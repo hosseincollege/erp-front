@@ -15,18 +15,6 @@ import { statusConfig } from '@/lib/ticket-constants';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3006';
 
-type TicketStatus =
-  | 'NEW'
-  | 'OPEN'
-  | 'IN_PROGRESS'
-  | 'PENDING_CUSTOMER'
-  | 'PENDING_VENDOR'
-  | 'PENDING_FIELD_TEAM'
-  | 'MONITORING'
-  | 'RESOLVED'
-  | 'CLOSED'
-  | 'REOPENED'
-  | 'CANCELED';
 
 type TicketPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT' | 'CRITICAL';
 

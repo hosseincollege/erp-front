@@ -26,17 +26,6 @@ export function TopHeader() {
 
         <ModuleSwitcher />
 
-        <div className="mx-auto hidden w-full max-w-xl md:block">
-          <label className="flex items-center gap-2 rounded-lg bg-white/10 px-3 py-2">
-            <Search className="h-4 w-4 shrink-0 text-white/80" />
-            <input
-              type="text"
-              placeholder="جستجو در سیستم..."
-              className="w-full bg-transparent text-sm text-white outline-none placeholder:text-white/65"
-            />
-          </label>
-        </div>
-
         <div className="mr-auto flex items-center gap-1">
           <button
             type="button"
