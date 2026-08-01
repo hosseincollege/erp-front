@@ -4,13 +4,6 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode, SVGProps } from 'react';
-import type { 
-  ApiTicket, 
-  IncidentSeverity, 
-  TicketPriority, 
-  TicketRow, 
-  TicketStatus 
-} from '@/types/ticket';
 import { statusConfig } from '@/lib/ticket-constants';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3006';
