@@ -18,7 +18,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { AppShell } from "@/components/layout/app-shell";
 import { StatCard } from "@/components/ui/stat-card";
 
 type ModuleItem = {
@@ -184,7 +184,7 @@ const tasks = [
 
 export default function HomePage() {
   return (
-    <DashboardShell>
+    <AppShell>
       <section className="space-y-6">
         <header className="animate-fade-in flex flex-col gap-4 rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--card)] p-5 shadow-[var(--shadow-sm)] sm:flex-row sm:items-end sm:justify-between md:p-6">
           <div className="min-w-0">
@@ -493,7 +493,7 @@ export default function HomePage() {
           </section>
         </div>
       </section>
-    </DashboardShell>
+    </AppShell>
   );
 }
 

@@ -1,3 +1,5 @@
+// src/app/layout.tsx
+
 import type { Metadata, Viewport } from "next";
 import { Vazirmatn } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -36,14 +38,19 @@ export default function RootLayout({
       suppressHydrationWarning
       className={vazirmatn.variable}
     >
-      <body>
+      <body className="font-sans antialiased overflow-x-hidden">
         <ThemeProvider>
-          <div className="min-h-screen bg-[color:var(--background)] text-[color:var(--foreground)]">
-            <TopHeader />
-            <main className="min-h-[calc(100vh-56px)]">{children}</main>
-          </div>
+          {/* TopHeader همواره ثابت در بالای تمام صفحات */}
+          <TopHeader />
+          
+          {/* pt-14 معادل 3.5rem یا 56px است که فضای زیر TopHeader را خالی می‌کند */}
+          <main className="min-h-screen pt-14 bg-[color:var(--background)] text-[color:var(--foreground)]">
+            {children}
+          </main>
         </ThemeProvider>
       </body>
     </html>
   );
 }
+
+// end of src/app/layout.tsx

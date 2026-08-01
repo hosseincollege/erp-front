@@ -1,3 +1,5 @@
+// src/components/layout/top-header.tsx
+
 "use client";
 
 import Link from "next/link";
@@ -6,8 +8,8 @@ import { ModuleSwitcher } from "./module-switcher";
 
 export function TopHeader() {
   return (
-    <header className="sticky top-0 z-40 border-b border-black/10 bg-[color:var(--primary)] text-white shadow-sm">
-      <div className="flex h-14 items-center gap-3 px-3 sm:px-4">
+    <header className="fixed inset-x-0 top-0 z-50 h-14 border-b border-black/10 bg-[color:var(--primary)] text-white shadow-sm">
+      <div className="flex h-full items-center gap-3 px-3 sm:px-4">
         <Link
           href="/"
           className="flex items-center gap-2 rounded-md px-2 py-1.5 transition hover:bg-white/10"
@@ -82,3 +84,5 @@ export function TopHeader() {
     </header>
   );
 }
+
+// end of src/components/layout/top-header.tsx

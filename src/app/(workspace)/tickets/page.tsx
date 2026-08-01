@@ -1,8 +1,19 @@
+/* file: src/app/(workspace)/tickets/page.tsx */
 'use client';
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode, SVGProps } from 'react';
+import type { 
+  ApiTicket, 
+  IncidentSeverity, 
+  TicketPriority, 
+  TicketRow, 
+  TicketStatus 
+} from '@/types/ticket';
+import { statusConfig } from '@/lib/ticket-constants';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3006';
 
 type TicketStatus =
   | 'NEW'
@@ -45,55 +56,7 @@ type TicketRow = {
 
 type ApiTicket = Record<string, any>;
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3006';
 
-const statusConfig: Record<TicketStatus, { label: string; className: string }> = {
-  NEW: {
-    label: 'جدید',
-    className: 'bg-blue-50 text-blue-700 ring-blue-200',
-  },
-  OPEN: {
-    label: 'باز',
-    className: 'bg-indigo-50 text-indigo-700 ring-indigo-200',
-  },
-  IN_PROGRESS: {
-    label: 'در حال بررسی',
-    className: 'bg-amber-50 text-amber-700 ring-amber-200',
-  },
-  PENDING_CUSTOMER: {
-    label: 'در انتظار مشتری',
-    className: 'bg-violet-50 text-violet-700 ring-violet-200',
-  },
-  PENDING_VENDOR: {
-    label: 'در انتظار تأمین‌کننده',
-    className: 'bg-purple-50 text-purple-700 ring-purple-200',
-  },
-  PENDING_FIELD_TEAM: {
-    label: 'در انتظار تیم میدانی',
-    className: 'bg-orange-50 text-orange-700 ring-orange-200',
-  },
-  MONITORING: {
-    label: 'تحت پایش',
-    className: 'bg-cyan-50 text-cyan-700 ring-cyan-200',
-  },
-  RESOLVED: {
-    label: 'رفع‌شده',
-    className: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
-  },
-  CLOSED: {
-    label: 'بسته‌شده',
-    className: 'bg-slate-100 text-slate-700 ring-slate-200',
-  },
-  REOPENED: {
-    label: 'بازگشایی‌شده',
-    className: 'bg-rose-50 text-rose-700 ring-rose-200',
-  },
-  CANCELED: {
-    label: 'لغوشده',
-    className: 'bg-slate-100 text-slate-600 ring-slate-200',
-  },
-};
 
 const priorityConfig: Record<TicketPriority, { label: string; className: string }> =
   {
