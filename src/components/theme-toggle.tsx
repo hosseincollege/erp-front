@@ -1,7 +1,9 @@
+// src/components/theme-toggle.tsx
+
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/theme-provider";
 
 const themes = [
   { key: "light", label: "Light" },

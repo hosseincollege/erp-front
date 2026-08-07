@@ -1,3 +1,6 @@
+// frontend/src/components/theme-provider.tsx
+// مدیریت تم‌های light، dark و system و اعمال آن روی تگ html
+
 "use client";
 
 import {
@@ -11,7 +14,7 @@ import {
 } from "react";
 
 export type Theme = "light" | "dark" | "system";
-type ResolvedTheme = "light" | "dark";
+export type ResolvedTheme = "light" | "dark";
 
 type ThemeContextValue = {
   theme: Theme;
@@ -22,7 +25,7 @@ type ThemeContextValue = {
 
 const STORAGE_KEY = "erp-theme";
 
-const ThemeContext = createContext<ThemeContextValue | null>(null);
+const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 function getSystemTheme(): ResolvedTheme {
   if (typeof window === "undefined") {
@@ -34,8 +37,16 @@ function getSystemTheme(): ResolvedTheme {
     : "light";
 }
 
+function isValidTheme(value: string | null): value is Theme {
+  return value === "light" || value === "dark" || value === "system";
+}
+
+function resolveTheme(theme: Theme): ResolvedTheme {
+  return theme === "system" ? getSystemTheme() : theme;
+}
+
 function applyTheme(theme: Theme): ResolvedTheme {
-  const resolvedTheme = theme === "system" ? getSystemTheme() : theme;
+  const resolvedTheme = resolveTheme(theme);
   const root = document.documentElement;
 
   root.classList.remove("light", "dark");
@@ -50,22 +61,26 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("system");
   const [resolvedTheme, setResolvedTheme] =
     useState<ResolvedTheme>("light");
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const savedTheme = window.localStorage.getItem(STORAGE_KEY) as Theme | null;
+    const savedTheme = window.localStorage.getItem(STORAGE_KEY);
+    const initialTheme: Theme = isValidTheme(savedTheme)
+      ? savedTheme
+      : "system";
 
-    const initialTheme: Theme =
-      savedTheme === "light" ||
-      savedTheme === "dark" ||
-      savedTheme === "system"
-        ? savedTheme
-        : "system";
+    const initialResolvedTheme = applyTheme(initialTheme);
 
     setThemeState(initialTheme);
-    setResolvedTheme(applyTheme(initialTheme));
+    setResolvedTheme(initialResolvedTheme);
+    setMounted(true);
   }, []);
 
   useEffect(() => {
+    if (!mounted) {
+      return;
+    }
+
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
     const handleSystemThemeChange = () => {
@@ -79,19 +94,21 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return () => {
       mediaQuery.removeEventListener("change", handleSystemThemeChange);
     };
-  }, [theme]);
+  }, [mounted, theme]);
 
   const setTheme = useCallback((nextTheme: Theme) => {
-    setThemeState(nextTheme);
+    const nextResolvedTheme = applyTheme(nextTheme);
+
     window.localStorage.setItem(STORAGE_KEY, nextTheme);
-    setResolvedTheme(applyTheme(nextTheme));
+    setThemeState(nextTheme);
+    setResolvedTheme(nextResolvedTheme);
   }, []);
 
   const toggleTheme = useCallback(() => {
     setTheme(resolvedTheme === "dark" ? "light" : "dark");
   }, [resolvedTheme, setTheme]);
 
-  const value = useMemo(
+  const value = useMemo<ThemeContextValue>(
     () => ({
       theme,
       resolvedTheme,
@@ -108,7 +125,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useTheme() {
+export function useTheme(): ThemeContextValue {
   const context = useContext(ThemeContext);
 
   if (!context) {

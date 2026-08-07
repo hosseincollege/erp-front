@@ -1,583 +1,433 @@
-import Link from "next/link";
+/**
+ * @file src/app/page.tsx
+ * @name page.tsx
+ * @description صفحه اصلی ERP Pro با تشخیص پایدار نشست رسمی و مهمان، جلوگیری از نمایش اشتباه وضعیت ورود بعد از جابه‌جایی بین صفحات، و UI مینیمال RTL.
+ */
+
+'use client';
+
+import Link from 'next/link';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  AlertTriangle,
   ArrowLeft,
-  Boxes,
+  BarChart3,
   CheckCircle2,
-  CircleDollarSign,
-  Clock3,
-  FileBarChart,
-  FileText,
-  Package,
-  ReceiptText,
-  ShoppingBasket,
-  TrendingUp,
-  UserRoundCheck,
+  ClipboardList,
+  Headphones,
+  ShieldCheck,
+  Sparkles,
   Users,
-  WalletCards,
-  type LucideIcon,
-} from "lucide-react";
+} from 'lucide-react';
 
-import { AppShell } from "@/components/layout/app-shell";
-import { StatCard } from "@/components/ui/stat-card";
+import {
+  getCurrentUser,
+  getUserDisplayName,
+  isUserAuthenticated,
+  type AuthUser,
+} from '@/lib/auth-api';
 
-type ModuleItem = {
-  title: string;
-  description: string;
-  href: string;
-  icon: LucideIcon;
-  color: string;
-  background: string;
-  meta: string;
-};
+const GUEST_MODE_STORAGE_KEY = 'erp-pro-guest-mode';
+
+const features = [
+  {
+    title: 'تیکتینگ',
+    description: 'پیگیری و مدیریت درخواست‌های پشتیبانی',
+    icon: Headphones,
+  },
+  {
+    title: 'مدیریت مشتریان',
+    description: 'ثبت مشتریان، ارتباطات و سوابق CRM',
+    icon: Users,
+  },
+  {
+    title: 'عملیات و وظایف',
+    description: 'مدیریت فرایندها و فعالیت‌های روزانه',
+    icon: ClipboardList,
+  },
+  {
+    title: 'گزارش مدیریتی',
+    description: 'مشاهده شاخص‌ها و گزارش‌های لحظه‌ای',
+    icon: BarChart3,
+  },
+];
 
 const stats = [
-  {
-    label: "سفارش‌های امروز",
-    value: "۲۴",
-    hint: "میانگین تکمیل سفارش: ۲ ساعت و ۱۸ دقیقه",
-    change: "۸٪",
-    trend: "up" as const,
-    tone: "primary" as const,
-    icon: ShoppingBasket,
-  },
-  {
-    label: "فاکتورهای باز",
-    value: "۱۱",
-    hint: "۳ فاکتور نیازمند پیگیری فوری هستند",
-    change: "۳ مورد",
-    trend: "neutral" as const,
-    tone: "warning" as const,
-    icon: ReceiptText,
-  },
-  {
-    label: "هشدار موجودی",
-    value: "۸",
-    hint: "۲ قلم کالا به وضعیت بحرانی رسیده‌اند",
-    change: "۲ بحرانی",
-    trend: "down" as const,
-    tone: "danger" as const,
-    icon: Boxes,
-  },
-  {
-    label: "کاربران فعال",
-    value: "۱۷",
-    hint: "۵ ورود جدید از ابتدای امروز ثبت شده است",
-    change: "۱۲٪",
-    trend: "up" as const,
-    tone: "success" as const,
-    icon: UserRoundCheck,
-  },
+  { value: '6', label: 'ماژول فعال', icon: ClipboardList },
+  { value: '24', label: 'کاربر هم‌زمان', icon: Users },
+  { value: '99.9%', label: 'پایداری سرویس', icon: ShieldCheck },
+  { value: 'لحظه‌ای', label: 'گزارش عملیات', icon: BarChart3 },
 ];
 
-const modules: ModuleItem[] = [
-  {
-    title: "مدیریت فروش",
-    description: "مشتریان، فرصت‌ها، سفارش‌ها و فاکتورهای فروش",
-    href: "/sales",
-    icon: CircleDollarSign,
-    color: "text-blue-600 dark:text-blue-400",
-    background: "bg-blue-50 dark:bg-blue-500/10",
-    meta: "۱۲ سفارش باز",
-  },
-  {
-    title: "خرید و تأمین",
-    description: "تأمین‌کنندگان، درخواست خرید و سفارش‌های ورودی",
-    href: "/purchases",
-    icon: ShoppingBasket,
-    color: "text-violet-600 dark:text-violet-400",
-    background: "bg-violet-50 dark:bg-violet-500/10",
-    meta: "۵ درخواست جدید",
-  },
-  {
-    title: "مدیریت انبار",
-    description: "موجودی، گردش کالا، انتقال و انبارگردانی",
-    href: "/inventory",
-    icon: Package,
-    color: "text-orange-600 dark:text-orange-400",
-    background: "bg-orange-50 dark:bg-orange-500/10",
-    meta: "۸ هشدار موجودی",
-  },
-  {
-    title: "مالی و حسابداری",
-    description: "اسناد، دریافت‌ها، پرداخت‌ها و مدیریت خزانه",
-    href: "/accounting",
-    icon: WalletCards,
-    color: "text-emerald-600 dark:text-emerald-400",
-    background: "bg-emerald-50 dark:bg-emerald-500/10",
-    meta: "۳ تأیید در انتظار",
-  },
-  {
-    title: "منابع انسانی",
-    description: "پرسنل، حضور و غیاب، مرخصی و ارزیابی",
-    href: "/hr",
-    icon: Users,
-    color: "text-cyan-600 dark:text-cyan-400",
-    background: "bg-cyan-50 dark:bg-cyan-500/10",
-    meta: "۱۷ کاربر فعال",
-  },
-  {
-    title: "گزارش و تحلیل",
-    description: "داشبوردهای مدیریتی و گزارش عملکرد واحدها",
-    href: "/reports",
-    icon: FileBarChart,
-    color: "text-pink-600 dark:text-pink-400",
-    background: "bg-pink-50 dark:bg-pink-500/10",
-    meta: "به‌روزرسانی امروز",
-  },
-];
-
-const activities = [
-  {
-    title: "سفارش فروش جدید ثبت شد",
-    description: "سفارش شماره ۱۰۲۴ برای شرکت سپهر",
-    time: "۱۰ دقیقه پیش",
-    icon: ShoppingBasket,
-    iconClass: "text-[var(--primary)] bg-[var(--primary-soft)]",
-  },
-  {
-    title: "پرداخت فاکتور تأیید شد",
-    description: "پرداخت مبلغ ۴۸,۵۰۰,۰۰۰ تومان",
-    time: "۳۵ دقیقه پیش",
-    icon: CheckCircle2,
-    iconClass: "text-[var(--success)] bg-[var(--success-soft)]",
-  },
-  {
-    title: "هشدار کاهش موجودی",
-    description: "موجودی دو قلم کالا کمتر از حد سفارش است",
-    time: "۱ ساعت پیش",
-    icon: AlertTriangle,
-    iconClass: "text-[var(--warning)] bg-[var(--warning-soft)]",
-  },
-  {
-    title: "پیش‌فاکتور جدید ایجاد شد",
-    description: "پیش‌فاکتور شماره ۸۷۶ در انتظار بررسی",
-    time: "۲ ساعت پیش",
-    icon: FileText,
-    iconClass: "text-violet-600 bg-violet-50 dark:bg-violet-500/10",
-  },
-];
-
-const tasks = [
-  {
-    title: "تأیید پرداخت فاکتور ۱۰۲۱",
-    department: "مالی",
-    time: "تا ساعت ۱۲:۳۰",
-    priority: "فوری",
-    priorityClass: "bg-[var(--danger-soft)] text-[var(--danger)]",
-  },
-  {
-    title: "بررسی موجودی انبار مرکزی",
-    department: "انبار",
-    time: "تا پایان امروز",
-    priority: "مهم",
-    priorityClass: "bg-[var(--warning-soft)] text-[var(--warning)]",
-  },
-  {
-    title: "پیگیری پیشنهاد فروش شرکت سپهر",
-    department: "فروش",
-    time: "فردا، ساعت ۹",
-    priority: "عادی",
-    priorityClass: "bg-[var(--primary-soft)] text-[var(--primary)]",
-  },
-];
+type SessionState = 'loading' | 'anonymous' | 'guest' | 'official';
 
 export default function HomePage() {
+  const [sessionState, setSessionState] = useState<SessionState>('loading');
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
+
+  const refreshAuthState = useCallback(() => {
+    try {
+      const user = getCurrentUser();
+      const guestMode =
+        typeof window !== 'undefined' &&
+        window.localStorage.getItem(GUEST_MODE_STORAGE_KEY) === 'true';
+
+      const officialSession = isUserAuthenticated() && user !== null;
+
+      setCurrentUser(user);
+
+      if (officialSession) {
+        setSessionState('official');
+        return;
+      }
+
+      if (guestMode) {
+        setSessionState('guest');
+        return;
+      }
+
+      setSessionState('anonymous');
+    } catch {
+      setCurrentUser(null);
+      setSessionState('anonymous');
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshAuthState();
+
+    const handleAuthStateChanged = () => {
+      refreshAuthState();
+    };
+
+    const handleStorageChanged = (event: StorageEvent) => {
+      if (
+        event.key === null ||
+        event.key === GUEST_MODE_STORAGE_KEY
+      ) {
+        refreshAuthState();
+      }
+    };
+
+    const handleWindowFocus = () => {
+      refreshAuthState();
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        refreshAuthState();
+      }
+    };
+
+    window.addEventListener('auth-state-changed', handleAuthStateChanged);
+    window.addEventListener('storage', handleStorageChanged);
+    window.addEventListener('focus', handleWindowFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('auth-state-changed', handleAuthStateChanged);
+      window.removeEventListener('storage', handleStorageChanged);
+      window.removeEventListener('focus', handleWindowFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [refreshAuthState]);
+
+  const currentUserDisplayName = useMemo(() => {
+    if (sessionState === 'official') {
+      return getUserDisplayName(currentUser);
+    }
+
+    if (sessionState === 'guest') {
+      return 'کاربر مهمان';
+    }
+
+    return '';
+  }, [currentUser, sessionState]);
+
+  const isLoggedIn = sessionState === 'official' || sessionState === 'guest';
+
   return (
-    <AppShell>
-      <section className="space-y-6">
-        <header className="animate-fade-in flex flex-col gap-4 rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--card)] p-5 shadow-[var(--shadow-sm)] sm:flex-row sm:items-end sm:justify-between md:p-6">
-          <div className="min-w-0">
-            <div className="inline-flex items-center gap-2 rounded-xl bg-[var(--primary-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--primary)]">
-              <Clock3 size={14} />
-              آخرین به‌روزرسانی: امروز، ساعت ۱۹:۰۰
-            </div>
+    <main
+      dir="rtl"
+      className="
+        relative h-[calc(100dvh-68px)] min-h-0 w-full overflow-hidden
+        bg-[var(--background)] text-[var(--foreground)]
+      "
+    >
+      <div
+        aria-hidden="true"
+        className="
+          pointer-events-none absolute inset-0 opacity-40
+          bg-[radial-gradient(circle_at_80%_30%,var(--primary),transparent_36%),radial-gradient(circle_at_18%_78%,var(--info),transparent_32%)]
+        "
+      />
 
-            <h2 className="mt-3 text-2xl font-bold tracking-tight md:text-3xl">
-              سلام حسین، روز بخیر
-            </h2>
-
-            <p className="mt-2 max-w-2xl text-sm text-[var(--muted)]">
-              خلاصه وضعیت سازمان و موارد نیازمند توجه را در یک نگاه ببین و سریع
-              وارد ماژول‌های اصلی شو.
-            </p>
+      <div
+        className="
+          relative mx-auto grid h-full min-h-0 w-full max-w-[1480px]
+          grid-cols-1 items-center gap-8 px-6 py-6
+          lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)] lg:px-10
+          xl:gap-14 xl:px-14
+          [@media(max-height:760px)]:py-4
+        "
+      >
+        <section className="flex min-h-0 flex-col justify-center">
+          <div
+            className="
+              mb-5 inline-flex w-fit items-center gap-2 rounded-full
+              border border-[var(--primary)]/20 bg-[var(--primary-soft)]
+              px-4 py-2 text-sm font-medium text-[var(--primary)]
+              [@media(max-height:700px)]:mb-3
+            "
+          >
+            <Sparkles className="h-4 w-4 shrink-0" />
+            سامانه یکپارچه مدیریت عملیات سازمانی
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              className="inline-flex h-11 items-center gap-2 rounded-xl bg-[var(--primary)] px-4 text-sm font-semibold text-[var(--primary-foreground)] transition hover:bg-[var(--primary-hover)]"
-            >
-              <ShoppingBasket size={17} />
-              ثبت سفارش
-            </button>
+          <h1
+            className="
+              max-w-4xl text-4xl font-black leading-[1.35] tracking-normal
+              text-[var(--foreground)] md:text-5xl xl:text-6xl
+              [@media(max-height:700px)]:text-4xl
+            "
+          >
+            مدیریت کسب‌وکار،
+            <span className="block text-[var(--primary)]">
+              منظم، سریع و یکپارچه
+            </span>
+          </h1>
 
-            <button
-              type="button"
-              className="inline-flex h-11 items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 text-sm font-semibold text-[var(--foreground)] transition hover:bg-[var(--surface-hover)]"
-            >
-              <FileBarChart size={17} />
-              گزارش سریع
-            </button>
-          </div>
-        </header>
+          <p
+            className="
+              mt-5 max-w-3xl text-base leading-8 text-[var(--muted)]
+              md:text-lg [@media(max-height:700px)]:mt-3
+              [@media(max-height:700px)]:text-base
+              [@media(max-height:700px)]:leading-7
+            "
+          >
+            فروش، مشتریان، تیکت‌ها، عملیات و گزارش‌های مدیریتی را در یک محیط
+            متمرکز و قابل اتکا مدیریت کنید.
+          </p>
 
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {stats.map((item) => (
-            <StatCard
-              key={item.label}
-              label={item.label}
-              value={item.value}
-              hint={item.hint}
-              change={item.change}
-              trend={item.trend}
-              tone={item.tone}
-              icon={item.icon}
-            />
-          ))}
-        </div>
-
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.65fr)_minmax(340px,0.75fr)]">
-          <section className="surface-card overflow-hidden">
-            <div className="flex items-center justify-between border-b border-[var(--border)] px-5 py-4 md:px-6">
-              <div>
-                <h3 className="font-bold">عملکرد فروش</h3>
-                <p className="mt-1 text-xs text-[var(--muted)]">
-                  روند درآمد در هفت روز گذشته
-                </p>
-              </div>
-
-              <button
-                type="button"
-                className="rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-xs font-semibold transition hover:bg-[var(--surface-hover)]"
+          <div
+            className="
+              mt-7 flex min-h-12 flex-wrap items-center gap-3
+              [@media(max-height:700px)]:mt-4
+            "
+          >
+            {sessionState === 'loading' ? (
+              <div
+                className="
+                  inline-flex h-12 items-center justify-center rounded-lg
+                  border border-[var(--border)] bg-[var(--surface-muted)]
+                  px-6 text-sm font-bold text-[var(--muted)]
+                "
               >
-                ۷ روز اخیر
-              </button>
-            </div>
-
-            <div className="p-5 md:p-6">
-              <div className="flex flex-wrap items-end justify-between gap-4">
-                <div>
-                  <p className="text-xs text-[var(--muted)]">
-                    فروش خالص این دوره
-                  </p>
-                  <p className="mt-2 text-2xl font-bold md:text-3xl">
-                    ۱۸۶,۴۵۰,۰۰۰
-                    <span className="mr-2 text-sm font-normal text-[var(--muted)]">
-                      تومان
-                    </span>
-                  </p>
-                </div>
-
-                <div className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--success-soft)] px-3 py-2 text-xs font-bold text-[var(--success)]">
-                  <TrendingUp size={16} />
-                  ۱۲.۸٪ رشد
-                </div>
+                در حال بررسی نشست...
               </div>
+            ) : null}
 
-              <SalesChart />
-            </div>
-          </section>
+            {sessionState !== 'loading' && isLoggedIn ? (
+              <Link
+                href="/tickets"
+                className="
+                  inline-flex h-12 items-center justify-center gap-2 rounded-lg
+                  bg-[var(--primary)] px-6 text-sm font-bold
+                  text-[var(--primary-foreground)] shadow-lg transition-colors
+                  hover:bg-[var(--primary-hover)]
+                  focus-visible:outline-none focus-visible:ring-2
+                  focus-visible:ring-[var(--ring)]
+                "
+              >
+                ورود به محیط کار
+                <ArrowLeft className="h-4 w-4" />
+              </Link>
+            ) : null}
 
-          <section className="surface-card overflow-hidden">
-            <div className="flex items-center justify-between border-b border-[var(--border)] px-5 py-4">
-              <div>
-                <h3 className="font-bold">کارهای امروز</h3>
-                <p className="mt-1 text-xs text-[var(--muted)]">
-                  موارد در انتظار اقدام شما
-                </p>
-              </div>
-
-              <span className="rounded-lg bg-[var(--primary-soft)] px-2.5 py-1 text-xs font-bold text-[var(--primary)]">
-                ۳ مورد
-              </span>
-            </div>
-
-            <div className="divide-y divide-[var(--border)]">
-              {tasks.map((task) => (
-                <button
-                  key={task.title}
-                  type="button"
-                  className="flex w-full gap-3 p-4 text-right transition hover:bg-[var(--surface-hover)]"
+            {sessionState === 'anonymous' ? (
+              <>
+                <Link
+                  href="/login"
+                  className="
+                    inline-flex h-12 items-center justify-center gap-2 rounded-lg
+                    bg-[var(--primary)] px-6 text-sm font-bold
+                    text-[var(--primary-foreground)] shadow-lg transition-colors
+                    hover:bg-[var(--primary-hover)]
+                    focus-visible:outline-none focus-visible:ring-2
+                    focus-visible:ring-[var(--ring)]
+                  "
                 >
-                  <span className="mt-1 grid size-5 shrink-0 place-items-center rounded-full border-2 border-[var(--border-strong)]" />
+                  ورود به سیستم
+                  <ArrowLeft className="h-4 w-4" />
+                </Link>
 
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-semibold">
-                      {task.title}
-                    </span>
-
-                    <span className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-[var(--muted)]">
-                      <span>{task.department}</span>
-                      <span className="size-1 rounded-full bg-[var(--border-strong)]" />
-                      <span>{task.time}</span>
-                    </span>
-                  </span>
-
-                  <span
-                    className={`shrink-0 rounded-lg px-2 py-1 text-[10px] font-bold ${task.priorityClass}`}
-                  >
-                    {task.priority}
-                  </span>
-                </button>
-              ))}
-            </div>
-
-            <div className="border-t border-[var(--border)] p-3">
-              <button
-                type="button"
-                className="flex w-full items-center justify-center gap-2 rounded-xl py-2 text-xs font-semibold text-[var(--primary)] transition hover:bg-[var(--primary-soft)]"
-              >
-                مشاهده همه وظایف
-                <ArrowLeft size={15} />
-              </button>
-            </div>
-          </section>
-        </div>
-
-        <section className="surface-card overflow-hidden">
-          <div className="flex items-center justify-between border-b border-[var(--border)] px-5 py-4 md:px-6">
-            <div>
-              <h3 className="font-bold">ماژول‌های سیستم</h3>
-              <p className="mt-1 text-xs text-[var(--muted)]">
-                دسترسی سریع به بخش‌های اصلی سازمان
-              </p>
-            </div>
-
-            <button
-              type="button"
-              className="hidden items-center gap-1.5 text-xs font-semibold text-[var(--primary)] sm:flex"
-            >
-              مدیریت ماژول‌ها
-              <ArrowLeft size={15} />
-            </button>
+                <Link
+                  href="/register"
+                  className="
+                    inline-flex h-12 items-center justify-center rounded-lg
+                    border border-[var(--border)] bg-[var(--surface-muted)]
+                    px-6 text-sm font-bold text-[var(--foreground)]
+                    transition-colors hover:bg-[var(--surface-hover)]
+                    focus-visible:outline-none focus-visible:ring-2
+                    focus-visible:ring-[var(--ring)]
+                  "
+                >
+                  ثبت‌نام
+                </Link>
+              </>
+            ) : null}
           </div>
 
-          <div className="grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3 md:p-6">
-            {modules.map((module) => {
-              const Icon = module.icon;
+          <div
+            className="
+              mt-8 grid max-w-4xl grid-cols-2 gap-3 md:grid-cols-4
+              [@media(max-height:760px)]:mt-5
+              [@media(max-height:650px)]:hidden
+            "
+          >
+            {stats.map((stat) => {
+              const Icon = stat.icon;
 
               return (
-                <Link
-                  key={module.href}
-                  href={module.href}
-                  className="group rounded-2xl border border-[var(--border)] bg-[var(--background)] p-4 transition duration-200 hover:-translate-y-0.5 hover:border-[var(--primary)] hover:bg-[var(--card)] hover:shadow-[var(--shadow-md)]"
+                <div
+                  key={stat.label}
+                  className="
+                    flex min-h-24 items-center gap-3 rounded-lg
+                    border border-[var(--border)] bg-[var(--surface-muted)]
+                    px-4 py-3
+                  "
                 >
-                  <div className="flex items-start gap-3">
-                    <div
-                      className={`grid size-11 shrink-0 place-items-center rounded-xl ${module.background} ${module.color}`}
-                    >
-                      <Icon size={21} />
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <h4 className="font-bold">{module.title}</h4>
-
-                        <ArrowLeft
-                          className="shrink-0 text-[var(--muted)] transition group-hover:-translate-x-1 group-hover:text-[var(--primary)]"
-                          size={17}
-                        />
-                      </div>
-
-                      <p className="mt-1.5 text-xs leading-5 text-[var(--muted)]">
-                        {module.description}
-                      </p>
-                    </div>
+                  <div
+                    className="
+                      flex h-10 w-10 shrink-0 items-center justify-center
+                      rounded-lg bg-[var(--primary-soft)]
+                      text-[var(--primary)]
+                    "
+                  >
+                    <Icon className="h-5 w-5" />
                   </div>
 
-                  <div className="mt-4 border-t border-[var(--border)] pt-3 text-[11px] font-medium text-[var(--muted)]">
-                    {module.meta}
+                  <div className="min-w-0">
+                    <div className="text-xl font-black text-[var(--foreground)]">
+                      {stat.value}
+                    </div>
+
+                    <div className="mt-1 truncate text-xs text-[var(--muted)]">
+                      {stat.label}
+                    </div>
                   </div>
-                </Link>
+                </div>
               );
             })}
           </div>
         </section>
 
-        <div className="grid gap-6 lg:grid-cols-2">
-          <section className="surface-card overflow-hidden">
-            <div className="flex items-center justify-between border-b border-[var(--border)] px-5 py-4">
-              <div>
-                <h3 className="font-bold">فعالیت‌های اخیر</h3>
-                <p className="mt-1 text-xs text-[var(--muted)]">
-                  آخرین رویدادهای ثبت‌شده در سیستم
-                </p>
-              </div>
-
-              <button
-                type="button"
-                className="text-xs font-semibold text-[var(--primary)]"
+        <aside
+          className="
+            hidden min-h-0 w-full max-w-lg justify-self-end
+            border-r border-[var(--border)] pr-8 lg:block
+            [@media(max-height:620px)]:hidden
+          "
+        >
+          <div className="mb-6">
+            <div className="flex items-center gap-3">
+              <div
+                className="
+                  flex h-12 w-12 shrink-0 items-center justify-center
+                  rounded-lg bg-[var(--primary-soft)] text-[var(--primary)]
+                "
               >
-                مشاهده همه
-              </button>
-            </div>
+                <ClipboardList className="h-6 w-6" />
+              </div>
 
-            <div className="divide-y divide-[var(--border)]">
-              {activities.map((activity) => {
-                const Icon = activity.icon;
+              <div className="min-w-0">
+                <h2 className="text-xl font-extrabold text-[var(--foreground)]">
+                  پنل عملیاتی ERP Pro
+                </h2>
 
-                return (
-                  <div
-                    key={activity.title}
-                    className="flex items-start gap-3 p-4 transition hover:bg-[var(--surface-hover)]"
-                  >
-                    <div
-                      className={`grid size-10 shrink-0 place-items-center rounded-xl ${activity.iconClass}`}
-                    >
-                      <Icon size={19} />
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold">
-                        {activity.title}
-                      </p>
-                      <p className="mt-1 truncate text-xs text-[var(--muted)]">
-                        {activity.description}
-                      </p>
-                    </div>
-
-                    <time className="shrink-0 text-[10px] text-[var(--muted)]">
-                      {activity.time}
-                    </time>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-
-          <section className="surface-card overflow-hidden">
-            <div className="flex items-center justify-between border-b border-[var(--border)] px-5 py-4">
-              <div>
-                <h3 className="font-bold">وضعیت مالی</h3>
-                <p className="mt-1 text-xs text-[var(--muted)]">
-                  خلاصه دریافت‌ها و پرداخت‌های جاری
+                <p className="mt-1 text-sm text-[var(--muted)]">
+                  دسترسی سریع به بخش‌های اصلی سامانه
                 </p>
               </div>
-
-              <Link href="/accounting" className="text-xs font-semibold text-[var(--primary)]">
-                جزئیات
-              </Link>
-            </div>
-
-            <div className="grid gap-3 p-5 sm:grid-cols-2">
-              <FinancialItem
-                label="مطالبات دریافتنی"
-                value="۱۲۸,۰۰۰,۰۰۰"
-                unit="تومان"
-                status="۸ فاکتور"
-                tone="success"
-              />
-
-              <FinancialItem
-                label="بدهی پرداختنی"
-                value="۷۴,۵۰۰,۰۰۰"
-                unit="تومان"
-                status="۵ فاکتور"
-                tone="warning"
-              />
-            </div>
-
-            <div className="mx-5 mb-5 rounded-2xl border border-[var(--border)] bg-[var(--background)] p-4">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-xs text-[var(--muted)]">مانده خالص تخمینی</p>
-                  <p className="mt-1 text-lg font-bold">۵۳,۵۰۰,۰۰۰ تومان</p>
-                </div>
-
-                <div className="grid size-11 place-items-center rounded-xl bg-[var(--success-soft)] text-[var(--success)]">
-                  <TrendingUp size={21} />
-                </div>
-              </div>
-            </div>
-          </section>
-        </div>
-      </section>
-    </AppShell>
-  );
-}
-
-function SalesChart() {
-  const bars = [
-    { day: "شنبه", height: "42%" },
-    { day: "یکشنبه", height: "58%" },
-    { day: "دوشنبه", height: "47%" },
-    { day: "سه‌شنبه", height: "76%" },
-    { day: "چهارشنبه", height: "65%" },
-    { day: "پنجشنبه", height: "91%" },
-    { day: "جمعه", height: "70%" },
-  ];
-
-  return (
-    <div className="mt-8">
-      <div className="flex h-52 items-end gap-2 border-b border-[var(--border)] sm:gap-4">
-        {bars.map((bar, index) => (
-          <div
-            key={bar.day}
-            className="group flex h-full flex-1 items-end justify-center"
-          >
-            <div
-              title={`${bar.day}: عملکرد فروش`}
-              className="relative w-full max-w-12 rounded-t-xl bg-gradient-to-t from-blue-600 to-blue-400 transition duration-200 group-hover:brightness-110"
-              style={{
-                height: bar.height,
-                animationDelay: `${index * 55}ms`,
-              }}
-            >
-              <span className="pointer-events-none absolute -top-8 left-1/2 hidden -translate-x-1/2 whitespace-nowrap rounded-lg bg-slate-900 px-2 py-1 text-[10px] text-white shadow-lg group-hover:block">
-                {bar.height}
-              </span>
             </div>
           </div>
-        ))}
+
+          <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+            {features.map((feature) => {
+              const Icon = feature.icon;
+
+              return (
+                <div key={feature.title} className="flex min-w-0 gap-3">
+                  <div
+                    className="
+                      flex h-9 w-9 shrink-0 items-center justify-center
+                      rounded-lg bg-[var(--surface-muted)]
+                      text-[var(--primary)]
+                    "
+                  >
+                    <Icon className="h-4 w-4" />
+                  </div>
+
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-bold text-[var(--foreground)]">
+                      {feature.title}
+                    </h3>
+
+                    <p className="mt-1 text-xs leading-6 text-[var(--muted)]">
+                      {feature.description}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-7 border-t border-[var(--border)] pt-5">
+            <div className="flex items-start gap-3">
+              <CheckCircle2
+                className={`
+                  mt-0.5 h-5 w-5 shrink-0
+                  ${
+                    isLoggedIn
+                      ? 'text-[var(--success)]'
+                      : 'text-[var(--muted)]'
+                  }
+                `}
+              />
+
+              <div>
+                <p
+                  className={`
+                    text-sm font-bold
+                    ${
+                      isLoggedIn
+                        ? 'text-[var(--success)]'
+                        : 'text-[var(--foreground)]'
+                    }
+                  `}
+                >
+                  {sessionState === 'loading'
+                    ? 'در حال بررسی وضعیت نشست'
+                    : sessionState === 'official'
+                      ? `نشست ${currentUserDisplayName} فعال است`
+                      : sessionState === 'guest'
+                        ? 'نشست کاربر مهمان فعال است'
+                        : 'هنوز وارد سیستم نشده‌اید'}
+                </p>
+
+                <p className="mt-1 text-xs leading-6 text-[var(--muted)]">
+                  {sessionState === 'loading'
+                    ? 'در حال همگام‌سازی وضعیت ورود شما با سامانه...'
+                    : sessionState === 'official'
+                      ? 'برای ادامه فعالیت وارد محیط کاری شوید.'
+                      : sessionState === 'guest'
+                        ? 'شما با سطح دسترسی محدود وارد سامانه شده‌اید.'
+                        : 'برای دسترسی کامل وارد حساب شوید یا ثبت‌نام کنید.'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </aside>
       </div>
-
-      <div className="mt-3 flex gap-2 sm:gap-4">
-        {bars.map((bar) => (
-          <span
-            key={bar.day}
-            className="flex-1 truncate text-center text-[10px] text-[var(--muted)] sm:text-xs"
-          >
-            {bar.day}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function FinancialItem({
-  label,
-  value,
-  unit,
-  status,
-  tone,
-}: {
-  label: string;
-  value: string;
-  unit: string;
-  status: string;
-  tone: "success" | "warning";
-}) {
-  const toneClass =
-    tone === "success"
-      ? "bg-[var(--success-soft)] text-[var(--success)]"
-      : "bg-[var(--warning-soft)] text-[var(--warning)]";
-
-  return (
-    <div className="rounded-2xl border border-[var(--border)] bg-[var(--background)] p-4">
-      <p className="text-xs text-[var(--muted)]">{label}</p>
-
-      <p className="mt-2 text-lg font-bold">
-        {value}
-        <span className="mr-1 text-[10px] font-normal text-[var(--muted)]">
-          {unit}
-        </span>
-      </p>
-
-      <span className={`mt-3 inline-flex rounded-lg px-2 py-1 text-[10px] font-bold ${toneClass}`}>
-        {status}
-      </span>
-    </div>
+    </main>
   );
 }
