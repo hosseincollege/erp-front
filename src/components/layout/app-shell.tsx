@@ -1,69 +1,26 @@
-// src/components/layout/app-shell.tsx
-// مدیریت پوسته اصلی برنامه، ساختار RTL، اسکرول محتوای صفحات و پشتیبانی از تم Light/Dark
-
+/**
+ * @file src/components/layout/app-shell.tsx
+ */
 'use client';
 
-import type { ReactNode } from 'react';
+import React, { useState } from 'react';
+import { TopHeader } from './top-header';
+import { Sidebar } from './sidebar';
 
-import { TopHeader } from '@/components/layout/top-header';
+export function AppShell({ children }: { children: React.ReactNode }) {
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
-type AppShellProps = {
-  children: ReactNode;
-};
-
-export function AppShell({ children }: AppShellProps) {
   return (
-    <div
-      dir="rtl"
-      className="
-        isolate
-        flex
-        h-dvh
-        min-h-0
-        w-full
-        flex-col
-        overflow-hidden
-        bg-[var(--background)]
-        text-[var(--foreground)]
-        transition-colors
-        duration-200
-      "
-    >
-      {/* نوار بالایی برنامه */}
-      <div className="shrink-0">
-        <TopHeader />
-      </div>
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col" dir="rtl">
+      {/* هدر بالایی */}
+      <TopHeader onToggleSidebar={() => setIsCollapsed((prev) => !prev)} />
 
-      {/* فضای اصلی برنامه */}
-      <div className="flex min-h-0 flex-1 overflow-hidden">
-        <main
-          id="main-content"
-          className="
-            min-h-0
-            w-full
-            flex-1
-            overflow-y-auto
-            overscroll-contain
-            bg-[var(--background)]
-            transition-colors
-            duration-200
-          "
-        >
-          <div
-            className="
-              mx-auto
-              min-h-full
-              w-full
-              max-w-[1600px]
-              px-4
-              py-5
-              sm:px-6
-              sm:py-6
-              lg:px-8
-            "
-          >
-            {children}
-          </div>
+      {/* بخش بدنه: سایدبار + محتوای اصلی */}
+      <div className="flex flex-1 items-start">
+        <Sidebar isMainCollapsed={isCollapsed} />
+        
+        <main className="flex-1 min-w-0 p-6 overflow-y-auto">
+          {children}
         </main>
       </div>
     </div>

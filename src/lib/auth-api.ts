@@ -1,18 +1,26 @@
 /**
  * @file src/lib/auth-api.ts
- * @description رفع خطای نبود getCurrentUser و هماهنگی با قراردادهای Identifier-based
+ * @description توابع احراز هویت ERP Pro هماهنگ با api-client.ts
  */
 
-import { apiClient, clearAccessToken, setAccessToken, getAccessToken } from "./api-client";
+import {
+  apiClient,
+  ApiError,
+  ApiClientError,
+  clearAccessToken,
+  getAccessToken,
+  isAuthenticated,
+  setAccessToken,
+} from '@/lib/api-client';
 
-// صادر کردن تایپ مورد نیاز صفحه اصلی
+export { ApiError, ApiClientError };
+
 export interface AuthUser {
-  id: string;
-  email: string;
-  username: string;
-  firstName?: string;
-  lastName?: string;
+  id?: string;
+  name: string;
+  email?: string;
   role?: string;
+  username?: string;
 }
 
 export interface LoginPayload {
@@ -26,86 +34,126 @@ export interface RegisterPayload {
   password: string;
 }
 
-/**
- * دریافت اطلاعات کاربر فعلی
- * در نسخه‌های پیشرفته‌تر این داده از دیکود کردن JWT یا درخواست به /auth/me می‌آید.
- */
-export async function getCurrentUser(): Promise<AuthUser | null> {
-  if (!isUserAuthenticated()) return null;
-  
+export interface AuthResponse {
+  access_token?: string;
+  user?: AuthUser;
+  id?: string;
+  name?: string;
+  email?: string;
+  role?: string;
+  username?: string;
+  [key: string]: unknown;
+}
+
+const USER_STORAGE_KEY = 'auth_user';
+
+function isBrowser(): boolean {
+  return typeof window !== 'undefined';
+}
+
+function normalizeUser(
+  payload: Partial<AuthResponse> | undefined,
+  fallback: Partial<AuthUser> = {},
+): AuthUser {
+  const source = payload?.user ?? payload ?? {};
+
+  return {
+    id: source.id,
+    name: source.name || fallback.name || 'کاربر',
+    email: source.email || fallback.email,
+    role: source.role || fallback.role || 'user',
+    username: source.username || fallback.username,
+  };
+}
+
+function saveUser(user: AuthUser): void {
+  if (!isBrowser()) return;
+  window.localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+}
+
+function clearUser(): void {
+  if (!isBrowser()) return;
+  window.localStorage.removeItem(USER_STORAGE_KEY);
+}
+
+function persistSession(
+  response: AuthResponse,
+  fallbackUser: Partial<AuthUser>,
+): AuthUser {
+  const token = response.access_token;
+  if (token) {
+    setAccessToken(token);
+  }
+
+  const user = normalizeUser(response, fallbackUser);
+  saveUser(user);
+  return user;
+}
+
+export async function login(payload: LoginPayload): Promise<AuthResponse> {
+  const response = await apiClient.post<AuthResponse, {
+    identifier: string;
+    password: string;
+  }>('/auth/login', {
+    identifier: payload.email,
+    password: payload.password,
+  });
+
+  persistSession(response, {
+    name: payload.email.split('@')[0] || 'کاربر',
+    email: payload.email,
+  });
+
+  return response;
+}
+
+export async function register(payload: RegisterPayload): Promise<AuthResponse> {
+  const response = await apiClient.post<AuthResponse, RegisterPayload>(
+    '/auth/register',
+    {
+      name: payload.name,
+      email: payload.email,
+      password: payload.password,
+    },
+  );
+
+  persistSession(response, {
+    name: payload.name,
+    email: payload.email,
+  });
+
+  return response;
+}
+
+export function getCurrentUser(): AuthUser | null {
+  if (!isBrowser()) return null;
+
+  const rawUser = window.localStorage.getItem(USER_STORAGE_KEY);
+  if (!rawUser) return null;
+
   try {
-    // تلاش برای دریافت پروفایل از بک‌اِند
-    const user = await apiClient.get<AuthUser>("/auth/me");
-    return user;
-  } catch (error) {
-    console.error("Failed to fetch user profile:", error);
+    return JSON.parse(rawUser) as AuthUser;
+  } catch {
+    clearUser();
     return null;
   }
 }
 
-/**
- * بررسی وضعیت احراز هویت
- */
 export function isUserAuthenticated(): boolean {
-  if (typeof window === 'undefined') return false;
-  return !!getAccessToken();
+  return isAuthenticated() || getCurrentUser() !== null || getAccessToken() !== null;
 }
 
-/**
- * ورود کاربر با فیلد identifier
- */
-export async function login(payload: LoginPayload): Promise<any> {
-  const response = await apiClient.post<any, any>("/auth/login", {
-    identifier: payload.email.trim().toLowerCase(),
-    password: payload.password,
-  });
+export async function logout(): Promise<void> {
+  try {
+    await apiClient.post('/auth/logout');
+  } catch (error) {
+    console.warn('Logout request failed:', error);
+  } finally {
+    clearAccessToken();
+    clearUser();
 
-  if (response?.access_token) {
-    setAccessToken(response.access_token);
+    if (isBrowser()) {
+      window.dispatchEvent(new Event('auth:logout'));
+    }
   }
-  return response;
-}
-
-/**
- * ثبت‌نام با تفکیک نام برای سازگاری با مدل دیتابیس
- */
-export async function register(payload: RegisterPayload): Promise<any> {
-  const nameParts = payload.name.trim().split(" ");
-  const firstName = nameParts[0] || "User";
-  const lastName = nameParts.slice(1).join(" ") || "-";
-  const username = payload.email.split("@")[0] + "_" + Math.floor(Math.random() * 100);
-
-  const response = await apiClient.post<any, any>("/auth/register", {
-    username,
-    firstName,
-    lastName,
-    email: payload.email.trim().toLowerCase(),
-    password: payload.password,
-  });
-
-  if (response?.access_token) {
-    setAccessToken(response.access_token);
-  }
-  return response;
-}
-
-/**
- * خروج از سیستم
- */
-export function logout(): void {
-  clearAccessToken();
-  if (typeof window !== "undefined") {
-    window.location.href = "/login";
-  }
-}
-
-/**
- * تابع کمکی برای نمایش نام در UI
- */
-export function getUserDisplayName(user: AuthUser | null): string {
-  if (!user) return "کاربر مهمان";
-  if (user.firstName || user.lastName) {
-    return `${user.firstName || ''} ${user.lastName || ''}`.trim();
-  }
-  return user.username || user.email;
 }

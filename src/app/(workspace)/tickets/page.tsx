@@ -209,9 +209,11 @@ function getPriorityClassName(priority: TicketPriority) {
   }
 }
 
-function normalizeText(value?: string | null) {
-  return value?.trim().toLowerCase() || '';
+function normalizeText(value?: any) {
+  if (value === null || value === undefined) return '';
+  return String(value).trim().toLowerCase();
 }
+
 
 export default function TicketsPage() {
   const [tickets, setTickets] = useState<TicketRecord[]>([]);
@@ -334,7 +336,10 @@ export default function TicketsPage() {
   );
 
   return (
-    <div dir="rtl" className="space-y-6 text-[var(--foreground)]">
+    <div
+      dir="rtl"
+      className="h-full min-h-0 overflow-y-auto space-y-6 text-[var(--foreground)]"
+    >
       <section
         className="
           rounded-2xl border border-[var(--border)]

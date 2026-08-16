@@ -1,37 +1,78 @@
-// file: src/types/ticket.ts
+/**
+ * @file frontend/src/types/ticket.ts
+ * @description Typeهای مربوط به ماژول تیکت.
+ */
 
 export type TicketStatus =
-  | "NEW" | "OPEN" | "IN_PROGRESS" | "PENDING_CUSTOMER"
-  | "PENDING_VENDOR" | "PENDING_FIELD_TEAM" | "MONITORING"
-  | "RESOLVED" | "CLOSED" | "REOPENED" | "CANCELED";
+  | 'OPEN'
+  | 'IN_PROGRESS'
+  | 'WAITING_FOR_CUSTOMER'
+  | 'RESOLVED'
+  | 'CLOSED'
+  | 'CANCELLED';
 
-export type TicketPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT" | "CRITICAL";
+export type TicketPriority =
+  | 'LOW'
+  | 'MEDIUM'
+  | 'HIGH'
+  | 'URGENT';
 
-// برای فرم ایجاد تیکت که CRITICAL را ندارد
-export type NewTicketPriority = Exclude<TicketPriority, "CRITICAL">;
+export type TicketType =
+  | 'SUPPORT'
+  | 'INCIDENT'
+  | 'REQUEST'
+  | 'QUESTION'
+  | 'COMPLAINT';
 
-export type IncidentSeverity =
-  | "MINOR" | "DEGRADED" | "PARTIAL_OUTAGE" | "FULL_OUTAGE";
+export type TicketVisibility =
+  | 'INTERNAL'
+  | 'CUSTOMER';
 
 export type TicketSource =
-  | "PHONE" | "BALE" | "WHATSAPP" | "EMAIL" | "IN_PERSON" | "SYSTEM";
+  | 'PANEL'
+  | 'EMAIL'
+  | 'PHONE'
+  | 'OTHER';
 
-export type TicketRow = {
-  id: string;
-  number: string;
+export type CreateTicketPayload = {
   title: string;
-  customer: string;
-  service: string;
-  status: TicketStatus;
-  priority: TicketPriority;
-  severity: IncidentSeverity;
-  assignedTo: string;
-  team: string;
-  createdAt: string;
-  updatedAt: string;
-  slaRemaining: string;
-  breached: boolean;
-  tags: string[];
+  description: string;
+  type?: TicketType;
+  priority?: TicketPriority;
+  visibility?: TicketVisibility;
+  category?: string;
+  dueAt?: string;
 };
 
-export type ApiTicket = Record<string, any>;
+export type Ticket = {
+  id: string;
+  ticketNumber: number;
+  subject: string;
+  description: string;
+  type: TicketType;
+  status: TicketStatus;
+  priority: TicketPriority;
+  visibility: TicketVisibility;
+  category?: string | null;
+  dueAt?: string | null;
+  resolvedAt?: string | null;
+  closedAt?: string | null;
+  creatorId: string;
+  assigneeId?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type TicketMessage = {
+  id: string;
+  ticketId: string;
+  authorId: string;
+  body: string;
+  isInternal: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type TicketDetails = Ticket & {
+  messages?: TicketMessage[];
+};

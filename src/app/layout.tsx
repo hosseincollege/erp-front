@@ -1,9 +1,12 @@
-// src/app/layout.tsx
+/**
+ * @file frontend/src/app/layout.tsx
+ * @description فایل اصلی لایوت ریشه. 
+ * هدر از اینجا حذف شده تا مدیریت آن به AppShell واگذار شود و مشکل رندر دوبار حل گردد.
+ */
 
 import type { Metadata, Viewport } from "next";
 import { Vazirmatn } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
-import { TopHeader } from "@/components/layout/top-header";
 import "./globals.css";
 
 const vazirmatn = Vazirmatn({
@@ -38,19 +41,15 @@ export default function RootLayout({
       suppressHydrationWarning
       className={vazirmatn.variable}
     >
-      <body className="font-sans antialiased overflow-x-hidden">
+      <body className="font-sans antialiased overflow-x-hidden bg-[color:var(--background)] text-[color:var(--foreground)]">
         <ThemeProvider>
-          {/* TopHeader همواره ثابت در بالای تمام صفحات */}
-          <TopHeader />
-          
-          {/* pt-14 معادل 3.5rem یا 56px است که فضای زیر TopHeader را خالی می‌کند */}
-          <main className="min-h-screen pt-14 bg-[color:var(--background)] text-[color:var(--foreground)]">
-            {children}
-          </main>
+          {/* 
+            هدر از اینجا حذف شد.
+            در ساختار جدید، TopHeader داخل AppShell رندر می‌شود.
+          */}
+          {children}
         </ThemeProvider>
       </body>
     </html>
   );
 }
-
-// end of src/app/layout.tsx

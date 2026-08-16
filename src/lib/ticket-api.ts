@@ -1,6 +1,6 @@
 /**
- * @file src/lib/ticket-api.ts
- * @description Ticket API service layer for ERP Pro frontend.
+ * @file frontend/src/lib/ticket-api.ts
+ * @description لایه API ماژول تیکت در فرانت‌اند.
  */
 
 import { apiClient, ApiClientError } from './api-client';
@@ -9,7 +9,6 @@ import type {
   Ticket,
   TicketDetails,
   TicketPriority,
-  TicketSource,
   TicketStatus,
 } from '../types/ticket';
 
@@ -23,7 +22,6 @@ export type TicketListQuery = {
   search?: string;
   status?: TicketStatus | 'ALL';
   priority?: TicketPriority | 'ALL';
-  source?: TicketSource | 'ALL';
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -57,25 +55,9 @@ function buildQueryString(query?: TicketListQuery): string {
     params.set('priority', query.priority);
   }
 
-  if (query.source && query.source !== 'ALL') {
-    params.set('source', query.source);
-  }
-
   const serializedQuery = params.toString();
 
   return serializedQuery ? `?${serializedQuery}` : '';
-}
-
-function getAccessToken(): string | null {
-  if (typeof window === 'undefined') {
-    return null;
-  }
-
-  return (
-    localStorage.getItem('accessToken') ??
-    localStorage.getItem('token') ??
-    localStorage.getItem('auth_token')
-  );
 }
 
 function normalizeError(error: unknown, fallbackMessage: string): never {
@@ -92,7 +74,6 @@ function normalizeError(error: unknown, fallbackMessage: string): never {
 
 /**
  * دریافت فهرست تیکت‌ها.
- * فیلترهای فعلی در صورت پشتیبانی بک‌اند به query string ارسال می‌شوند.
  */
 export async function getTickets(
   query?: TicketListQuery,
@@ -100,9 +81,6 @@ export async function getTickets(
   try {
     const response = await apiClient.get<unknown>(
       `/tickets${buildQueryString(query)}`,
-      {
-        token: getAccessToken(),
-      },
     );
 
     const data = unwrapApiData<unknown>(response);
@@ -118,7 +96,7 @@ export async function getTickets(
 }
 
 /**
- * دریافت جزئیات یک تیکت از طریق شناسه UUID.
+ * دریافت جزئیات یک تیکت.
  */
 export async function getTicketById(id: string): Promise<TicketDetails> {
   if (!id?.trim()) {
@@ -126,9 +104,7 @@ export async function getTicketById(id: string): Promise<TicketDetails> {
   }
 
   try {
-    const response = await apiClient.get<unknown>(`/tickets/${id}`, {
-      token: getAccessToken(),
-    });
+    const response = await apiClient.get<unknown>(`/tickets/${id}`);
 
     return unwrapApiData<TicketDetails>(response);
   } catch (error) {
@@ -138,14 +114,48 @@ export async function getTicketById(id: string): Promise<TicketDetails> {
 
 /**
  * ثبت تیکت جدید.
+ *
+ * title در فرانت به subject در بک‌اند نگاشت می‌شود.
  */
 export async function createTicket(
   payload: CreateTicketPayload,
 ): Promise<Ticket> {
+  const subject = payload.title.trim();
+  const description = payload.description.trim();
+
+  if (!subject) {
+    throw new Error('عنوان تیکت الزامی است.');
+  }
+
+  if (!description) {
+    throw new Error('شرح تیکت الزامی است.');
+  }
+
   try {
-    const response = await apiClient.post<unknown>('/tickets', payload, {
-      token: getAccessToken(),
-    });
+    const backendPayload = {
+      subject,
+      description,
+      ...(payload.type !== undefined && {
+        type: payload.type,
+      }),
+      ...(payload.priority !== undefined && {
+        priority: payload.priority,
+      }),
+      ...(payload.visibility !== undefined && {
+        visibility: payload.visibility,
+      }),
+      ...(payload.category?.trim() && {
+        category: payload.category.trim(),
+      }),
+      ...(payload.dueAt && {
+        dueAt: payload.dueAt,
+      }),
+    };
+
+    const response = await apiClient.post<unknown>(
+      '/tickets',
+      backendPayload,
+    );
 
     return unwrapApiData<Ticket>(response);
   } catch (error) {
@@ -153,12 +163,6 @@ export async function createTicket(
   }
 }
 
-/**
- * API شیء‌گرا برای سازگاری با صفحات UI.
- *
- * نمونه استفاده:
- * const tickets = await ticketApi.getTickets();
- */
 export const ticketApi = {
   getTickets,
   getTicketById,
