@@ -1,0 +1,58 @@
+# ERP Pro: Current State & Implementation Roadmap (v2.0)
+
+## 1. Project Overview & Architecture
+An organization-centric ERP system built for multi-tenancy.
+- **Backend:** NestJS, Prisma (PostgreSQL), JWT Auth.
+- **Frontend:** Next.js 14+ (App Router), Tailwind CSS, Lucide Icons.
+- **Core Pattern:** Every entity is scoped by `organizationId`. Multi-tenant logic is enforced at the database and service level.
+- **Frontend Pattern:** `ModulePage` layout for consistency, standalone API clients (e.g., `accounting-api.ts`), and theme-aware UI (Dark/Light mode using CSS tokens).
+
+## 2. Current Implementation Status
+
+### Core Foundation (Completed)
+- Multi-tenant Prisma schema (Organization, User, Branch, Department).
+- Auth system (Login/Register) with JWT and `localStorage` management.
+- Sidebar and AppShell with responsive design.
+- Settings module (Branches, Departments, Roles, Users).
+
+### Accounting Module (In Progress)
+- **Frontend (Done):**
+  - `types/accounting.ts`: Interfaces for Invoices, Payments, and Summaries.
+  - `lib/accounting-api.ts`: API client with error handling and tenant scoping.
+  - `(workspace)/accounting/page.tsx`: Main dashboard with filters (Status, Priority), Search, and Sort.
+  - `(workspace)/accounting/new/page.tsx`: Invoice registration form.
+  - `(workspace)/accounting/[id]/page.tsx`: Detailed view with workflow actions (Approve/Reject).
+- **Backend (Next Step):** Creating `accounting.prisma` and implementing `AccountingModule`.
+
+## 3. Module Development Sequence (The "Blueprint")
+
+For each upcoming module (CRM, HR, Inventory, Purchases), the AI assistant must provide files in this specific order:
+
+### Phase A: Frontend Foundation
+1. `src/types/[module].ts`: Full TypeScript interfaces (Models + DTOs).
+2. `src/lib/[module]-api.ts`: API client based on the `api-client.ts` pattern.
+3. `src/app/(workspace)/[module]/page.tsx`: Main list/dashboard with standard filters and search.
+
+### Phase B: Frontend Forms & Details
+1. `src/app/(workspace)/[module]/new/page.tsx`: Creation/Edit forms using standard UI components.
+2. `src/app/(workspace)/[module]/[id]/page.tsx`: Detailed view with status-based action buttons.
+
+### Phase C: Backend Infrastructure
+1. `backend/prisma/schema/[module].prisma`: Database models with mandatory `organizationId`.
+2. `backend/src/[module]/dto/`: DTOs for Create/Update with `class-validator`.
+3. `backend/src/[module]/[module].service.ts`: Business logic with organization scoping.
+4. `backend/src/[module]/[module].controller.ts`: REST endpoints.
+5. `backend/src/[module]/[module].module.ts`: NestJS module registration.
+
+## 4. Coding Rules & Constraints
+1. **No Mock Data:** Service methods must use Prisma; API clients must call real endpoints.
+2. **Organization Scoping:** Every `findMany`, `findUnique`, `create`, and `update` must include `organizationId` from the request user.
+3. **UI Theme:** Use project CSS variables (`--background`, `--foreground`, etc.) instead of hardcoded white/black classes to support Dark Mode.
+4. **Standard Responses:** Use the `ApiResponse<T>` wrapper for all backend returns.
+5. **Localization:** All labels and messages in the UI must be in Persian (Farsi), but code (variables, routes) must be in English.
+
+## 5. Next Immediate Tasks (Priority Order)
+1. **Backend Accounting:** Implement the Prisma schema and Service/Controller for the already built frontend.
+2. **CRM Module:** Start Phase A (Types -> API -> List Page).
+3. **Inventory/Warehouse:** Define models for Products, Categories, and Stock Movements.
+4. **Purchases & HR:** Subsequent phases after CRM/Inventory.

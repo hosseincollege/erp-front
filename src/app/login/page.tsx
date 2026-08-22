@@ -1,23 +1,24 @@
 /**
  * @file src/app/login/page.tsx
- * @description صفحه ورود با مدیریت صحیح خطاهای اعتبارسنجی بک‌اند.
+ * @description صفحه ورود با هدر عمومی، سازگاری کامل تم لایت/دارک و رفع تداخل Autofill.
+ *
+ * نکته:
+ * - لینک ثبت‌نام عمومی عمداً حذف شده است.
+ * - پس از راه‌اندازی اولیه، ساخت کاربر جدید فقط باید توسط مدیر از داخل پنل انجام شود.
  */
 
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { login } from '@/lib/auth-api';
+import { PublicHeader } from '@/components/layout/public-header';
 
 export default function LoginPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
+  const [formData, setFormData] = useState({ email: '', password: '' });
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -42,68 +43,76 @@ export default function LoginPage() {
   };
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center bg-slate-950 p-4"
-      dir="rtl"
-    >
-      <div className="w-full max-w-sm bg-slate-900 p-8 rounded-2xl border border-slate-800">
-        <h1 className="text-2xl font-bold text-white mb-6 text-center">
-          ورود به سیستم
-        </h1>
+    <main dir="rtl" className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
+      <style jsx global>{`
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover,
+        input:-webkit-autofill:focus,
+        input:-webkit-autofill:active {
+          -webkit-box-shadow: 0 0 0 1000px var(--surface) inset !important;
+          -webkit-text-fill-color: var(--foreground) !important;
+          caret-color: var(--foreground) !important;
+          transition: background-color 9999s ease-out 0s;
+        }
+      `}</style>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error ? (
-            <div className="p-3 text-xs text-red-400 bg-red-950/30 border border-red-900 rounded-lg">
-              {error}
+      <PublicHeader />
+
+      <section className="flex min-h-[calc(100vh-5rem)] items-center justify-center p-4">
+        <div className="w-full max-w-sm rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-8 shadow-sm">
+          <h1 className="mb-6 text-center text-2xl font-bold text-[var(--foreground)]">
+            ورود به سیستم
+          </h1>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {error ? (
+              <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-600 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">
+                {error}
+              </div>
+            ) : null}
+
+            <div>
+              <label className="mb-1 block text-sm text-[var(--foreground)]">
+                ایمیل یا نام کاربری
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.email}
+                autoComplete="username"
+                className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] p-2.5 text-[var(--foreground)] outline-none transition-colors placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
+              />
             </div>
-          ) : null}
 
-          <div>
-            <label className="block text-sm text-slate-400 mb-1">
-              ایمیل یا نام کاربری
-            </label>
-            <input
-              type="text"
-              required
-              value={formData.email}
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white outline-none focus:ring-2 focus:ring-blue-500"
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, email: e.target.value }))
-              }
-            />
-          </div>
+            <div>
+              <label className="mb-1 block text-sm text-[var(--foreground)]">
+                رمز عبور
+              </label>
+              <input
+                type="password"
+                required
+                value={formData.password}
+                autoComplete="current-password"
+                className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] p-2.5 text-[var(--foreground)] outline-none transition-colors placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                onChange={(e) => setFormData((prev) => ({ ...prev, password: e.target.value }))}
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm text-slate-400 mb-1">
-              رمز عبور
-            </label>
-            <input
-              type="password"
-              required
-              value={formData.password}
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-white outline-none focus:ring-2 focus:ring-blue-500"
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, password: e.target.value }))
-              }
-            />
-          </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-lg bg-blue-600 py-2.5 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {loading ? 'در حال ورود...' : 'ورود'}
+            </button>
+          </form>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2.5 rounded-lg font-semibold transition"
-          >
-            {loading ? 'در حال ورود...' : 'ورود'}
-          </button>
-        </form>
-
-        <p className="mt-4 text-center text-sm text-slate-500">
-          حساب ندارید؟{' '}
-          <Link href="/register" className="text-blue-400">
-            ثبت‌نام کنید
-          </Link>
-        </p>
-      </div>
-    </div>
+          <p className="mt-4 text-center text-sm text-slate-500 dark:text-slate-400">
+            اگر حساب کاربری ندارید، با مدیر سیستم تماس بگیرید.
+          </p>
+        </div>
+      </section>
+    </main>
   );
 }
