@@ -13,6 +13,8 @@ export type RolesImportData = {
   roles: RoleImportData[];
 };
 
+export type ImportedRoleItem = Omit<RoleItem, 'id' | 'userCount'>;
+
 export const rolesImportSample: RolesImportData = {
   roles: [
     {
@@ -170,21 +172,28 @@ export function parseRolesImportData(value: unknown): RolesImportData {
 }
 
 /**
- * تبدیل دادهٔ اعتبارسنجی‌شدهٔ JSON به مدل قابل ذخیره‌سازی در API.
+ * تبدیل دادهٔ اعتبارسنجی‌شدهٔ JSON به مدل نقش
+ * قبل از ذخیره‌سازی در API.
+ *
+ * فیلدهای id و userCount توسط سرور تعیین می‌شوند،
+ * بنابراین در دادهٔ ورودی وجود ندارند.
  */
 export function rolesImportDataToItems(
   data: RolesImportData,
-): RoleItem[] {
+): ImportedRoleItem[] {
   return data.roles.map((role) => ({
     ...(role.key ? { key: role.key } : {}),
     name: role.name,
-    description: role.description ?? null,
+    ...(role.description
+      ? { description: role.description }
+      : {}),
     permissions: role.permissions,
   }));
 }
 
 /**
  * تبدیل نقش‌های API به ساختار قابل خروجی گرفتن در JSON.
+ *
  * شناسه‌ها، تعداد کاربران و تاریخ‌ها عمداً در خروجی قرار نمی‌گیرند،
  * چون داده‌های سیستمی/وابسته به سرور هستند.
  */
