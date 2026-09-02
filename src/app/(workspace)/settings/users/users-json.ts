@@ -1,13 +1,10 @@
 // File: frontend/src/app/(workspace)/settings/users/users-json.ts
 // Frontend - منطق JSON حساب‌های کاربری: نمونه، اعتبارسنجی و تبدیل داده‌ها
 
-import type { UserItem } from '@/lib/settings-api';
+import type { UserItem, UserRoleItem } from '@/lib/settings-api';
 
 /**
  * ساختار هر کاربر در فایل JSON ورودی و خروجی.
- *
- * شناسهٔ `id` اختیاری است؛ اگر هنگام Import ارائه نشده باشد،
- * در زمان تبدیل به UserItem یک شناسهٔ جدید ساخته می‌شود.
  */
 export interface UserImportData {
   id?: string;
@@ -68,49 +65,27 @@ export const usersImportSample: UsersImportData = {
   ],
 };
 
-/**
- * یک مقدار ناشناخته را به رشتهٔ تمیزشده تبدیل می‌کند.
- *
- * اگر مقدار رشته نباشد یا پس از trim خالی شود،
- * مقدار undefined برگردانده خواهد شد.
- */
 function normalizeOptionalString(value: unknown): string | undefined {
   if (typeof value !== 'string') {
     return undefined;
   }
 
   const normalizedValue = value.trim();
-
   return normalizedValue || undefined;
 }
 
-/**
- * یک مقدار الزامی را به رشتهٔ تمیزشده تبدیل می‌کند.
- */
 function normalizeRequiredString(value: unknown): string {
   return normalizeOptionalString(value) ?? '';
 }
 
-/**
- * ایمیل را برای اعتبارسنجی و تشخیص مقدار تکراری نرمال می‌کند.
- */
 function normalizeEmail(value: unknown): string {
   return normalizeRequiredString(value).toLowerCase();
 }
 
-/**
- * معتبر بودن قالب اولیهٔ ایمیل را بررسی می‌کند.
- *
- * این اعتبارسنجی عمداً ساده نگه داشته شده است و بررسی تحویل‌پذیری
- * ایمیل باید در سمت سرور انجام شود.
- */
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-/**
- * یک ردیف کاربر را اعتبارسنجی و نرمال می‌کند.
- */
 function parseUser(
   item: unknown,
   index: number,
@@ -171,15 +146,6 @@ function parseUser(
   };
 }
 
-/**
- * ساختار JSON کاربران را اعتبارسنجی و نرمال می‌کند.
- *
- * ساختار ورودی مورد انتظار:
- *
- * {
- *   "users": [...]
- * }
- */
 export function parseUsersImportData(rawData: unknown): UsersImportData {
   if (!rawData || typeof rawData !== 'object' || Array.isArray(rawData)) {
     throw new Error(
@@ -239,48 +205,62 @@ export function parseUsersImportData(rawData: unknown): UsersImportData {
 }
 
 /**
- * داده‌های اعتبارسنجی‌شدهٔ JSON را به مدل مورد استفادهٔ
- * settings-api تبدیل می‌کند.
+ * تبدیل داده‌های اعتبارسنجی‌شده به ساختار کامل UserItem با تمامی فیلدهای الزامی
  */
 export function usersImportDataToItems(
   data: UsersImportData,
 ): UsersImportResult {
   return {
-    users: data.users.map((user) => ({
-      id: user.id || crypto.randomUUID(),
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      department: user.department || 'عمومی',
-      isActive: user.isActive ?? true,
-    })),
+    users: data.users.map((user): UserItem => {
+      const nameParts = user.name.trim().split(/\s+/);
+      const firstName = nameParts[0] || user.name;
+      const lastName = nameParts.slice(1).join(' ');
+      const username = user.email.split('@')[0] || `user_${Date.now()}`;
+      const isActive = user.isActive ?? true;
+
+      const roleItem: UserRoleItem = {
+        id: `role-${user.role.toLowerCase()}`,
+        key: user.role,
+        name: user.role,
+        permissions: [],
+      };
+
+      const generatedId =
+        typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+          ? crypto.randomUUID()
+          : `usr-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
+      return {
+        id: user.id || generatedId,
+        username,
+        name: user.name,
+        email: user.email,
+        status: isActive ? 'ACTIVE' : 'INACTIVE',
+        isSystemUser: false,
+        roles: [roleItem],
+        firstName: firstName || undefined,
+        lastName: lastName || undefined,
+        department: user.department || 'عمومی',
+        isActive,
+        role: user.role,
+      };
+    }),
   };
 }
 
-/**
- * عملیات Parse و تبدیل را در یک فراخوانی انجام می‌دهد.
- */
 export function parseUsersToItems(rawData: unknown): UsersImportResult {
   const parsedData = parseUsersImportData(rawData);
-
   return usersImportDataToItems(parsedData);
 }
 
-/**
- * فهرست کاربران داخلی را برای دانلود یا Export به ساختار مستقل
- * و قابل‌انتقال JSON تبدیل می‌کند.
- *
- * شناسهٔ داخلی عمداً در خروجی قرار نمی‌گیرد تا فایل به داده‌های
- * داخلی یک نصب مشخص وابسته نباشد.
- */
 export function usersToExportData(users: UserItem[]): UsersImportData {
   return {
     users: users.map((user) => ({
       name: user.name,
       email: user.email,
-      role: user.role,
+      role: user.role || (user.roles && user.roles[0]?.key) || 'USER',
       department: user.department || undefined,
-      isActive: user.isActive,
+      isActive: user.isActive ?? (user.status === 'ACTIVE'),
     })),
   };
 }
