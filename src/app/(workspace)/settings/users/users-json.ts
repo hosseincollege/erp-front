@@ -212,9 +212,10 @@ export function usersImportDataToItems(
 ): UsersImportResult {
   return {
     users: data.users.map((user): UserItem => {
-      const nameParts = user.name.trim().split(/\s+/);
-      const firstName = nameParts[0] || user.name;
-      const lastName = nameParts.slice(1).join(' ');
+      const trimmedName = user.name.trim();
+      const nameParts = trimmedName ? trimmedName.split(/\s+/) : [];
+      const firstName = nameParts[0] || user.name || '';
+      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
       const username = user.email.split('@')[0] || `user_${Date.now()}`;
       const isActive = user.isActive ?? true;
 
@@ -233,15 +234,17 @@ export function usersImportDataToItems(
         id: user.id || generatedId,
         username,
         name: user.name,
+        firstName,
+        lastName,
         email: user.email,
+        phone: null,
         status: isActive ? 'ACTIVE' : 'INACTIVE',
         isSystemUser: false,
+        role: user.role,
+        roleKey: user.role,
         roles: [roleItem],
-        firstName: firstName || undefined,
-        lastName: lastName || undefined,
         department: user.department || 'عمومی',
         isActive,
-        role: user.role,
       };
     }),
   };
@@ -256,7 +259,7 @@ export function usersToExportData(users: UserItem[]): UsersImportData {
   return {
     users: users.map((user) => ({
       name: user.name,
-      email: user.email,
+      email: user.email ?? '',
       role: user.role || (user.roles && user.roles[0]?.key) || 'USER',
       department: user.department || undefined,
       isActive: user.isActive ?? (user.status === 'ACTIVE'),
