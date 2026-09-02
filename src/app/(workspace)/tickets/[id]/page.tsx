@@ -212,7 +212,35 @@ export default function TicketDetailsPage() {
         setError(null);
 
         const result = await ticketApi.getTicketById(ticketId);
-        setTicket(result as TicketDetailsRecord);
+        
+        // تبدیل صریح Response بک‌اندازه به شکل مورد نیاز این صفحه
+        const record: TicketDetailsRecord = {
+          id: result.id,
+          title: result.subject,
+          ticketNumber:
+            result.ticketNumber !== undefined && result.ticketNumber !== null
+              ? String(result.ticketNumber)
+              : null,
+          description: result.description,
+          status: (result.status as unknown) as TicketStatus,
+          priority: result.priority,
+          source: null,
+          customerName: null,
+          customerPhone: null,
+          customer: null,
+          creator: result.creatorId
+            ? {
+                id: result.creatorId,
+                name: `کاربر ${result.creatorId.slice(0, 6)}`,
+                fullName: `کاربر ${result.creatorId.slice(0, 6)}`,
+              }
+            : null,
+          creatorId: result.creatorId,
+          createdAt: result.createdAt,
+          updatedAt: result.updatedAt,
+        };
+
+        setTicket(record);
       } catch (requestError) {
         setError(
           requestError instanceof Error
@@ -226,6 +254,7 @@ export default function TicketDetailsPage() {
     },
     [ticketId],
   );
+
 
   useEffect(() => {
     void loadTicket();
