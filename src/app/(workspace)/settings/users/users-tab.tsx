@@ -93,7 +93,13 @@ export function UsersTab() {
       setIsLoading(true);
       setErrorMessage(null);
 
-      const organizationId = await getCurrentOrganizationId();
+      const organizationId = getCurrentOrganizationId();
+      if (!organizationId) {
+        setErrorMessage('شناسه سازمان یافت نشد. لطفاً مجدداً وارد سیستم شوید.');
+        setUsers([]);
+        return;
+      }
+
       const response = await settingsApi.getUsers(organizationId);
 
       setUsers(response ?? []);
@@ -244,6 +250,11 @@ export function UsersTab() {
         setIsSaving(true);
         setErrorMessage(null);
 
+        const organizationId = getCurrentOrganizationId();
+        if (!organizationId) {
+          throw new Error('شناسه سازمان یافت نشد. لطفاً مجدداً وارد سیستم شوید.');
+        }
+
         const fileContent = reader.result;
 
         if (typeof fileContent !== 'string') {
@@ -257,7 +268,6 @@ export function UsersTab() {
           throw new Error('هیچ کاربر معتبری در فایل انتخاب‌شده پیدا نشد.');
         }
 
-        // تکمیل فیلدهای الزامی UserItem برای تضمین سازگاری کامل با تایپ‌ها و بک‌اند
         const sanitizedImportedUsers: UserItem[] = rawImportedUsers.map((item) => {
           const name = item.name?.trim() || 'کاربر جدید';
           const email = item.email?.trim().toLowerCase() || '';
@@ -282,8 +292,6 @@ export function UsersTab() {
             isActive,
           };
         });
-
-        const organizationId = await getCurrentOrganizationId();
 
         const importedIds = new Set(sanitizedImportedUsers.map((user) => user.id));
         const importedEmails = new Set(
@@ -361,7 +369,11 @@ export function UsersTab() {
       setIsSaving(true);
       setErrorMessage(null);
 
-      const organizationId = await getCurrentOrganizationId();
+      const organizationId = getCurrentOrganizationId();
+      if (!organizationId) {
+        setErrorMessage('شناسه سازمان یافت نشد. لطفاً مجدداً وارد شوید.');
+        return;
+      }
 
       let updatedUsers: UserItem[];
 
@@ -443,9 +455,13 @@ export function UsersTab() {
       setIsSaving(true);
       setErrorMessage(null);
 
-      const organizationId = await getCurrentOrganizationId();
-      const updatedUsers = users.filter((item) => item.id !== user.id);
+      const organizationId = getCurrentOrganizationId();
+      if (!organizationId) {
+        setErrorMessage('شناسه سازمان یافت نشد. لطفاً مجدداً وارد شوید.');
+        return;
+      }
 
+      const updatedUsers = users.filter((item) => item.id !== user.id);
       const savedUsers = await settingsApi.saveUsers(organizationId, updatedUsers);
 
       setUsers(savedUsers ?? updatedUsers);
