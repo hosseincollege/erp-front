@@ -19,17 +19,16 @@ interface UserImportItem {
   roleName?: unknown;
   role?: unknown;
   isActive?: unknown;
-PayloadLike {
-  organizationId?: unknown;
-  sub?: unknown;
-}
-
-function;
 }
 
 interface JwtPayloadLike {
   organizationId?: unknown;
   sub?: unknown;
+}
+
+interface UsersRolesImportBody {
+  roles?: unknown;
+  users?: unknown;
 }
 
 function getErrorMessage(error: unknown): string {
@@ -102,7 +101,7 @@ function validateUser(rawUser: unknown, index: number): string | null {
     return `ایمیل کاربر در ردیف ${index + 1} معتبر نیست.`;
   }
 
-  if (!isOptionalString(user.roleName) && !isOptionalString(user.role)) {
+  if (!isOptionalString(user.roleName) || !isOptionalString(user.role)) {
     return `فیلد نقش کاربر در ردیف ${index + 1} باید از نوع متن باشد.`;
   }
 
