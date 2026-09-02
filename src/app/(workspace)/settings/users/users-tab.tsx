@@ -309,7 +309,7 @@ export function UsersTab() {
         });
 
         const updatedUsers = [...sanitizedImportedUsers, ...remainingUsers];
-        const savedUsers = await settingsApi.saveUsers(organizationId, updatedUsers);
+        const savedUsers = await settingsApi.saveUsers(updatedUsers, organizationId);
 
         setUsers(savedUsers ?? updatedUsers);
         setSuccessMessage(
@@ -418,7 +418,7 @@ export function UsersTab() {
         updatedUsers = [newUser, ...users];
       }
 
-      const savedUsers = await settingsApi.saveUsers(organizationId, updatedUsers);
+      const savedUsers = await settingsApi.saveUsers(updatedUsers, organizationId);
 
       setUsers(savedUsers ?? updatedUsers);
       setSuccessMessage(
@@ -462,7 +462,7 @@ export function UsersTab() {
       }
 
       const updatedUsers = users.filter((item) => item.id !== user.id);
-      const savedUsers = await settingsApi.saveUsers(organizationId, updatedUsers);
+      const savedUsers = await settingsApi.saveUsers(updatedUsers, organizationId);
 
       setUsers(savedUsers ?? updatedUsers);
       setSuccessMessage('کاربر با موفقیت حذف شد.');
