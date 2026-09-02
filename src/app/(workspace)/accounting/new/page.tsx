@@ -1,22 +1,6 @@
 /**
  * مسیر فایل:
  * frontend/src/app/(workspace)/accounting/new/page.tsx
- *
- * هدف:
- * صفحه ثبت فاکتور خرید در ماژول حسابداری.
- *
- * ویژگی‌ها:
- * - ثبت اطلاعات اصلی فاکتور
- * - مدیریت پویا و افزودن یا حذف ردیف‌های فاکتور
- * - محاسبه subtotal، مالیات و total
- * - اعتبارسنجی سمت کاربر
- * - ارسال اطلاعات به accountingApi.createInvoice
- * - انتقال کاربر به صفحه جزئیات پس از ثبت موفق
- *
- * نکته:
- * شعبه و دپارتمان در این مرحله از API تنظیمات دریافت نمی‌شوند
- * و هیچ مقدار mock یا مقدار پیش‌فرض سازمانی در این فایل وجود ندارد.
- * این دو فیلد فعلاً اختیاری هستند.
  */
 
 "use client";
@@ -96,7 +80,6 @@ function parseNumber(value: string): number {
   }
 
   const parsedValue = Number(normalizedValue);
-
   return Number.isFinite(parsedValue) ? parsedValue : 0;
 }
 
@@ -116,15 +99,14 @@ function getErrorMessage(error: unknown): string {
   return "ثبت فاکتور با خطا مواجه شد.";
 }
 
+const inputClass =
+  "h-11 w-full rounded-xl border border-border bg-background px-3.5 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20";
+
 export default function NewAccountingInvoicePage() {
   const router = useRouter();
 
   const [form, setForm] = useState<FormValues>(INITIAL_FORM);
-
-  const [items, setItems] = useState<InvoiceFormItem[]>([
-    createEmptyItem(),
-  ]);
-
+  const [items, setItems] = useState<InvoiceFormItem[]>([createEmptyItem()]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -151,10 +133,7 @@ export default function NewAccountingInvoicePage() {
     };
   }, [items]);
 
-  function updateFormField(
-    field: keyof FormValues,
-    value: string,
-  ) {
+  function updateFormField(field: keyof FormValues, value: string) {
     setForm((currentForm) => ({
       ...currentForm,
       [field]: value,
@@ -179,10 +158,7 @@ export default function NewAccountingInvoicePage() {
   }
 
   function addItem() {
-    setItems((currentItems) => [
-      ...currentItems,
-      createEmptyItem(),
-    ]);
+    setItems((currentItems) => [...currentItems, createEmptyItem()]);
   }
 
   function removeItem(localId: string) {
@@ -277,9 +253,7 @@ export default function NewAccountingInvoicePage() {
       setIsSubmitting(true);
       setError(null);
 
-      const createdInvoice = await accountingApi.createInvoice(
-        buildPayload(),
-      );
+      const createdInvoice = await accountingApi.createInvoice(buildPayload());
 
       if (createdInvoice?.id) {
         router.push(`/accounting/${createdInvoice.id}`);
@@ -310,48 +284,59 @@ export default function NewAccountingInvoicePage() {
   return (
     <main
       dir="rtl"
-      className="min-h-full space-y-6 bg-[var(--background)] p-4 text-[var(--foreground)] md:p-6"
+      className="w-full min-w-0 space-y-6 bg-background px-0 py-4 text-foreground md:py-6"
     >
-      <section className="surface-card rounded-2xl p-5">
+      {/* هدر تمام‌عرض */}
+      <section className="w-full rounded-2xl border border-border bg-card p-5 shadow-sm">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <Link
               href="/accounting"
-              className="mb-3 inline-flex items-center gap-2 text-sm text-[var(--muted-foreground)] transition hover:text-[var(--primary)]"
+              className="mb-3 inline-flex items-center gap-2 text-sm text-muted-foreground transition hover:text-primary"
             >
               <ArrowRight size={16} />
               بازگشت به حسابداری
             </Link>
 
-            <h1 className="text-xl font-bold text-[var(--foreground)]">
+            <h1 className="text-xl font-bold text-foreground">
               ثبت فاکتور خرید
             </h1>
 
-            <p className="mt-2 text-sm text-[var(--muted-foreground)]">
+            <p className="mt-2 text-sm text-muted-foreground">
               اطلاعات فاکتور و اقلام خرید را وارد کنید.
             </p>
           </div>
 
-          <div className="rounded-xl bg-[var(--primary-soft)] p-3 text-[var(--primary)]">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
             <Calculator size={24} />
           </div>
         </div>
       </section>
 
-      <form
-        onSubmit={handleSubmit}
-        className="space-y-6"
-      >
-        <section className="surface-card rounded-2xl p-5">
-          <h2 className="mb-5 text-lg font-bold text-[var(--foreground)]">
-            اطلاعات اصلی فاکتور
-          </h2>
+      <form onSubmit={handleSubmit} className="w-full space-y-6">
+        {/* اطلاعات اصلی */}
+        <section className="w-full rounded-2xl border border-border bg-card p-5 shadow-sm">
+          <div className="mb-5 flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-bold text-foreground">
+                اطلاعات اصلی فاکتور
+              </h2>
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <label className="space-y-2">
-              <span className="text-sm font-medium text-[var(--foreground)]">
+              <p className="mt-1 text-sm text-muted-foreground">
+                مشخصات عمومی فاکتور خرید را وارد کنید.
+              </p>
+            </div>
+
+            <span className="hidden rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary sm:inline-flex">
+              فاکتور خرید
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <label className="space-y-2 xl:col-span-2">
+              <span className="text-sm font-medium text-foreground">
                 عنوان فاکتور
-                <span className="text-[var(--danger)]"> *</span>
+                <span className="text-destructive"> *</span>
               </span>
 
               <input
@@ -360,93 +345,81 @@ export default function NewAccountingInvoicePage() {
                   updateFormField("title", event.target.value)
                 }
                 placeholder="مثلاً خرید تجهیزات اداری"
-                className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-3 text-sm text-[var(--foreground)] outline-none transition placeholder:text-[var(--muted-foreground)] focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-soft)]"
+                className={inputClass}
               />
             </label>
 
-            <label className="space-y-2">
-              <span className="text-sm font-medium text-[var(--foreground)]">
+            <label className="space-y-2 xl:col-span-2">
+              <span className="text-sm font-medium text-foreground">
                 نام تأمین‌کننده
               </span>
 
               <input
                 value={form.vendorName}
                 onChange={(event) =>
-                  updateFormField(
-                    "vendorName",
-                    event.target.value,
-                  )
+                  updateFormField("vendorName", event.target.value)
                 }
                 placeholder="نام شخص یا شرکت تأمین‌کننده"
-                className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-3 text-sm text-[var(--foreground)] outline-none transition placeholder:text-[var(--muted-foreground)] focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-soft)]"
+                className={inputClass}
               />
             </label>
 
-            <label className="space-y-2 md:col-span-2">
-              <span className="text-sm font-medium text-[var(--foreground)]">
+            <label className="space-y-2 md:col-span-2 xl:col-span-4">
+              <span className="text-sm font-medium text-foreground">
                 توضیحات
               </span>
 
               <textarea
                 value={form.description}
                 onChange={(event) =>
-                  updateFormField(
-                    "description",
-                    event.target.value,
-                  )
+                  updateFormField("description", event.target.value)
                 }
                 rows={3}
                 placeholder="توضیحات تکمیلی فاکتور"
-                className="w-full resize-y rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-3 py-3 text-sm text-[var(--foreground)] outline-none transition placeholder:text-[var(--muted-foreground)] focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-soft)]"
+                className={`${inputClass} h-auto resize-y py-3`}
               />
             </label>
 
             <label className="space-y-2">
-              <span className="text-sm font-medium text-[var(--foreground)]">
+              <span className="text-sm font-medium text-foreground">
                 شناسه شعبه
               </span>
 
               <input
                 value={form.branchId}
                 onChange={(event) =>
-                  updateFormField(
-                    "branchId",
-                    event.target.value,
-                  )
+                  updateFormField("branchId", event.target.value)
                 }
-                placeholder="در صورت وجود شناسه شعبه"
-                className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-3 text-sm text-[var(--foreground)] outline-none transition placeholder:text-[var(--muted-foreground)] focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-soft)]"
+                placeholder="شناسه شعبه"
+                className={inputClass}
               />
 
-              <span className="block text-xs text-[var(--muted-foreground)]">
-                تا زمان آماده‌شدن API تنظیمات، این فیلد اختیاری است.
+              <span className="block text-xs text-muted-foreground">
+                اختیاری
               </span>
             </label>
 
             <label className="space-y-2">
-              <span className="text-sm font-medium text-[var(--foreground)]">
+              <span className="text-sm font-medium text-foreground">
                 شناسه دپارتمان
               </span>
 
               <input
                 value={form.departmentId}
                 onChange={(event) =>
-                  updateFormField(
-                    "departmentId",
-                    event.target.value,
-                  )
+                  updateFormField("departmentId", event.target.value)
                 }
-                placeholder="در صورت وجود شناسه دپارتمان"
-                className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-3 text-sm text-[var(--foreground)] outline-none transition placeholder:text-[var(--muted-foreground)] focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-soft)]"
+                placeholder="شناسه دپارتمان"
+                className={inputClass}
               />
 
-              <span className="block text-xs text-[var(--muted-foreground)]">
-                تا زمان آماده‌شدن API تنظیمات، این فیلد اختیاری است.
+              <span className="block text-xs text-muted-foreground">
+                اختیاری
               </span>
             </label>
 
             <label className="space-y-2">
-              <span className="text-sm font-medium text-[var(--foreground)]">
+              <span className="text-sm font-medium text-foreground">
                 تاریخ سررسید
               </span>
 
@@ -454,29 +427,23 @@ export default function NewAccountingInvoicePage() {
                 type="date"
                 value={form.dueDate}
                 onChange={(event) =>
-                  updateFormField(
-                    "dueDate",
-                    event.target.value,
-                  )
+                  updateFormField("dueDate", event.target.value)
                 }
-                className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-soft)]"
+                className={inputClass}
               />
             </label>
 
             <label className="space-y-2">
-              <span className="text-sm font-medium text-[var(--foreground)]">
+              <span className="text-sm font-medium text-foreground">
                 ارز
               </span>
 
               <select
                 value={form.currency}
                 onChange={(event) =>
-                  updateFormField(
-                    "currency",
-                    event.target.value,
-                  )
+                  updateFormField("currency", event.target.value)
                 }
-                className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-soft)]"
+                className={`${inputClass} cursor-pointer`}
               >
                 <option value="IRR">ریال</option>
                 <option value="toman">تومان</option>
@@ -486,19 +453,16 @@ export default function NewAccountingInvoicePage() {
             </label>
 
             <label className="space-y-2">
-              <span className="text-sm font-medium text-[var(--foreground)]">
+              <span className="text-sm font-medium text-foreground">
                 اولویت
               </span>
 
               <select
                 value={form.priority}
                 onChange={(event) =>
-                  updateFormField(
-                    "priority",
-                    event.target.value,
-                  )
+                  updateFormField("priority", event.target.value)
                 }
-                className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-3 text-sm text-[var(--foreground)] outline-none transition focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-soft)]"
+                className={`${inputClass} cursor-pointer`}
               >
                 <option value="LOW">کم</option>
                 <option value="MEDIUM">متوسط</option>
@@ -509,14 +473,15 @@ export default function NewAccountingInvoicePage() {
           </div>
         </section>
 
-        <section className="surface-card overflow-hidden rounded-2xl">
-          <div className="flex flex-col gap-3 border-b border-[var(--border)] p-5 sm:flex-row sm:items-center sm:justify-between">
+        {/* اقلام فاکتور */}
+        <section className="w-full overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+          <div className="flex flex-col gap-3 border-b border-border p-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-lg font-bold text-[var(--foreground)]">
+              <h2 className="text-lg font-bold text-foreground">
                 اقلام فاکتور
               </h2>
 
-              <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+              <p className="mt-1 text-sm text-muted-foreground">
                 اقلام خرید، تعداد، قیمت و مالیات را وارد کنید.
               </p>
             </div>
@@ -524,7 +489,7 @@ export default function NewAccountingInvoicePage() {
             <button
               type="button"
               onClick={addItem}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-[color-mix(in_srgb,var(--primary)_35%,var(--border))] bg-[var(--primary-soft)] px-4 py-2.5 text-sm font-medium text-[var(--primary)] transition hover:brightness-95"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-4 py-2.5 text-sm font-medium text-primary transition hover:bg-primary/15"
             >
               <Plus size={17} />
               افزودن ردیف
@@ -538,37 +503,34 @@ export default function NewAccountingInvoicePage() {
               const taxRate = parseNumber(item.taxRate);
 
               const lineSubtotal = quantity * unitPrice;
-              const lineTax =
-                lineSubtotal * (taxRate / 100);
+              const lineTax = lineSubtotal * (taxRate / 100);
               const lineTotal = lineSubtotal + lineTax;
 
               return (
                 <div
                   key={item.localId}
-                  className="rounded-2xl border border-[var(--border)] bg-[var(--surface-muted)] p-4"
+                  className="rounded-2xl border border-border bg-muted/30 p-4"
                 >
                   <div className="mb-4 flex items-center justify-between">
-                    <h3 className="font-semibold text-[var(--foreground)]">
+                    <h3 className="font-semibold text-foreground">
                       ردیف {formatAmount(index + 1)}
                     </h3>
 
                     <button
                       type="button"
-                      onClick={() =>
-                        removeItem(item.localId)
-                      }
-                      className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium text-[var(--danger)] transition hover:bg-[var(--danger-soft)]"
+                      onClick={() => removeItem(item.localId)}
+                      className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium text-destructive transition hover:bg-destructive/10"
                     >
                       <Trash2 size={15} />
                       حذف ردیف
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
-                    <label className="space-y-2 lg:col-span-2">
-                      <span className="text-sm font-medium text-[var(--foreground)]">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-12">
+                    <label className="space-y-2 md:col-span-2 xl:col-span-5">
+                      <span className="text-sm font-medium text-foreground">
                         شرح کالا یا خدمت
-                        <span className="text-[var(--danger)]"> *</span>
+                        <span className="text-destructive"> *</span>
                       </span>
 
                       <input
@@ -581,14 +543,14 @@ export default function NewAccountingInvoicePage() {
                           )
                         }
                         placeholder="شرح ردیف فاکتور"
-                        className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-3 text-sm text-[var(--foreground)] outline-none transition placeholder:text-[var(--muted-foreground)] focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-soft)]"
+                        className={inputClass}
                       />
                     </label>
 
-                    <label className="space-y-2">
-                      <span className="text-sm font-medium text-[var(--foreground)]">
+                    <label className="space-y-2 xl:col-span-2">
+                      <span className="text-sm font-medium text-foreground">
                         تعداد
-                        <span className="text-[var(--danger)]"> *</span>
+                        <span className="text-destructive"> *</span>
                       </span>
 
                       <input
@@ -602,14 +564,14 @@ export default function NewAccountingInvoicePage() {
                           )
                         }
                         placeholder="1"
-                        className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-3 text-sm text-[var(--foreground)] outline-none transition placeholder:text-[var(--muted-foreground)] focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-soft)]"
+                        className={inputClass}
                       />
                     </label>
 
-                    <label className="space-y-2">
-                      <span className="text-sm font-medium text-[var(--foreground)]">
+                    <label className="space-y-2 xl:col-span-2">
+                      <span className="text-sm font-medium text-foreground">
                         قیمت واحد
-                        <span className="text-[var(--danger)]"> *</span>
+                        <span className="text-destructive"> *</span>
                       </span>
 
                       <input
@@ -623,13 +585,13 @@ export default function NewAccountingInvoicePage() {
                           )
                         }
                         placeholder="0"
-                        className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-3 text-sm text-[var(--foreground)] outline-none transition placeholder:text-[var(--muted-foreground)] focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-soft)]"
+                        className={inputClass}
                       />
                     </label>
 
-                    <label className="space-y-2">
-                      <span className="text-sm font-medium text-[var(--foreground)]">
-                        مالیات درصدی
+                    <label className="space-y-2 xl:col-span-1">
+                      <span className="text-sm font-medium text-foreground">
+                        مالیات %
                       </span>
 
                       <input
@@ -643,17 +605,27 @@ export default function NewAccountingInvoicePage() {
                           )
                         }
                         placeholder="0"
-                        className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-3 text-sm text-[var(--foreground)] outline-none transition placeholder:text-[var(--muted-foreground)] focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-soft)]"
+                        className={inputClass}
                       />
                     </label>
+
+                    <div className="flex flex-col justify-end gap-2 xl:col-span-2">
+                      <span className="text-sm font-medium text-muted-foreground">
+                        مبلغ نهایی ردیف
+                      </span>
+
+                      <div className="flex h-11 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 px-3 text-sm font-bold text-primary">
+                        {formatAmount(lineTotal)}
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border)] pt-3 text-sm">
-                    <span className="text-[var(--muted-foreground)]">
+                  <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3 text-sm">
+                    <span className="text-muted-foreground">
                       مبلغ این ردیف با مالیات:
                     </span>
 
-                    <span className="font-bold text-[var(--foreground)]">
+                    <span className="font-bold text-foreground">
                       {formatAmount(lineTotal)}
                     </span>
                   </div>
@@ -663,40 +635,54 @@ export default function NewAccountingInvoicePage() {
           </div>
         </section>
 
-        <section className="surface-card rounded-2xl p-5">
-          <div className="ms-auto max-w-md space-y-3">
-            <div className="flex items-center justify-between text-sm text-[var(--muted-foreground)]">
-              <span>جمع کالا و خدمات</span>
-              <span>{formatAmount(totals.subtotal)}</span>
+        {/* خلاصه مبالغ */}
+        <section className="w-full rounded-2xl border border-border bg-card p-5 shadow-sm">
+          <div className="grid gap-5 lg:grid-cols-[1fr_420px] lg:items-center">
+            <div className="rounded-xl border border-border bg-muted/20 p-4">
+              <p className="text-sm font-medium text-foreground">
+                خلاصه فاکتور
+              </p>
+
+              <p className="mt-1 text-xs leading-6 text-muted-foreground">
+                پس از بررسی اطلاعات، فاکتور را ثبت کنید. مبلغ نهایی بر اساس
+                تعداد، قیمت واحد و مالیات هر ردیف محاسبه شده است.
+              </p>
             </div>
 
-            <div className="flex items-center justify-between text-sm text-[var(--muted-foreground)]">
-              <span>مبلغ مالیات</span>
-              <span>{formatAmount(totals.taxAmount)}</span>
-            </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <span>جمع کالا و خدمات</span>
+                <span>{formatAmount(totals.subtotal)}</span>
+              </div>
 
-            <div className="flex items-center justify-between border-t border-[var(--border)] pt-3 text-base font-bold text-[var(--foreground)]">
-              <span>مبلغ نهایی</span>
-              <span>
-                {formatAmount(totals.total)}{" "}
-                {form.currency === "IRR"
-                  ? "ریال"
-                  : form.currency}
-              </span>
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <span>مبلغ مالیات</span>
+                <span>{formatAmount(totals.taxAmount)}</span>
+              </div>
+
+              <div className="flex items-center justify-between rounded-xl border border-primary/20 bg-primary/10 px-4 py-3 text-base font-bold text-primary">
+                <span>مبلغ نهایی</span>
+
+                <span>
+                  {formatAmount(totals.total)}{" "}
+                  {form.currency === "IRR" ? "ریال" : form.currency}
+                </span>
+              </div>
             </div>
           </div>
         </section>
 
         {error && (
-          <div className="rounded-xl border border-[color-mix(in_srgb,var(--danger)_35%,var(--border))] bg-[var(--danger-soft)] p-4 text-sm leading-6 text-[var(--danger)]">
+          <div className="w-full rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm leading-6 text-destructive">
             {error}
           </div>
         )}
 
-        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+        {/* دکمه‌های عملیاتی */}
+        <div className="flex w-full flex-col-reverse gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm sm:flex-row sm:justify-end">
           <Link
             href="/accounting"
-            className="inline-flex items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-5 py-3 text-sm font-medium text-[var(--foreground)] transition hover:bg-[var(--surface-hover)]"
+            className="inline-flex items-center justify-center rounded-xl border border-border bg-background px-5 py-3 text-sm font-medium text-foreground transition hover:bg-accent"
           >
             انصراف
           </Link>
@@ -704,12 +690,10 @@ export default function NewAccountingInvoicePage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--primary)] px-5 py-3 text-sm font-medium text-[var(--primary-foreground)] transition hover:bg-[var(--primary-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Save size={17} />
-            {isSubmitting
-              ? "در حال ثبت..."
-              : "ثبت فاکتور"}
+            {isSubmitting ? "در حال ثبت..." : "ثبت فاکتور"}
           </button>
         </div>
       </form>

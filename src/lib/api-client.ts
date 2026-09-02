@@ -1,7 +1,9 @@
 /**
  * @file src/lib/api-client.ts
- * @description Central HTTP client for ERP Pro frontend with JWT auth, token storage, logout, and standardized errors.
+ * @description Central HTTP client for ERP Pro frontend with JWT auth, token storage, logout, standardized errors, and status panel logging.
  */
+
+import { levelFromStatus, useStatusStore } from './status-store';
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
@@ -96,8 +98,18 @@ function buildUrl(path: string): string {
   }
 
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+
+  // مسیرهای /api متعلق به Route Handlerهای Next.js هستند
+  if (
+    typeof window !== 'undefined' &&
+    (normalizedPath === '/api' || normalizedPath.startsWith('/api/'))
+  ) {
+    return normalizedPath;
+  }
+
   return `${API_BASE_URL}${normalizedPath}`;
 }
+
 
 function extractErrorMessage(
   payload: ApiErrorPayload | string | null,
@@ -203,7 +215,29 @@ async function request<T>(
         ? error.message
         : 'امکان برقراری ارتباط با سرور وجود ندارد.';
 
+    if (isBrowser()) {
+      useStatusStore.getState().pushLog({
+        method,
+        url: path,
+        status: null,
+        level: 'error',
+        message: `عدم دسترسی به سرور: ${message}`,
+      });
+    }
+
     throw new ApiError(message, 0, error);
+  }
+
+  if (isBrowser()) {
+    useStatusStore.getState().pushLog({
+      method,
+      url: path,
+      status: response.status,
+      level: levelFromStatus(response.status),
+      message: response.ok
+        ? `${method} ${path} با موفقیت انجام شد`
+        : `خطای HTTP ${response.status} در ${method} ${path}`,
+    });
   }
 
   return parseResponse<T>(response);

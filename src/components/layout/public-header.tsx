@@ -1,23 +1,17 @@
-/**
- * @file src/components/layout/public-header.tsx
- * @description هدر عمومی ERP Pro (لوگو در وسط، اکشن‌ها در سمت چپ)
- *
- * منطق:
- * - اگر هنوز هیچ کاربری در سیستم وجود نداشته باشد:
- *   فقط دکمه «ثبت‌نام مدیر سیستم» نمایش داده می‌شود.
- * - اگر سیستم قبلاً راه‌اندازی شده باشد:
- *   فقط دکمه «ورود» نمایش داده می‌شود.
- *
- * نکته:
- * این کنترل فقط در UI است و بک‌اند نیز باید ثبت‌نام عمومی را
- * پس از ایجاد اولین کاربر مسدود کند.
- */
+// frontend/src/components/layout/public-header.tsx
 
 'use client';
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { LogIn, Monitor, Moon, Sparkles, Sun, UserPlus } from 'lucide-react';
+import {
+  LogIn,
+  Monitor,
+  Moon,
+  Sparkles,
+  Sun,
+  UserPlus,
+} from 'lucide-react';
 
 type ThemeMode = 'system' | 'light' | 'dark';
 
@@ -27,25 +21,27 @@ type SetupStatusResponse = {
 };
 
 const THEME_STORAGE_KEY = 'erp-theme';
-
-/**
- * اگر در آینده خواستی آدرس بک‌اند را از env بخوانی،
- * می‌توانی این ثابت را به متغیر محیطی وصل کنی.
- */
-const BACKEND_BASE_URL = 'http://localhost:3006';
+const BACKEND_BASE_URL =
+  process.env.NEXT_PUBLIC_BACKEND_BASE_URL?.replace(/\/+$/, '') ||
+  'http://localhost:3006';
 
 function isThemeMode(value: string | null): value is ThemeMode {
   return value === 'system' || value === 'light' || value === 'dark';
 }
 
 function getSavedTheme(): ThemeMode {
-  if (typeof window === 'undefined') return 'system';
+  if (typeof window === 'undefined') {
+    return 'system';
+  }
+
   const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
   return isThemeMode(savedTheme) ? savedTheme : 'system';
 }
 
-function applyTheme(mode: ThemeMode) {
-  if (typeof window === 'undefined') return;
+function applyTheme(mode: ThemeMode): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
 
   const systemIsDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   const shouldUseDark = mode === 'dark' || (mode === 'system' && systemIsDark);
@@ -67,7 +63,7 @@ async function getSetupStatus(): Promise<SetupStatusResponse> {
     throw new Error('دریافت وضعیت راه‌اندازی سیستم ناموفق بود.');
   }
 
-  return response.json();
+  return response.json() as Promise<SetupStatusResponse>;
 }
 
 export function PublicHeader() {
@@ -76,6 +72,7 @@ export function PublicHeader() {
 
   useEffect(() => {
     const savedTheme = getSavedTheme();
+
     setTheme(savedTheme);
     applyTheme(savedTheme);
 
@@ -83,7 +80,10 @@ export function PublicHeader() {
 
     const handleSystemThemeChange = () => {
       const currentTheme = getSavedTheme();
-      if (currentTheme === 'system') applyTheme('system');
+
+      if (currentTheme === 'system') {
+        applyTheme('system');
+      }
     };
 
     const handleStorageChange = (event: StorageEvent) => {
@@ -100,12 +100,7 @@ export function PublicHeader() {
         setHasUsers(data.hasUsers);
       } catch (error) {
         console.error('Setup status error:', error);
-
-        /**
-         * اگر وضعیت سرور نامشخص بود، ثبت‌نام را نمایش نمی‌دهیم
-         * و حالت امن‌تر را انتخاب می‌کنیم.
-         */
-        setHasUsers(true);
+        setHasUsers(null);
       }
     };
 
@@ -129,7 +124,8 @@ export function PublicHeader() {
     applyTheme(nextTheme);
   };
 
-  const ThemeIcon = theme === 'system' ? Monitor : theme === 'light' ? Sun : Moon;
+  const ThemeIcon =
+    theme === 'system' ? Monitor : theme === 'light' ? Sun : Moon;
 
   return (
     <header
@@ -137,10 +133,41 @@ export function PublicHeader() {
       className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl"
     >
       <div className="mx-auto grid h-20 w-full max-w-7xl grid-cols-[1fr_auto_1fr] items-center px-5 sm:px-8">
-        {/* ستون اول (راست): خالی برای تعادل وزن گرید */}
-        <div />
+        {/* ستون راست (RTL): دکمه‌های ورود یا ثبت‌نام */}
+        <nav className="flex items-center justify-start">
+          {hasUsers === null ? (
+            <div
+              className="h-11 w-[120px] animate-pulse rounded-2xl bg-muted"
+              aria-hidden="true"
+            />
+          ) : null}
 
-        {/* ستون دوم (وسط): لوگو */}
+          {hasUsers === true ? (
+            <div className="min-w-[104px]">
+              <Link
+                href="/login"
+                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground shadow-md shadow-primary/20 transition-transform hover:-translate-y-0.5"
+              >
+                <LogIn size={17} />
+                <span>ورود</span>
+              </Link>
+            </div>
+          ) : null}
+
+          {hasUsers === false ? (
+            <div className="min-w-[160px]">
+              <Link
+                href="/register"
+                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground shadow-md shadow-primary/20 transition-transform hover:-translate-y-0.5"
+              >
+                <UserPlus size={17} />
+                <span>ثبت‌نام مدیر سیستم</span>
+              </Link>
+            </div>
+          ) : null}
+        </nav>
+
+        {/* ستون مرکز: لوگو و عنوان سامانه */}
         <Link
           href="/"
           className="group flex items-center gap-3 rounded-3xl px-3 py-2 transition-opacity hover:opacity-90"
@@ -160,51 +187,20 @@ export function PublicHeader() {
           </div>
         </Link>
 
-        {/* ستون سوم (چپ): تم + اکشن پویا */}
-        <nav className="flex justify-end">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <button
-              type="button"
-              onClick={cycleTheme}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-border bg-card text-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:bg-muted"
-              aria-label="تغییر تم"
-            >
-              <ThemeIcon size={20} />
-            </button>
-
-            {hasUsers === null ? (
-              <div
-                className="h-11 w-[120px] animate-pulse rounded-2xl bg-muted"
-                aria-hidden="true"
-              />
-            ) : null}
-
-            {hasUsers === true ? (
-              <div className="min-w-[104px]">
-                <Link
-                  href="/login"
-                  className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-bold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                >
-                  <LogIn size={17} />
-                  <span>ورود</span>
-                </Link>
-              </div>
-            ) : null}
-
-            {hasUsers === false ? (
-              <div className="min-w-[160px]">
-                <Link
-                  href="/register"
-                  className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground shadow-md shadow-primary/20 transition-transform hover:-translate-y-0.5"
-                >
-                  <UserPlus size={17} />
-                  <span>ثبت‌نام مدیر سیستم</span>
-                </Link>
-              </div>
-            ) : null}
-          </div>
-        </nav>
+        {/* ستون چپ (RTL): دکمه تغییر تم */}
+        <div className="flex items-center justify-end">
+          <button
+            type="button"
+            onClick={cycleTheme}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-border bg-card text-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:bg-muted"
+            aria-label="تغییر تم"
+          >
+            <ThemeIcon size={20} />
+          </button>
+        </div>
       </div>
     </header>
   );
 }
+
+export default PublicHeader;

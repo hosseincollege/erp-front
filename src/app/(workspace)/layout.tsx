@@ -152,7 +152,9 @@ export default function WorkspaceLayout({
       data-guest-mode={isGuestMode ? 'true' : 'false'}
       data-read-only={isGuestMode ? 'true' : 'false'}
     >
-      <AppShell>{children}</AppShell>
+      <AppShell>
+        {children}
+      </AppShell>
     </div>
   )
 }

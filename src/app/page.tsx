@@ -1,6 +1,7 @@
 /**
  * @file src/app/page.tsx
  * @description صفحه اصلی ERP Pro.
+ *
  * اگر کاربر لاگین نباشد، لندینگ عمومی نمایش داده می‌شود.
  * اگر کاربر لاگین باشد، داشبورد داخل AppShell نمایش داده می‌شود.
  */
@@ -9,49 +10,87 @@
 
 import { useEffect, useState } from 'react';
 
-import { PublicLanding } from '@/components/home/public-landing';
 import { AuthenticatedHome } from '@/components/home/authenticated-home';
+import { PublicLanding } from '@/components/home/public-landing';
 import { isUserAuthenticated } from '@/lib/auth-api';
 
 export default function HomePage() {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(
+    null
+  );
 
   useEffect(() => {
-    const check = () => {
+    const checkAuthentication = () => {
       setIsAuthenticated(isUserAuthenticated());
     };
 
-    check();
+    /*
+     * بررسی وضعیت احراز هویت هنگام mount
+     */
+    checkAuthentication();
 
-    window.addEventListener('focus', check);
-    window.addEventListener('storage', check);
-    window.addEventListener('auth:login', check);
-    window.addEventListener('auth:logout', check);
+    /*
+     * هماهنگ‌سازی وضعیت احراز هویت در شرایط مختلف:
+     * - بازگشت فوکوس به صفحه
+     * - تغییر localStorage در تب دیگر
+     * - ورود موفق
+     * - خروج موفق
+     */
+    window.addEventListener('focus', checkAuthentication);
+    window.addEventListener('storage', checkAuthentication);
+    window.addEventListener('auth:login', checkAuthentication);
+    window.addEventListener('auth:logout', checkAuthentication);
 
     return () => {
-      window.removeEventListener('focus', check);
-      window.removeEventListener('storage', check);
-      window.removeEventListener('auth:login', check);
-      window.removeEventListener('auth:logout', check);
+      window.removeEventListener('focus', checkAuthentication);
+      window.removeEventListener('storage', checkAuthentication);
+      window.removeEventListener('auth:login', checkAuthentication);
+      window.removeEventListener('auth:logout', checkAuthentication);
     };
   }, []);
 
+  /*
+   * وضعیت احراز هویت هنوز مشخص نشده است.
+   * این وضعیت از نمایش لحظه‌ای لندینگ یا داشبورد جلوگیری می‌کند.
+   */
   if (isAuthenticated === null) {
     return (
       <main
         dir="rtl"
-        className="flex min-h-screen items-center justify-center bg-background"
+        aria-busy="true"
+        aria-live="polite"
+        className="
+          flex
+          min-h-screen
+          items-center
+          justify-center
+          bg-[color:var(--background)]
+          text-[color:var(--foreground)]
+        "
       >
-        <div className="animate-pulse text-sm text-muted-foreground">
+        <div
+          role="status"
+          className="
+            animate-pulse
+            text-sm
+            text-[color:var(--muted-foreground)]
+          "
+        >
           در حال بارگذاری...
         </div>
       </main>
     );
   }
 
+  /*
+   * کاربر وارد نشده است؛ نمایش صفحه عمومی
+   */
   if (!isAuthenticated) {
     return <PublicLanding />;
   }
 
+  /*
+   * کاربر وارد شده است؛ نمایش داشبورد
+   */
   return <AuthenticatedHome />;
 }

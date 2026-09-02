@@ -2,23 +2,31 @@
  * مسیر فایل:
  * src/app/(workspace)/hr/page.tsx
  *
- * هدف:
- * صفحه داشبورد منابع انسانی شامل:
- * - آمار کارکنان و درخواست‌های مرخصی
- * - جست‌وجو و فیلتر کارکنان
- * - مشاهده درخواست‌های مرخصی
- * - تأیید یا رد درخواست‌های در انتظار بررسی
+ * داشبورد منابع انسانی (HR) بر اساس استاندارد مینیمال ERP Pro:
+ * - شروع مستقیم با ۴ کارت شاخص عملکرد (KPIs)
+ * - تب‌بندی تفکیک‌شده برای پرسنل و مرخصی‌ها
+ * - ابزارهای جستجو، فیلتر و دکمه به‌روزرسانی در نوار ابزار
  */
 
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-
-import { ModulePage } from "@/components/module-page";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  ApiClientError,
-  humanResourcesApi,
-} from "@/lib/human-resources-api";
+  Users,
+  UserCheck,
+  UserMinus,
+  CalendarClock,
+  RefreshCw,
+  Search,
+  Filter,
+  Briefcase,
+  Clock,
+  AlertCircle,
+  CheckCircle2,
+  XCircle,
+} from "lucide-react";
+
+import { ApiClientError, humanResourcesApi } from "@/lib/human-resources-api";
 import type {
   Employee,
   EmployeeListQuery,
@@ -31,6 +39,9 @@ import type {
   LeaveType,
 } from "@/types/human-resources";
 
+type HrTab = "employees" | "leaves";
+
+// برچسب‌ها و متون فارسی
 const employeeStatusLabels: Record<EmployeeStatus, string> = {
   ACTIVE: "فعال",
   ON_LEAVE: "در مرخصی",
@@ -64,40 +75,11 @@ const leaveStatusLabels: Record<LeaveRequestStatus, string> = {
   CANCELLED: "لغو شده",
 };
 
-const employeeStatusClasses: Record<EmployeeStatus, string> = {
-  ACTIVE:
-    "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
-  ON_LEAVE:
-    "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300",
-  INACTIVE:
-    "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
-  TERMINATED:
-    "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300",
-};
-
-const leaveStatusClasses: Record<LeaveRequestStatus, string> = {
-  DRAFT:
-    "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
-  PENDING:
-    "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
-  APPROVED:
-    "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
-  REJECTED:
-    "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300",
-  CANCELLED:
-    "bg-slate-100 text-slate-600 line-through dark:bg-slate-800 dark:text-slate-400",
-};
-
+// توابع کمکی فرمت‌دهی
 function formatDate(value?: string | null) {
-  if (!value) {
-    return "—";
-  }
-
+  if (!value) return "—";
   const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "—";
-  }
+  if (Number.isNaN(date.getTime())) return "—";
 
   return new Intl.DateTimeFormat("fa-IR", {
     year: "numeric",
@@ -107,9 +89,7 @@ function formatDate(value?: string | null) {
 }
 
 function formatDuration(minutes: number) {
-  if (!minutes || minutes < 1) {
-    return "—";
-  }
+  if (!minutes || minutes < 1) return "—";
 
   const days = Math.floor(minutes / 1440);
   const remainingMinutes = minutes % 1440;
@@ -117,97 +97,69 @@ function formatDuration(minutes: number) {
   const mins = remainingMinutes % 60;
 
   const parts: string[] = [];
-
-  if (days > 0) {
-    parts.push(`${days} روز`);
-  }
-
-  if (hours > 0) {
-    parts.push(`${hours} ساعت`);
-  }
-
-  if (mins > 0 && days === 0) {
-    parts.push(`${mins} دقیقه`);
-  }
+  if (days > 0) parts.push(`${days} روز`);
+  if (hours > 0) parts.push(`${hours} ساعت`);
+  if (mins > 0 && days === 0) parts.push(`${mins} دقیقه`);
 
   return parts.join(" و ");
 }
 
 function getEmployeeName(employee?: Employee) {
-  if (!employee) {
-    return "کارمند نامشخص";
-  }
-
+  if (!employee) return "کارمند نامشخص";
   return `${employee.firstName} ${employee.lastName}`.trim();
 }
 
-function HrEmployeeStatusBadge({
-  status,
-}: {
-  status: EmployeeStatus;
-}) {
+function HrEmployeeStatusBadge({ status }: { status: EmployeeStatus }) {
+  const config: Record<EmployeeStatus, { bg: string; text: string }> = {
+    ACTIVE: { bg: "bg-emerald-500/10", text: "text-emerald-600 dark:text-emerald-400" },
+    ON_LEAVE: { bg: "bg-blue-500/10", text: "text-blue-600 dark:text-blue-400" },
+    INACTIVE: { bg: "bg-muted", text: "text-muted-foreground" },
+    TERMINATED: { bg: "bg-rose-500/10", text: "text-rose-600 dark:text-rose-400" },
+  };
+  const c = config[status] || config.INACTIVE;
+
   return (
-    <span
-      className={[
-        "inline-flex rounded-full px-2.5 py-1 text-xs font-semibold",
-        employeeStatusClasses[status],
-      ].join(" ")}
-    >
+    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${c.bg} ${c.text}`}>
       {employeeStatusLabels[status]}
     </span>
   );
 }
 
-function HrLeaveStatusBadge({
-  status,
-}: {
-  status: LeaveRequestStatus;
-}) {
+function HrLeaveStatusBadge({ status }: { status: LeaveRequestStatus }) {
+  const config: Record<LeaveRequestStatus, { bg: string; text: string }> = {
+    DRAFT: { bg: "bg-muted", text: "text-muted-foreground" },
+    PENDING: { bg: "bg-amber-500/10", text: "text-amber-600 dark:text-amber-400" },
+    APPROVED: { bg: "bg-emerald-500/10", text: "text-emerald-600 dark:text-emerald-400" },
+    REJECTED: { bg: "bg-rose-500/10", text: "text-rose-600 dark:text-rose-400" },
+    CANCELLED: { bg: "bg-muted", text: "text-muted-foreground line-through" },
+  };
+  const c = config[status] || config.DRAFT;
+
   return (
-    <span
-      className={[
-        "inline-flex rounded-full px-2.5 py-1 text-xs font-semibold",
-        leaveStatusClasses[status],
-      ].join(" ")}
-    >
+    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${c.bg} ${c.text}`}>
       {leaveStatusLabels[status]}
     </span>
   );
 }
 
 export default function HrPage() {
-  const [dashboard, setDashboard] =
-    useState<HrDashboardSummary | null>(null);
-
+  const [activeTab, setActiveTab] = useState<HrTab>("employees");
+  const [dashboard, setDashboard] = useState<HrDashboardSummary | null>(null);
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [leaveRequests, setLeaveRequests] = useState<
-    LeaveRequest[]
-  >([]);
+  const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [employeeSearch, setEmployeeSearch] = useState("");
-  const [employeeStatus, setEmployeeStatus] = useState<
-    EmployeeStatus | "ALL"
-  >("ALL");
+  const [employeeStatus, setEmployeeStatus] = useState<EmployeeStatus | "ALL">("ALL");
+  const [employmentType, setEmploymentType] = useState<EmploymentType | "ALL">("ALL");
 
-  const [employmentType, setEmploymentType] = useState<
-    EmploymentType | "ALL"
-  >("ALL");
+  const [leaveStatus, setLeaveStatus] = useState<LeaveRequestStatus | "ALL">("PENDING");
+  const [leaveType, setLeaveType] = useState<LeaveType | "ALL">("ALL");
 
-  const [leaveStatus, setLeaveStatus] = useState<
-    LeaveRequestStatus | "ALL"
-  >("PENDING");
-
-  const [leaveType, setLeaveType] = useState<
-    LeaveType | "ALL"
-  >("ALL");
-
-  const [updatingLeaveId, setUpdatingLeaveId] = useState<
-    string | null
-  >(null);
+  const [updatingLeaveId, setUpdatingLeaveId] = useState<string | null>(null);
 
   const employeeQuery = useMemo<EmployeeListQuery>(
     () => ({
@@ -232,18 +184,12 @@ export default function HrPage() {
   }, []);
 
   const loadEmployees = useCallback(async () => {
-    const result = await humanResourcesApi.getEmployees(
-      employeeQuery,
-    );
-
+    const result = await humanResourcesApi.getEmployees(employeeQuery);
     setEmployees(result);
   }, [employeeQuery]);
 
   const loadLeaveRequests = useCallback(async () => {
-    const result = await humanResourcesApi.getLeaveRequests(
-      leaveQuery,
-    );
-
+    const result = await humanResourcesApi.getLeaveRequests(leaveQuery);
     setLeaveRequests(result);
   }, [leaveQuery]);
 
@@ -251,7 +197,6 @@ export default function HrPage() {
     async (showRefreshState = false) => {
       try {
         setError(null);
-
         if (showRefreshState) {
           setRefreshing(true);
         } else {
@@ -267,9 +212,7 @@ export default function HrPage() {
         if (requestError instanceof ApiClientError) {
           setError(requestError.message);
         } else {
-          setError(
-            "دریافت اطلاعات منابع انسانی با خطای غیرمنتظره مواجه شد.",
-          );
+          setError("دریافت اطلاعات منابع انسانی با خطای غیرمنتظره مواجه شد.");
         }
       } finally {
         setLoading(false);
@@ -287,485 +230,454 @@ export default function HrPage() {
     leaveRequestId: string,
     status: "APPROVED" | "REJECTED",
   ) {
-    const actionLabel =
-      status === "APPROVED" ? "تأیید" : "رد";
-
+    const actionLabel = status === "APPROVED" ? "تأیید" : "رد";
     const reviewerNote = window.prompt(
       `یادداشت ${actionLabel} درخواست مرخصی را وارد کنید (اختیاری):`,
     );
 
-    if (reviewerNote === null) {
-      return;
-    }
+    if (reviewerNote === null) return;
 
     try {
       setUpdatingLeaveId(leaveRequestId);
       setError(null);
 
-      await humanResourcesApi.updateLeaveRequestStatus(
-        leaveRequestId,
-        {
-          status,
-          reviewerNote: reviewerNote.trim() || undefined,
-        },
-      );
+      await humanResourcesApi.updateLeaveRequestStatus(leaveRequestId, {
+        status,
+        reviewerNote: reviewerNote.trim() || undefined,
+      });
 
-      await Promise.all([
-        loadDashboard(),
-        loadLeaveRequests(),
-      ]);
+      await Promise.all([loadDashboard(), loadLeaveRequests()]);
     } catch (requestError) {
       if (requestError instanceof ApiClientError) {
         setError(requestError.message);
       } else {
-        setError(
-          `عملیات ${actionLabel} درخواست مرخصی انجام نشد.`,
-        );
+        setError(`عملیات ${actionLabel} درخواست مرخصی انجام نشد.`);
       }
     } finally {
       setUpdatingLeaveId(null);
     }
   }
 
-  const stats = [
-    {
-      label: "کل کارکنان",
-      value: String(dashboard?.employees.total ?? 0),
-    },
-    {
-      label: "کارکنان فعال",
-      value: String(dashboard?.employees.active ?? 0),
-    },
-    {
-      label: "کارکنان در مرخصی",
-      value: String(dashboard?.employees.onLeave ?? 0),
-    },
-    {
-      label: "درخواست‌های در انتظار",
-      value: String(dashboard?.leaveRequests.pending ?? 0),
-    },
-  ];
-
   return (
-    <ModulePage
-      title="منابع انسانی"
-      description="مدیریت کارکنان و درخواست‌های مرخصی سازمان"
-      stats={stats}
-    >
-      <div className="space-y-6">
-        {error ? (
-          <div
-            role="alert"
-            className="flex flex-col gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-200 sm:flex-row sm:items-center sm:justify-between"
-          >
+    <div dir="rtl" className="space-y-5">
+      {/* هشدار خطا در صورت بروز */}
+      {error && (
+        <div
+          role="alert"
+          className="flex items-center justify-between gap-3 rounded-2xl border border-rose-500/20 bg-rose-500/10 p-4 text-xs font-medium text-rose-600 dark:text-rose-400"
+        >
+          <div className="flex items-center gap-2">
+            <AlertCircle size={16} />
             <span>{error}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => void loadAllData(true)}
+            className="rounded-lg border border-rose-500/30 px-3 py-1 font-bold transition-all hover:bg-rose-500/20"
+          >
+            تلاش مجدد
+          </button>
+        </div>
+      )}
+
+      {/* ۱. کارت‌های شاخص‌های کلیدی منابع انسانی (KPIs) */}
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="rounded-2xl border border-border bg-card p-4 shadow-sm transition-all hover:border-blue-500/30">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-muted-foreground">کل کارکنان</p>
+              <p className="mt-2 text-xl font-bold text-foreground">
+                {dashboard?.employees.total ?? 0}
+              </p>
+              <p className="mt-1 text-[11px] text-muted-foreground">نیروی ثبت‌شده در سامانه</p>
+            </div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
+              <Users size={20} />
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-border bg-card p-4 shadow-sm transition-all hover:border-emerald-500/30">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-muted-foreground">کارکنان فعال</p>
+              <p className="mt-2 text-xl font-bold text-emerald-500">
+                {dashboard?.employees.active ?? 0}
+              </p>
+              <p className="mt-1 text-[11px] text-muted-foreground">مشغول به کار</p>
+            </div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
+              <UserCheck size={20} />
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-border bg-card p-4 shadow-sm transition-all hover:border-amber-500/30">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-muted-foreground">کارکنان در مرخصی</p>
+              <p className="mt-2 text-xl font-bold text-amber-500">
+                {dashboard?.employees.onLeave ?? 0}
+              </p>
+              <p className="mt-1 text-[11px] text-muted-foreground">عدم حضور امروز</p>
+            </div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500">
+              <UserMinus size={20} />
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-border bg-card p-4 shadow-sm transition-all hover:border-purple-500/30">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-muted-foreground">درخواست‌های در انتظار</p>
+              <p className="mt-2 text-xl font-bold text-purple-500">
+                {dashboard?.leaveRequests.pending ?? 0}
+              </p>
+              <p className="mt-1 text-[11px] text-muted-foreground">نیازمند بررسی و تأیید</p>
+            </div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-500/10 text-purple-500">
+              <CalendarClock size={20} />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ۲. بخش تب‌ها و جداول عملیاتی */}
+      <section className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-sm">
+        {/* نوار جابجایی تب‌ها و ابزار به‌روزرسانی */}
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between border-b border-border pb-4">
+          <div className="flex flex-wrap items-center gap-1.5 rounded-xl bg-muted/60 p-1">
+            <button
+              type="button"
+              onClick={() => setActiveTab("employees")}
+              className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-bold transition-all ${
+                activeTab === "employees"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Users size={14} />
+              <span>فهرست کارکنان ({employees.length})</span>
+            </button>
 
             <button
               type="button"
-              onClick={() => void loadAllData(true)}
-              className="rounded-lg border border-rose-300 px-3 py-1.5 font-semibold transition hover:bg-rose-100 dark:border-rose-800 dark:hover:bg-rose-900"
+              onClick={() => setActiveTab("leaves")}
+              className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-bold transition-all ${
+                activeTab === "leaves"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
             >
-              تلاش مجدد
+              <CalendarClock size={14} />
+              <span>درخواست‌های مرخصی ({leaveRequests.length})</span>
             </button>
           </div>
-        ) : null}
 
-        <section className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm sm:p-6">
-          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-lg font-bold text-[var(--foreground)]">
-                کارکنان
-              </h2>
+          <div className="flex items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => void loadAllData(true)}
+              disabled={refreshing || loading}
+              title="به‌روزرسانی داده‌ها"
+              className="inline-flex h-9.5 items-center justify-center gap-1.5 rounded-xl border border-border bg-background px-3 text-xs font-semibold text-foreground transition-all hover:bg-muted active:scale-95 disabled:opacity-50"
+            >
+              <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
+              <span className="hidden sm:inline">{refreshing ? "در حال دریافت..." : "به‌روزرسانی"}</span>
+            </button>
+          </div>
+        </div>
 
-              <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                فهرست کارکنان سازمان بر اساس فیلترهای انتخاب‌شده
-              </p>
+        {/* تب ۱: فهرست کارکنان */}
+        {activeTab === "employees" && (
+          <div className="space-y-4">
+            {/* فیلترهای بخش پرسنل */}
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="relative">
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" size={15} />
+                <input
+                  value={employeeSearch}
+                  onChange={(e) => setEmployeeSearch(e.target.value)}
+                  placeholder="جست‌وجو با نام، کد پرسنلی، تلفن یا ایمیل..."
+                  className="h-9.5 w-full rounded-xl border border-border bg-background pr-9 pl-3 text-xs text-foreground placeholder:text-muted-foreground focus:border-blue-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="relative">
+                <Filter className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" size={14} />
+                <select
+                  value={employeeStatus}
+                  onChange={(e) => setEmployeeStatus(e.target.value as EmployeeStatus | "ALL")}
+                  className="h-9.5 w-full appearance-none rounded-xl border border-border bg-background pr-8 pl-3 text-xs text-foreground focus:border-blue-500 focus:outline-none"
+                >
+                  <option value="ALL">همه وضعیت‌ها</option>
+                  {Object.entries(employeeStatusLabels).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="relative">
+                <Briefcase className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" size={14} />
+                <select
+                  value={employmentType}
+                  onChange={(e) => setEmploymentType(e.target.value as EmploymentType | "ALL")}
+                  className="h-9.5 w-full appearance-none rounded-xl border border-border bg-background pr-8 pl-3 text-xs text-foreground focus:border-blue-500 focus:outline-none"
+                >
+                  <option value="ALL">همه انواع استخدام</option>
+                  {Object.entries(employmentTypeLabels).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => void loadAllData(true)}
-              disabled={refreshing}
-              className="rounded-xl bg-[var(--primary)] px-4 py-2 text-sm font-semibold text-[var(--primary-foreground)] transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {refreshing
-                ? "در حال به‌روزرسانی..."
-                : "به‌روزرسانی"}
-            </button>
-          </div>
-
-          <div className="mb-5 grid gap-3 md:grid-cols-3">
-            <input
-              value={employeeSearch}
-              onChange={(event) =>
-                setEmployeeSearch(event.target.value)
-              }
-              placeholder="جست‌وجو با نام، کد پرسنلی، تلفن یا ایمیل"
-              className="min-w-0 rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-2.5 text-sm outline-none transition placeholder:text-[var(--muted-foreground)] focus:border-[var(--primary)]"
-            />
-
-            <select
-              value={employeeStatus}
-              onChange={(event) =>
-                setEmployeeStatus(
-                  event.target.value as EmployeeStatus | "ALL",
-                )
-              }
-              className="rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-2.5 text-sm outline-none focus:border-[var(--primary)]"
-            >
-              <option value="ALL">همه وضعیت‌ها</option>
-
-              {Object.entries(employeeStatusLabels).map(
-                ([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ),
-              )}
-            </select>
-
-            <select
-              value={employmentType}
-              onChange={(event) =>
-                setEmploymentType(
-                  event.target.value as EmploymentType | "ALL",
-                )
-              }
-              className="rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-2.5 text-sm outline-none focus:border-[var(--primary)]"
-            >
-              <option value="ALL">همه انواع استخدام</option>
-
-              {Object.entries(employmentTypeLabels).map(
-                ([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ),
-              )}
-            </select>
-          </div>
-
-          <div className="overflow-x-auto rounded-xl border border-[var(--border)]">
-            <table className="min-w-[920px] w-full text-right text-sm">
-              <thead className="bg-[var(--muted)] text-[var(--muted-foreground)]">
-                <tr>
-                  <th className="px-4 py-3 font-semibold">
-                    کد پرسنلی
-                  </th>
-                  <th className="px-4 py-3 font-semibold">
-                    نام کارمند
-                  </th>
-                  <th className="px-4 py-3 font-semibold">
-                    سمت
-                  </th>
-                  <th className="px-4 py-3 font-semibold">
-                    نوع استخدام
-                  </th>
-                  <th className="px-4 py-3 font-semibold">
-                    شعبه / دپارتمان
-                  </th>
-                  <th className="px-4 py-3 font-semibold">
-                    وضعیت
-                  </th>
-                  <th className="px-4 py-3 font-semibold">
-                    تاریخ استخدام
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td
-                      colSpan={7}
-                      className="px-4 py-10 text-center text-[var(--muted-foreground)]"
-                    >
-                      در حال دریافت فهرست کارکنان...
-                    </td>
-                  </tr>
-                ) : null}
-
-                {!loading && employees.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={7}
-                      className="px-4 py-10 text-center text-[var(--muted-foreground)]"
-                    >
-                      هیچ کارمندی با این فیلترها پیدا نشد.
-                    </td>
-                  </tr>
-                ) : null}
-
-                {!loading
-                  ? employees.map((employee) => (
-                      <tr
-                        key={employee.id}
-                        className="border-t border-[var(--border)] transition hover:bg-[var(--muted)]/50"
-                      >
-                        <td className="px-4 py-3 font-medium">
-                          {employee.employeeCode}
-                        </td>
-
-                        <td className="px-4 py-3">
-                          <div className="font-semibold text-[var(--foreground)]">
-                            {getEmployeeName(employee)}
+            {/* جدول پرسنل */}
+            <div className="overflow-hidden rounded-xl border border-border">
+              <div className="overflow-x-auto">
+                <table className="w-full text-right text-sm">
+                  <thead className="border-b border-border bg-muted/40 text-xs font-bold text-muted-foreground">
+                    <tr>
+                      <th className="px-4 py-3.5">کد پرسنلی</th>
+                      <th className="px-4 py-3.5">نام کارمند</th>
+                      <th className="px-4 py-3.5">سمت شغلی</th>
+                      <th className="px-4 py-3.5">نوع قرارداد</th>
+                      <th className="px-4 py-3.5">شعبه / دپارتمان</th>
+                      <th className="px-4 py-3.5 text-center">وضعیت</th>
+                      <th className="px-4 py-3.5 text-center">تاریخ استخدام</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {loading ? (
+                      Array.from({ length: 4 }).map((_, i) => (
+                        <tr key={i} className="animate-pulse">
+                          <td className="px-4 py-4"><div className="h-4 w-20 rounded bg-muted"></div></td>
+                          <td className="px-4 py-4"><div className="h-4 w-32 rounded bg-muted"></div></td>
+                          <td className="px-4 py-4"><div className="h-4 w-24 rounded bg-muted"></div></td>
+                          <td className="px-4 py-4"><div className="h-4 w-20 rounded bg-muted"></div></td>
+                          <td className="px-4 py-4"><div className="h-4 w-28 rounded bg-muted"></div></td>
+                          <td className="px-4 py-4 text-center"><div className="mx-auto h-5 w-16 rounded bg-muted"></div></td>
+                          <td className="px-4 py-4 text-center"><div className="mx-auto h-4 w-20 rounded bg-muted"></div></td>
+                        </tr>
+                      ))
+                    ) : employees.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="py-10 text-center">
+                          <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+                            <AlertCircle size={20} />
                           </div>
-
-                          <div className="mt-1 text-xs text-[var(--muted-foreground)]">
-                            {employee.phone ||
-                              employee.email ||
-                              "—"}
-                          </div>
-                        </td>
-
-                        <td className="px-4 py-3">
-                          {employee.jobTitle || "—"}
-                        </td>
-
-                        <td className="px-4 py-3">
-                          {
-                            employmentTypeLabels[
-                              employee.employmentType
-                            ]
-                          }
-                        </td>
-
-                        <td className="px-4 py-3">
-                          <div>
-                            {employee.branch?.name ||
-                              employee.branch?.title ||
-                              "—"}
-                          </div>
-
-                          <div className="mt-1 text-xs text-[var(--muted-foreground)]">
-                            {employee.department?.name ||
-                              employee.department?.title ||
-                              "—"}
-                          </div>
-                        </td>
-
-                        <td className="px-4 py-3">
-                          <HrEmployeeStatusBadge
-                            status={employee.status}
-                          />
-                        </td>
-
-                        <td className="px-4 py-3">
-                          {formatDate(employee.hiredAt)}
+                          <p className="mt-2 text-sm font-bold text-foreground">کارمندی یافت نشد</p>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            با تغییر فیلترها یا عبارت جستجو مجدداً تلاش کنید.
+                          </p>
                         </td>
                       </tr>
-                    ))
-                  : null}
-              </tbody>
-            </table>
-          </div>
-        </section>
+                    ) : (
+                      employees.map((employee) => (
+                        <tr key={employee.id} className="transition-colors hover:bg-muted/30">
+                          <td className="px-4 py-4 font-mono text-xs font-semibold text-muted-foreground">
+                            {employee.employeeCode}
+                          </td>
 
-        <section className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm sm:p-6">
-          <div className="mb-5">
-            <h2 className="text-lg font-bold text-[var(--foreground)]">
-              درخواست‌های مرخصی
-            </h2>
-
-            <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-              بررسی و مدیریت درخواست‌های ثبت‌شده کارکنان
-            </p>
-          </div>
-
-          <div className="mb-5 grid gap-3 sm:grid-cols-2">
-            <select
-              value={leaveStatus}
-              onChange={(event) =>
-                setLeaveStatus(
-                  event.target.value as LeaveRequestStatus | "ALL",
-                )
-              }
-              className="rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-2.5 text-sm outline-none focus:border-[var(--primary)]"
-            >
-              <option value="ALL">همه وضعیت‌ها</option>
-
-              {Object.entries(leaveStatusLabels).map(
-                ([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ),
-              )}
-            </select>
-
-            <select
-              value={leaveType}
-              onChange={(event) =>
-                setLeaveType(
-                  event.target.value as LeaveType | "ALL",
-                )
-              }
-              className="rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-2.5 text-sm outline-none focus:border-[var(--primary)]"
-            >
-              <option value="ALL">همه انواع مرخصی</option>
-
-              {Object.entries(leaveTypeLabels).map(
-                ([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ),
-              )}
-            </select>
-          </div>
-
-          <div className="overflow-x-auto rounded-xl border border-[var(--border)]">
-            <table className="min-w-[980px] w-full text-right text-sm">
-              <thead className="bg-[var(--muted)] text-[var(--muted-foreground)]">
-                <tr>
-                  <th className="px-4 py-3 font-semibold">
-                    کارمند
-                  </th>
-                  <th className="px-4 py-3 font-semibold">
-                    نوع مرخصی
-                  </th>
-                  <th className="px-4 py-3 font-semibold">
-                    بازه زمانی
-                  </th>
-                  <th className="px-4 py-3 font-semibold">
-                    مدت
-                  </th>
-                  <th className="px-4 py-3 font-semibold">
-                    وضعیت
-                  </th>
-                  <th className="px-4 py-3 font-semibold">
-                    عملیات
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td
-                      colSpan={6}
-                      className="px-4 py-10 text-center text-[var(--muted-foreground)]"
-                    >
-                      در حال دریافت درخواست‌های مرخصی...
-                    </td>
-                  </tr>
-                ) : null}
-
-                {!loading && leaveRequests.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={6}
-                      className="px-4 py-10 text-center text-[var(--muted-foreground)]"
-                    >
-                      درخواست مرخصی با این فیلترها وجود ندارد.
-                    </td>
-                  </tr>
-                ) : null}
-
-                {!loading
-                  ? leaveRequests.map((leaveRequest) => {
-                      const isPending =
-                        leaveRequest.status === "PENDING";
-
-                      const isUpdating =
-                        updatingLeaveId === leaveRequest.id;
-
-                      return (
-                        <tr
-                          key={leaveRequest.id}
-                          className="border-t border-[var(--border)] transition hover:bg-[var(--muted)]/50"
-                        >
-                          <td className="px-4 py-3">
-                            <div className="font-semibold text-[var(--foreground)]">
-                              {getEmployeeName(
-                                leaveRequest.employee,
-                              )}
+                          <td className="px-4 py-4">
+                            <div className="font-semibold text-foreground">
+                              {getEmployeeName(employee)}
                             </div>
-
-                            <div className="mt-1 text-xs text-[var(--muted-foreground)]">
-                              {leaveRequest.employee?.employeeCode ||
-                                "—"}
+                            <div className="text-xs text-muted-foreground">
+                              {employee.phone || employee.email || "—"}
                             </div>
                           </td>
 
-                          <td className="px-4 py-3">
-                            {
-                              leaveTypeLabels[
-                                leaveRequest.leaveType
-                              ]
-                            }
+                          <td className="px-4 py-4 text-foreground/80">
+                            {employee.jobTitle || "—"}
                           </td>
 
-                          <td className="px-4 py-3">
-                            <div>
-                              {formatDate(leaveRequest.startAt)}
+                          <td className="px-4 py-4 text-xs text-muted-foreground">
+                            {employmentTypeLabels[employee.employmentType]}
+                          </td>
+
+                          <td className="px-4 py-4">
+                            <div className="text-foreground">
+                              {employee.branch?.name || employee.branch?.title || "—"}
                             </div>
-
-                            <div className="mt-1 text-xs text-[var(--muted-foreground)]">
-                              تا {formatDate(leaveRequest.endAt)}
+                            <div className="text-xs text-muted-foreground">
+                              {employee.department?.name || employee.department?.title || "—"}
                             </div>
                           </td>
 
-                          <td className="px-4 py-3">
-                            {formatDuration(
-                              leaveRequest.durationMinutes,
-                            )}
+                          <td className="px-4 py-4 text-center">
+                            <HrEmployeeStatusBadge status={employee.status} />
                           </td>
 
-                          <td className="px-4 py-3">
-                            <HrLeaveStatusBadge
-                              status={leaveRequest.status}
-                            />
-                          </td>
-
-                          <td className="px-4 py-3">
-                            {isPending ? (
-                              <div className="flex items-center gap-2">
-                                <button
-                                  type="button"
-                                  disabled={isUpdating}
-                                  onClick={() =>
-                                    void updateLeaveStatus(
-                                      leaveRequest.id,
-                                      "APPROVED",
-                                    )
-                                  }
-                                  className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
-                                >
-                                  {isUpdating
-                                    ? "..."
-                                    : "تأیید"}
-                                </button>
-
-                                <button
-                                  type="button"
-                                  disabled={isUpdating}
-                                  onClick={() =>
-                                    void updateLeaveStatus(
-                                      leaveRequest.id,
-                                      "REJECTED",
-                                    )
-                                  }
-                                  className="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
-                                >
-                                  رد
-                                </button>
-                              </div>
-                            ) : (
-                              <span className="text-xs text-[var(--muted-foreground)]">
-                                عملیات دیگری ندارد
-                              </span>
-                            )}
+                          <td className="px-4 py-4 text-center text-xs text-muted-foreground">
+                            {formatDate(employee.hiredAt)}
                           </td>
                         </tr>
-                      );
-                    })
-                  : null}
-              </tbody>
-            </table>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
-        </section>
-      </div>
-    </ModulePage>
+        )}
+
+        {/* تب ۲: درخواست‌های مرخصی */}
+        {activeTab === "leaves" && (
+          <div className="space-y-4">
+            {/* فیلترهای مرخصی */}
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="relative">
+                <Filter className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" size={14} />
+                <select
+                  value={leaveStatus}
+                  onChange={(e) => setLeaveStatus(e.target.value as LeaveRequestStatus | "ALL")}
+                  className="h-9.5 w-full appearance-none rounded-xl border border-border bg-background pr-8 pl-3 text-xs text-foreground focus:border-blue-500 focus:outline-none"
+                >
+                  <option value="ALL">همه وضعیت‌ها</option>
+                  {Object.entries(leaveStatusLabels).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="relative">
+                <CalendarClock className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" size={14} />
+                <select
+                  value={leaveType}
+                  onChange={(e) => setLeaveType(e.target.value as LeaveType | "ALL")}
+                  className="h-9.5 w-full appearance-none rounded-xl border border-border bg-background pr-8 pl-3 text-xs text-foreground focus:border-blue-500 focus:outline-none"
+                >
+                  <option value="ALL">همه انواع مرخصی</option>
+                  {Object.entries(leaveTypeLabels).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* جدول مرخصی‌ها */}
+            <div className="overflow-hidden rounded-xl border border-border">
+              <div className="overflow-x-auto">
+                <table className="w-full text-right text-sm">
+                  <thead className="border-b border-border bg-muted/40 text-xs font-bold text-muted-foreground">
+                    <tr>
+                      <th className="px-4 py-3.5">کارمند</th>
+                      <th className="px-4 py-3.5">نوع مرخصی</th>
+                      <th className="px-4 py-3.5">بازه زمانی</th>
+                      <th className="px-4 py-3.5">مدت</th>
+                      <th className="px-4 py-3.5 text-center">وضعیت</th>
+                      <th className="px-4 py-3.5 text-center">عملیات</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {loading ? (
+                      Array.from({ length: 3 }).map((_, i) => (
+                        <tr key={i} className="animate-pulse">
+                          <td className="px-4 py-4"><div className="h-4 w-32 rounded bg-muted"></div></td>
+                          <td className="px-4 py-4"><div className="h-4 w-20 rounded bg-muted"></div></td>
+                          <td className="px-4 py-4"><div className="h-4 w-36 rounded bg-muted"></div></td>
+                          <td className="px-4 py-4"><div className="h-4 w-16 rounded bg-muted"></div></td>
+                          <td className="px-4 py-4 text-center"><div className="mx-auto h-5 w-20 rounded bg-muted"></div></td>
+                          <td className="px-4 py-4 text-center"><div className="mx-auto h-7 w-24 rounded bg-muted"></div></td>
+                        </tr>
+                      ))
+                    ) : leaveRequests.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-10 text-center">
+                          <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+                            <AlertCircle size={20} />
+                          </div>
+                          <p className="mt-2 text-sm font-bold text-foreground">درخواست مرخصی یافت نشد</p>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            هیچ درخواستی با فیلترهای انتخابی مطابقت ندارد.
+                          </p>
+                        </td>
+                      </tr>
+                    ) : (
+                      leaveRequests.map((leaveRequest) => {
+                        const isPending = leaveRequest.status === "PENDING";
+                        const isUpdating = updatingLeaveId === leaveRequest.id;
+
+                        return (
+                          <tr key={leaveRequest.id} className="transition-colors hover:bg-muted/30">
+                            <td className="px-4 py-4">
+                              <div className="font-semibold text-foreground">
+                                {getEmployeeName(leaveRequest.employee)}
+                              </div>
+                              <div className="font-mono text-xs text-muted-foreground">
+                                {leaveRequest.employee?.employeeCode || "—"}
+                              </div>
+                            </td>
+
+                            <td className="px-4 py-4 text-foreground/80">
+                              {leaveTypeLabels[leaveRequest.leaveType]}
+                            </td>
+
+                            <td className="px-4 py-4">
+                              <div className="flex items-center gap-1.5 text-xs text-foreground">
+                                <Clock size={13} className="text-muted-foreground" />
+                                <span>{formatDate(leaveRequest.startAt)}</span>
+                                <span className="text-muted-foreground">تا</span>
+                                <span>{formatDate(leaveRequest.endAt)}</span>
+                              </div>
+                            </td>
+
+                            <td className="px-4 py-4 font-semibold text-foreground">
+                              {formatDuration(leaveRequest.durationMinutes)}
+                            </td>
+
+                            <td className="px-4 py-4 text-center">
+                              <HrLeaveStatusBadge status={leaveRequest.status} />
+                            </td>
+
+                            <td className="px-4 py-4 text-center">
+                              {isPending ? (
+                                <div className="inline-flex items-center gap-2">
+                                  <button
+                                    type="button"
+                                    disabled={isUpdating}
+                                    onClick={() => void updateLeaveStatus(leaveRequest.id, "APPROVED")}
+                                    className="inline-flex h-8 items-center gap-1 rounded-lg bg-emerald-600 px-2.5 text-xs font-bold text-white shadow-sm shadow-emerald-600/20 transition-all hover:bg-emerald-700 active:scale-95 disabled:opacity-50"
+                                  >
+                                    <CheckCircle2 size={13} />
+                                    <span>{isUpdating ? "..." : "تأیید"}</span>
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    disabled={isUpdating}
+                                    onClick={() => void updateLeaveStatus(leaveRequest.id, "REJECTED")}
+                                    className="inline-flex h-8 items-center gap-1 rounded-lg bg-rose-600 px-2.5 text-xs font-bold text-white shadow-sm shadow-rose-600/20 transition-all hover:bg-rose-700 active:scale-95 disabled:opacity-50"
+                                  >
+                                    <XCircle size={13} />
+                                    <span>رد</span>
+                                  </button>
+                                </div>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">—</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
+    </div>
   );
 }

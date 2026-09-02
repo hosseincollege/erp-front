@@ -1,7 +1,6 @@
 /**
  * @file frontend/src/app/layout.tsx
- * @description فایل اصلی لایوت ریشه. 
- * هدر از اینجا حذف شده تا مدیریت آن به AppShell واگذار شود و مشکل رندر دوبار حل گردد.
+ * @description فایل اصلی لایوت ریشه ERP Pro
  */
 
 import type { Metadata, Viewport } from "next";
@@ -41,12 +40,8 @@ export default function RootLayout({
       suppressHydrationWarning
       className={vazirmatn.variable}
     >
-      <body className="font-sans antialiased overflow-x-hidden bg-[color:var(--background)] text-[color:var(--foreground)]">
+      <body className="font-sans antialiased h-screen overflow-hidden bg-[color:var(--background)] text-[color:var(--foreground)]">
         <ThemeProvider>
-          {/* 
-            هدر از اینجا حذف شد.
-            در ساختار جدید، TopHeader داخل AppShell رندر می‌شود.
-          */}
           {children}
         </ThemeProvider>
       </body>

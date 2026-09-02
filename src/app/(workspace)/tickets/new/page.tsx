@@ -1,7 +1,9 @@
 /**
- * @file src/app/(workspace)/tickets/new/page.tsx
- * @name new-ticket-page
- * @description صفحه RTL ثبت تیکت جدید با پشتیبانی کامل از متغیرهای CSS در تم‌های روشن و تیره.
+ * مسیر فایل:
+ * src/app/(workspace)/tickets/new/page.tsx
+ *
+ * هدف:
+ * صفحه تمام‌عرض ثبت تیکت جدید مطابق با استانداردهای دیزاین‌سیستم و تم ERP Pro.
  */
 
 'use client';
@@ -10,12 +12,15 @@ import Link from 'next/link';
 import { FormEvent, ReactNode, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
+  AlertCircle,
   ArrowRight,
   CheckCircle2,
+  FilePlus2,
   FileText,
   Loader2,
   Phone,
   Send,
+  Sparkles,
   UserRound,
 } from 'lucide-react';
 
@@ -56,26 +61,41 @@ const PRIORITY_OPTIONS: Array<{
   value: TicketPriority;
   label: string;
   description: string;
+  dotColor: string;
+  activeBorder: string;
+  activeBg: string;
 }> = [
   {
     value: 'LOW',
     label: 'کم',
     description: 'درخواست عادی بدون فوریت',
+    dotColor: 'bg-slate-400',
+    activeBorder: 'border-slate-500/40 ring-slate-500/20',
+    activeBg: 'bg-slate-500/10',
   },
   {
     value: 'MEDIUM',
     label: 'متوسط',
     description: 'نیازمند پیگیری در روند معمول',
+    dotColor: 'bg-blue-500',
+    activeBorder: 'border-blue-500/40 ring-blue-500/20',
+    activeBg: 'bg-blue-500/10',
   },
   {
     value: 'HIGH',
     label: 'زیاد',
     description: 'تأثیر قابل توجه بر مشتری یا عملیات',
+    dotColor: 'bg-amber-500',
+    activeBorder: 'border-amber-500/40 ring-amber-500/20',
+    activeBg: 'bg-amber-500/10',
   },
   {
     value: 'URGENT',
     label: 'فوری',
-    description: 'اختلال جدی یا نیازمند اقدام سریع',
+    description: 'اختلال جدی یا نیازمند اقدام آنی',
+    dotColor: 'bg-rose-500',
+    activeBorder: 'border-rose-500/40 ring-rose-500/20',
+    activeBg: 'bg-rose-500/10',
   },
 ];
 
@@ -164,7 +184,7 @@ export default function NewTicketPage() {
     }
 
     if (form.customerId.trim() && !isUuid(form.customerId.trim())) {
-      nextErrors.customerId = 'شناسه مشتری باید UUID معتبر باشد';
+      nextErrors.customerId = 'شناسه مشتری باید یک شناسه معتبر (UUID) باشد';
     }
 
     setErrors(nextErrors);
@@ -215,7 +235,7 @@ export default function NewTicketPage() {
       router.push('/tickets');
     } catch (error) {
       setSubmitError(
-        error instanceof Error ? error.message : 'خطا در ثبت تیکت',
+        error instanceof Error ? error.message : 'خطا در برقراری ارتباط و ثبت تیکت',
       );
     } finally {
       setIsSubmitting(false);
@@ -230,374 +250,266 @@ export default function NewTicketPage() {
   };
 
   return (
-    <div dir="rtl" className="mx-auto max-w-5xl space-y-6">
-      <section
-        className="
-          flex flex-col gap-4 border-b border-[var(--border)] pb-5
-          md:flex-row md:items-end md:justify-between
-        "
-      >
-        <div>
-          <Link
-            href="/tickets"
-            className="
-              mb-4 inline-flex items-center gap-2 text-sm
-              text-[var(--muted)] transition-colors
-              hover:text-[var(--foreground)]
-            "
-          >
-            <ArrowRight className="h-4 w-4" />
-            بازگشت به فهرست تیکت‌ها
-          </Link>
-
-          <div className="flex items-center gap-3">
-            <div
-              className="
-                rounded-lg border border-[var(--primary)]/20
-                bg-[var(--primary-soft)] p-2.5
-                text-[var(--primary)]
-              "
-            >
-              <FileText className="h-5 w-5" />
+    <div dir="rtl" className="w-full space-y-5">
+      {/* ۱. هدر تمام‌عرض ماژول */}
+      <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3.5">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
+              <FilePlus2 size={22} />
             </div>
 
             <div>
-              <h1 className="text-2xl font-bold text-[var(--foreground)]">
-                ثبت تیکت جدید
+              <h1 className="text-lg font-bold text-foreground">
+                ثبت تیکت پشتیبانی جدید
               </h1>
 
-              <p className="mt-1 text-sm text-[var(--muted)]">
-                درخواست مشتری را با اطلاعات کامل در سیستم ثبت کنید.
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                ثبت و ارجاع درخواست، مشکل یا سوال مشتری در چرخه پاسخگویی سازمان
               </p>
             </div>
           </div>
-        </div>
 
-        <div
-          className="
-            rounded-lg border border-[var(--border)]
-            bg-[var(--surface)] px-4 py-3 text-sm
-            text-[var(--muted)]
-          "
-        >
-          وضعیت اولیه پس از ثبت:{' '}
-          <strong className="text-[var(--foreground)]">باز</strong>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/tickets"
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-card px-3.5 py-2 text-xs font-semibold text-foreground shadow-sm transition-all hover:bg-accent hover:text-blue-500"
+            >
+              <ArrowRight size={14} />
+              بازگشت به فهرست تیکت‌ها
+            </Link>
+          </div>
         </div>
       </section>
 
-      {isSubmitted ? (
-        <section
-          className="
-            rounded-xl border border-[var(--success)]/20
-            bg-[var(--success-soft)] p-6
-          "
-        >
-          <div className="flex items-start gap-3">
-            <CheckCircle2
-              className="mt-0.5 h-6 w-6 shrink-0 text-[var(--success)]"
-            />
-
-            <div>
-              <h2 className="font-semibold text-[var(--success)]">
-                تیکت با موفقیت ثبت شد
-              </h2>
-
-              <p className="mt-1 text-sm text-[var(--success)]">
-                در حال انتقال به صفحه جزئیات تیکت هستید...
-              </p>
-            </div>
+      {/* وضعیت موفقیت */}
+      {isSubmitted && (
+        <section className="flex items-center gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-emerald-600 dark:text-emerald-400">
+          <CheckCircle2 className="h-5 w-5 shrink-0" />
+          <div className="text-xs">
+            <p className="font-bold">تیکت با موفقیت در سامانه ایجاد شد.</p>
+            <p className="mt-0.5 text-muted-foreground">
+              در حال انتقال به صفحه پیگیری تیکت...
+            </p>
           </div>
         </section>
-      ) : null}
+      )}
 
-      {submitError ? (
+      {/* پیام خطا */}
+      {submitError && (
         <section
           role="alert"
-          className="
-            rounded-lg border border-[var(--danger)]/20
-            bg-[var(--danger-soft)] px-4 py-3
-            text-sm text-[var(--danger)]
-          "
+          className="flex items-center gap-3 rounded-2xl border border-rose-500/20 bg-rose-500/10 p-4 text-rose-600 dark:text-rose-400"
         >
-          {submitError}
-        </section>
-      ) : null}
-
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <section
-          className="
-            rounded-xl border border-[var(--border)]
-            bg-[var(--surface)]
-          "
-        >
-          <div className="border-b border-[var(--border)] px-5 py-4">
-            <div className="flex items-center gap-3">
-              <FileText className="h-5 w-5 text-[var(--muted)]" />
-
-              <div>
-                <h2 className="font-semibold text-[var(--foreground)]">
-                  اطلاعات درخواست
-                </h2>
-
-                <p className="mt-1 text-xs text-[var(--muted)]">
-                  عنوان و شرح دقیق، مبنای پیگیری تیم پشتیبانی خواهد بود.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid gap-5 p-5">
-            <Field
-              label="عنوان تیکت"
-              required
-              error={errors.title}
-              hint={`${form.title.length}/150`}
-            >
-              <input
-                value={form.title}
-                onChange={(event) => updateField('title', event.target.value)}
-                placeholder="مثلاً: قطعی سرویس اینترنت مشتری"
-                maxLength={150}
-                className={inputClass(Boolean(errors.title))}
-              />
-            </Field>
-
-            <Field
-              label="شرح درخواست"
-              required
-              error={errors.description}
-              hint={`${form.description.length}/5000`}
-            >
-              <textarea
-                value={form.description}
-                onChange={(event) =>
-                  updateField('description', event.target.value)
-                }
-                placeholder="شرح مشکل، اقدامات انجام‌شده و نتیجه مورد انتظار را وارد کنید..."
-                rows={7}
-                maxLength={5000}
-                className={`${inputClass(Boolean(errors.description))} resize-y py-3`}
-              />
-            </Field>
+          <AlertCircle className="h-5 w-5 shrink-0" />
+          <div className="text-xs">
+            <p className="font-bold">خطا در ثبت اطلاعات</p>
+            <p className="mt-0.5">{submitError}</p>
           </div>
         </section>
+      )}
 
-        <section
-          className="
-            rounded-xl border border-[var(--border)]
-            bg-[var(--surface)]
-          "
-        >
-          <div className="border-b border-[var(--border)] px-5 py-4">
-            <div className="flex items-center gap-3">
-              <UserRound className="h-5 w-5 text-[var(--muted)]" />
-
-              <div>
-                <h2 className="font-semibold text-[var(--foreground)]">
-                  اطلاعات مشتری
-                </h2>
-
-                <p className="mt-1 text-xs text-[var(--muted)]">
-                  این بخش برای شناسایی و پیگیری سریع‌تر مشتری استفاده می‌شود.
-                </p>
+      {/* فرم ثبت تیکت (تمام‌عرض با گرید دو ستونه) */}
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="grid gap-5 lg:grid-cols-3">
+          {/* ستون اصلی: اطلاعات درخواست (عرض ۲ از ۳ در دسکتاپ) */}
+          <div className="space-y-5 lg:col-span-2">
+            <section className="rounded-2xl border border-border bg-card shadow-sm">
+              <div className="flex items-center gap-2.5 border-b border-border/80 px-5 py-4">
+                <FileText className="h-4 w-4 text-blue-500" />
+                <h2 className="text-sm font-bold text-foreground">اطلاعات تیکت</h2>
               </div>
-            </div>
-          </div>
 
-          <div className="grid gap-5 p-5 md:grid-cols-2">
-            <Field
-              label="نام مشتری"
-              error={errors.customerName}
-              hint="اختیاری"
-            >
-              <input
-                value={form.customerName}
-                onChange={(event) =>
-                  updateField('customerName', event.target.value)
-                }
-                placeholder="نام و نام خانوادگی یا نام شرکت"
-                maxLength={120}
-                className={inputClass(Boolean(errors.customerName))}
-              />
-            </Field>
+              <div className="space-y-4 p-5">
+                <Field
+                  label="عنوان تیکت"
+                  required
+                  error={errors.title}
+                  hint={`${form.title.length}/150`}
+                >
+                  <input
+                    value={form.title}
+                    onChange={(event) => updateField('title', event.target.value)}
+                    placeholder="مثلاً: عدم دسترسی کاربر به بخش صدور فاکتور"
+                    maxLength={150}
+                    className={inputClass(Boolean(errors.title))}
+                  />
+                </Field>
 
-            <Field
-              label="شماره تماس"
-              error={errors.customerPhone}
-              hint="اختیاری"
-            >
-              <div className="relative">
-                <Phone
-                  className="
-                    pointer-events-none absolute right-3 top-1/2
-                    h-4 w-4 -translate-y-1/2 text-[var(--muted)]
-                  "
-                />
-
-                <input
-                  dir="ltr"
-                  value={form.customerPhone}
-                  onChange={(event) =>
-                    updateField('customerPhone', event.target.value)
-                  }
-                  placeholder="0912xxxxxxx"
-                  maxLength={20}
-                  className={`${inputClass(Boolean(errors.customerPhone))} pr-10 text-right`}
-                />
+                <Field
+                  label="شرح درخواست"
+                  required
+                  error={errors.description}
+                  hint={`${form.description.length}/5000`}
+                >
+                  <textarea
+                    value={form.description}
+                    onChange={(event) =>
+                      updateField('description', event.target.value)
+                    }
+                    placeholder="شرح دقیق مشکل، مراحل بازتولید و انتظارات مربوطه را وارد کنید..."
+                    rows={8}
+                    maxLength={5000}
+                    className={`${inputClass(Boolean(errors.description))} resize-y py-3 leading-relaxed`}
+                  />
+                </Field>
               </div>
-            </Field>
+            </section>
 
-            <Field
-              label="شناسه مشتری"
-              error={errors.customerId}
-              hint="اختیاری؛ UUID"
-            >
-              <input
-                dir="ltr"
-                value={form.customerId}
-                onChange={(event) =>
-                  updateField('customerId', event.target.value)
-                }
-                placeholder="شناسه مشتری در CRM"
-                className={`${inputClass(Boolean(errors.customerId))} text-left`}
-              />
-            </Field>
-          </div>
-        </section>
-
-        <section
-          className="
-            rounded-xl border border-[var(--border)]
-            bg-[var(--surface)]
-          "
-        >
-          <div className="border-b border-[var(--border)] px-5 py-4">
-            <div className="flex items-center gap-3">
-              <Send className="h-5 w-5 text-[var(--muted)]" />
-
-              <div>
-                <h2 className="font-semibold text-[var(--foreground)]">
-                  طبقه‌بندی عملیاتی
-                </h2>
-
-                <p className="mt-1 text-xs text-[var(--muted)]">
-                  اولویت و منبع، برای تقسیم کار و گزارش‌گیری استفاده می‌شوند.
-                </p>
+            {/* بخش مشخصات مشتری */}
+            <section className="rounded-2xl border border-border bg-card shadow-sm">
+              <div className="flex items-center gap-2.5 border-b border-border/80 px-5 py-4">
+                <UserRound className="h-4 w-4 text-blue-500" />
+                <h2 className="text-sm font-bold text-foreground">اطلاعات مشتری</h2>
               </div>
-            </div>
-          </div>
 
-          <div className="grid gap-5 p-5">
-            <Field label="اولویت تیکت" required>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                {PRIORITY_OPTIONS.map((option) => {
-                  const selected = form.priority === option.value;
+              <div className="grid gap-4 p-5 sm:grid-cols-2">
+                <Field
+                  label="نام مشتری / سازمان"
+                  error={errors.customerName}
+                  hint="اختیاری"
+                >
+                  <input
+                    value={form.customerName}
+                    onChange={(event) =>
+                      updateField('customerName', event.target.value)
+                    }
+                    placeholder="نام و نام خانوادگی یا شرکت"
+                    maxLength={120}
+                    className={inputClass(Boolean(errors.customerName))}
+                  />
+                </Field>
 
-                  return (
-                    <label
-                      key={option.value}
-                      className={`
-                        cursor-pointer rounded-lg border p-3 transition
-                        ${
-                          selected
-                            ? 'border-[var(--primary)] bg-[var(--primary-soft)] ring-1 ring-[var(--primary)]'
-                            : 'border-[var(--border)] hover:border-[var(--primary)]/50'
-                        }
-                      `}
-                    >
-                      <input
-                        type="radio"
-                        name="priority"
-                        value={option.value}
-                        checked={selected}
-                        onChange={() =>
-                          updateField('priority', option.value)
-                        }
-                        className="sr-only"
-                      />
+                <Field
+                  label="شماره تماس"
+                  error={errors.customerPhone}
+                  hint="اختیاری"
+                >
+                  <div className="relative">
+                    <Phone className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <input
+                      dir="ltr"
+                      value={form.customerPhone}
+                      onChange={(event) =>
+                        updateField('customerPhone', event.target.value)
+                      }
+                      placeholder="0912xxxxxxx"
+                      maxLength={20}
+                      className={`${inputClass(Boolean(errors.customerPhone))} pr-10 text-right`}
+                    />
+                  </div>
+                </Field>
 
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-sm font-semibold text-[var(--foreground)]">
-                          {option.label}
-                        </span>
-
-                        <span
-                          className={`
-                            h-2.5 w-2.5 rounded-full
-                            ${
-                              option.value === 'URGENT'
-                                ? 'bg-[var(--danger)]'
-                                : option.value === 'HIGH'
-                                  ? 'bg-[var(--warning)]'
-                                  : option.value === 'MEDIUM'
-                                    ? 'bg-[var(--primary)]'
-                                    : 'bg-[var(--muted)]'
-                            }
-                          `}
-                        />
-                      </div>
-
-                      <p className="mt-2 text-xs leading-5 text-[var(--muted)]">
-                        {option.description}
-                      </p>
-                    </label>
-                  );
-                })}
-              </div>
-            </Field>
-
-            <Field label="منبع ثبت تیکت" required>
-              <select
-                value={form.source}
-                onChange={(event) =>
-                  updateField('source', event.target.value as TicketSource)
-                }
-                className={inputClass(false)}
-              >
-                {SOURCE_OPTIONS.map((option) => (
-                  <option
-                    key={option.value}
-                    value={option.value}
-                    className="bg-[var(--surface)] text-[var(--foreground)]"
+                <div className="sm:col-span-2">
+                  <Field
+                    label="شناسه سیستمی مشتری"
+                    error={errors.customerId}
+                    hint="UUID اختیاری"
                   >
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </Field>
+                    <input
+                      dir="ltr"
+                      value={form.customerId}
+                      onChange={(event) =>
+                        updateField('customerId', event.target.value)
+                      }
+                      placeholder="e.g. 550e8400-e29b-41d4-a716-446655440000"
+                      className={`${inputClass(Boolean(errors.customerId))} font-mono text-xs`}
+                    />
+                  </Field>
+                </div>
+              </div>
+            </section>
           </div>
-        </section>
 
-        <section
-          className="
-            flex flex-col-reverse gap-3
-            border-t border-[var(--border)] pt-5
-            sm:flex-row sm:items-center sm:justify-between
-          "
-        >
+          {/* ستون کناری: طبقه‌بندی و اولویت‌بندی (عرض ۱ از ۳ در دسکتاپ) */}
+          <div className="space-y-5">
+            <section className="rounded-2xl border border-border bg-card shadow-sm">
+              <div className="flex items-center gap-2.5 border-b border-border/80 px-5 py-4">
+                <Sparkles className="h-4 w-4 text-blue-500" />
+                <h2 className="text-sm font-bold text-foreground">طبقه‌بندی و اولویت‌بندی</h2>
+              </div>
+
+              <div className="space-y-5 p-5">
+                <Field label="میزان اولویت" required>
+                  <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-1">
+                    {PRIORITY_OPTIONS.map((option) => {
+                      const selected = form.priority === option.value;
+
+                      return (
+                        <label
+                          key={option.value}
+                          className={`cursor-pointer rounded-xl border p-3 transition-all ${
+                            selected
+                              ? `${option.activeBorder} ${option.activeBg} ring-1`
+                              : 'border-border bg-card hover:border-border/80 hover:bg-accent/30'
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="priority"
+                            value={option.value}
+                            checked={selected}
+                            onChange={() => updateField('priority', option.value)}
+                            className="sr-only"
+                          />
+
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-foreground">
+                              {option.label}
+                            </span>
+                            <span
+                              className={`h-2.5 w-2.5 rounded-full ${option.dotColor}`}
+                            />
+                          </div>
+
+                          <p className="mt-1 text-[11px] leading-4 text-muted-foreground">
+                            {option.description}
+                          </p>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </Field>
+
+                <Field label="کانال ورودی تیکت" required>
+                  <select
+                    value={form.source}
+                    onChange={(event) =>
+                      updateField('source', event.target.value as TicketSource)
+                    }
+                    className={`${inputClass(false)} cursor-pointer`}
+                  >
+                    {SOURCE_OPTIONS.map((option) => (
+                      <option
+                        key={option.value}
+                        value={option.value}
+                        className="bg-card text-foreground"
+                      >
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              </div>
+            </section>
+          </div>
+        </div>
+
+        {/* نوار دکمه‌های عملیاتی تمام‌عرض */}
+        <section className="flex flex-col-reverse gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
           <button
             type="button"
             onClick={handleReset}
             disabled={isSubmitting}
-            className="
-              h-11 rounded-lg border border-[var(--border)]
-              px-5 text-sm font-medium text-[var(--muted)]
-              transition-colors hover:bg-[var(--surface-hover)]
-              disabled:cursor-not-allowed disabled:opacity-60
-            "
+            className="inline-flex h-10 items-center justify-center rounded-xl border border-border bg-card px-4 text-xs font-medium text-muted-foreground transition-all hover:bg-accent hover:text-foreground disabled:opacity-50"
           >
             پاک کردن فرم
           </button>
 
-          <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="flex items-center gap-2.5">
             <Link
               href="/tickets"
-              className="
-                inline-flex h-11 items-center justify-center
-                rounded-lg border border-[var(--border)]
-                px-5 text-sm font-medium text-[var(--muted)]
-                transition-colors hover:bg-[var(--surface-hover)]
-              "
+              className="inline-flex h-10 items-center justify-center rounded-xl border border-border bg-card px-4 text-xs font-medium text-foreground transition-all hover:bg-accent"
             >
               انصراف
             </Link>
@@ -605,24 +517,17 @@ export default function NewTicketPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="
-                inline-flex h-11 items-center justify-center gap-2
-                rounded-lg bg-[var(--primary)]
-                px-6 text-sm font-medium
-                text-[var(--primary-foreground)]
-                transition-opacity hover:opacity-90
-                disabled:cursor-not-allowed disabled:opacity-60
-              "
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-xs font-semibold text-white shadow-sm shadow-blue-600/30 transition-all hover:bg-blue-500 disabled:opacity-60"
             >
               {isSubmitting ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  در حال ثبت...
+                  در حال ثبت تیکت...
                 </>
               ) : (
                 <>
-                  <Send className="h-4 w-4" />
-                  ثبت تیکت
+                  <Send className="h-3.5 w-3.5" />
+                  ثبت نهایی تیکت
                 </>
               )}
             </button>
@@ -647,47 +552,35 @@ function Field({
   children: ReactNode;
 }) {
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between gap-3">
-        <label className="text-sm font-medium text-[var(--foreground)]">
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between">
+        <label className="text-xs font-medium text-foreground">
           {label}
-
-          {required ? (
-            <span
-              className="mr-1 text-[var(--danger)]"
-              aria-label="الزامی"
-            >
-              *
-            </span>
-          ) : null}
+          {required && <span className="mr-1 text-rose-500">*</span>}
         </label>
 
-        {hint ? (
-          <span className="text-xs text-[var(--muted)]">{hint}</span>
-        ) : null}
+        {hint && (
+          <span className="text-[11px] text-muted-foreground">{hint}</span>
+        )}
       </div>
 
       {children}
 
-      {error ? (
-        <p className="text-xs text-[var(--danger)]">{error}</p>
-      ) : null}
+      {error && <p className="text-[11px] text-rose-500">{error}</p>}
     </div>
   );
 }
 
 function inputClass(hasError: boolean) {
   return `
-    h-11 w-full rounded-lg border
-    bg-[var(--background)]
-    px-3 text-sm text-[var(--foreground)]
-    outline-none transition-colors
-    placeholder:text-[var(--muted)]
-    focus:ring-2
+    h-10 w-full rounded-xl border
+    bg-background px-3.5 text-xs text-foreground
+    outline-none transition-all placeholder:text-muted-foreground
+    focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20
     ${
       hasError
-        ? 'border-[var(--danger)] focus:border-[var(--danger)] focus:ring-[var(--danger)]/15'
-        : 'border-[var(--border)] focus:border-[var(--primary)] focus:ring-[var(--ring)]/20'
+        ? 'border-rose-500/60 focus:border-rose-500 focus:ring-rose-500/20'
+        : 'border-border'
     }
   `;
 }

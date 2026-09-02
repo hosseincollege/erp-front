@@ -1,7 +1,4 @@
-/**
- * @file src/lib/auth-api.ts
- * @description توابع احراز هویت ERP Pro هماهنگ با api-client.ts
- */
+//frontend/src/lib/auth-api.ts
 
 import {
   apiClient,
@@ -21,6 +18,10 @@ export interface AuthUser {
   email?: string;
   role?: string;
   username?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  organizationId?: string;
 }
 
 export interface LoginPayload {
@@ -29,20 +30,28 @@ export interface LoginPayload {
 }
 
 export interface RegisterPayload {
-  name: string;
-  email: string;
+  username: string;
+  email?: string;
+  phone?: string;
+  firstName: string;
+  lastName: string;
   password: string;
 }
 
-export interface AuthResponse {
-  access_token?: string;
-  user?: AuthUser;
-  id?: string;
-  name?: string;
-  email?: string;
+export interface AuthResponseUser {
+  id: string;
+  username: string;
+  firstName: string;
+  lastName: string;
+  email?: string | null;
+  phone?: string | null;
   role?: string;
-  username?: string;
-  [key: string]: unknown;
+  organizationId?: string | null;
+}
+
+export interface AuthResponse {
+  access_token: string;
+  user: AuthResponseUser;
 }
 
 const USER_STORAGE_KEY = 'auth_user';
@@ -51,28 +60,56 @@ function isBrowser(): boolean {
   return typeof window !== 'undefined';
 }
 
+function getUserDisplayName(user: {
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+}): string {
+  if (user.name) {
+    return user.name;
+  }
+
+  const fullName = [user.firstName, user.lastName]
+    .filter(Boolean)
+    .join(' ')
+    .trim();
+
+  return fullName || 'کاربر';
+}
+
 function normalizeUser(
-  payload: Partial<AuthResponse> | undefined,
+  responseUser: AuthResponseUser | undefined,
   fallback: Partial<AuthUser> = {},
 ): AuthUser {
-  const source = payload?.user ?? payload ?? {};
+  const firstName = responseUser?.firstName ?? fallback.firstName;
+  const lastName = responseUser?.lastName ?? fallback.lastName;
 
   return {
-    id: source.id,
-    name: source.name || fallback.name || 'کاربر',
-    email: source.email || fallback.email,
-    role: source.role || fallback.role || 'user',
-    username: source.username || fallback.username,
+    id: responseUser?.id ?? fallback.id,
+    name: getUserDisplayName({
+      firstName,
+      lastName,
+      name: fallback.name,
+    }),
+    email: responseUser?.email ?? fallback.email ?? undefined,
+    role: responseUser?.role ?? fallback.role ?? 'user',
+    username: responseUser?.username ?? fallback.username,
+    firstName,
+    lastName,
+    phone: responseUser?.phone ?? fallback.phone,
+    organizationId: responseUser?.organizationId ?? fallback.organizationId,
   };
 }
 
 function saveUser(user: AuthUser): void {
   if (!isBrowser()) return;
+
   window.localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
 }
 
 function clearUser(): void {
   if (!isBrowser()) return;
+
   window.localStorage.removeItem(USER_STORAGE_KEY);
 }
 
@@ -80,21 +117,21 @@ function persistSession(
   response: AuthResponse,
   fallbackUser: Partial<AuthUser>,
 ): AuthUser {
-  const token = response.access_token;
-  if (token) {
-    setAccessToken(token);
+  if (response.access_token) {
+    setAccessToken(response.access_token);
   }
 
-  const user = normalizeUser(response, fallbackUser);
+  const user = normalizeUser(response.user, fallbackUser);
   saveUser(user);
+
   return user;
 }
 
 export async function login(payload: LoginPayload): Promise<AuthResponse> {
-  const response = await apiClient.post<AuthResponse, {
-    identifier: string;
-    password: string;
-  }>('/auth/login', {
+  const response = await apiClient.post<
+    AuthResponse,
+    { identifier: string; password: string }
+  >('/auth/login', {
     identifier: payload.email,
     password: payload.password,
   });
@@ -107,19 +144,28 @@ export async function login(payload: LoginPayload): Promise<AuthResponse> {
   return response;
 }
 
-export async function register(payload: RegisterPayload): Promise<AuthResponse> {
+export async function register(
+  payload: RegisterPayload,
+): Promise<AuthResponse> {
   const response = await apiClient.post<AuthResponse, RegisterPayload>(
     '/auth/register',
     {
-      name: payload.name,
-      email: payload.email,
+      username: payload.username,
+      email: payload.email || undefined,
+      phone: payload.phone || undefined,
+      firstName: payload.firstName,
+      lastName: payload.lastName,
       password: payload.password,
     },
   );
 
   persistSession(response, {
-    name: payload.name,
+    name: `${payload.firstName} ${payload.lastName}`.trim(),
     email: payload.email,
+    phone: payload.phone,
+    username: payload.username,
+    firstName: payload.firstName,
+    lastName: payload.lastName,
   });
 
   return response;
@@ -129,7 +175,10 @@ export function getCurrentUser(): AuthUser | null {
   if (!isBrowser()) return null;
 
   const rawUser = window.localStorage.getItem(USER_STORAGE_KEY);
-  if (!rawUser) return null;
+
+  if (!rawUser) {
+    return null;
+  }
 
   try {
     return JSON.parse(rawUser) as AuthUser;
@@ -139,8 +188,12 @@ export function getCurrentUser(): AuthUser | null {
   }
 }
 
+export function getCurrentOrganizationId(): string | null {
+  return getCurrentUser()?.organizationId ?? null;
+}
+
 export function isUserAuthenticated(): boolean {
-  return isAuthenticated() || getCurrentUser() !== null || getAccessToken() !== null;
+  return Boolean(getAccessToken() || isAuthenticated() || getCurrentUser());
 }
 
 export async function logout(): Promise<void> {

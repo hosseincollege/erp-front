@@ -6,40 +6,32 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-
-import { TopHeader } from './top-header';
 import { Sidebar } from './sidebar';
+import { TopHeader } from './top-header';
 
 const SIDEBAR_COLLAPSED_KEY = 'erp-sidebar-collapsed';
 const SIDEBAR_LOCKED_KEY = 'erp-sidebar-locked';
+const NAVIGATE_ON_CLICK_KEY = 'erp-navigate-on-click';
 
 interface AppShellProps {
   children: React.ReactNode;
 }
 
 export function AppShell({ children }: AppShellProps) {
-  /*
-   * مقدار اولیه فقط برای رندر سمت کلاینت استفاده می‌شود.
-   * بعد از mount، مقدار ذخیره‌شده از localStorage خوانده خواهد شد.
-   */
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [isSidebarLocked, setIsSidebarLocked] = useState(false);
-
-  const [isSidebarStateLoaded, setIsSidebarStateLoaded] =
-    useState(false);
+  const [isSidebarStateLoaded, setIsSidebarStateLoaded] = useState(false);
+  const [isProfileActive, setIsProfileActive] = useState(false);
+  const [navigateOnClick, setNavigateOnClick] = useState(false);
 
   /*
-   * خواندن وضعیت قبلی سایدبار
+   * خواندن وضعیت ذخیره‌شده سایدبار و حالت ناوبری از localStorage در سمت کلاینت
    */
   useEffect(() => {
     try {
-      const savedCollapsed = localStorage.getItem(
-        SIDEBAR_COLLAPSED_KEY
-      );
-
-      const savedLocked = localStorage.getItem(
-        SIDEBAR_LOCKED_KEY
-      );
+      const savedCollapsed = window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
+      const savedLocked = window.localStorage.getItem(SIDEBAR_LOCKED_KEY);
+      const savedNavigateOnClick = window.localStorage.getItem(NAVIGATE_ON_CLICK_KEY);
 
       if (savedCollapsed !== null) {
         setIsCollapsed(savedCollapsed === 'true');
@@ -48,9 +40,13 @@ export function AppShell({ children }: AppShellProps) {
       if (savedLocked !== null) {
         setIsSidebarLocked(savedLocked === 'true');
       }
+
+      if (savedNavigateOnClick !== null) {
+        setNavigateOnClick(savedNavigateOnClick === 'true');
+      }
     } catch (error) {
       console.warn(
-        'امکان خواندن وضعیت سایدبار از localStorage وجود ندارد:',
+        'امکان خواندن وضعیت‌ها از localStorage وجود ندارد:',
         error
       );
     } finally {
@@ -59,23 +55,14 @@ export function AppShell({ children }: AppShellProps) {
   }, []);
 
   /*
-   * ذخیره وضعیت باز یا جمع‌بودن سایدبار
+   * ذخیره وضعیت جمع/باز بودن سایدبار
    */
   useEffect(() => {
-    if (!isSidebarStateLoaded) {
-      return;
-    }
-
+    if (!isSidebarStateLoaded) return;
     try {
-      localStorage.setItem(
-        SIDEBAR_COLLAPSED_KEY,
-        String(isCollapsed)
-      );
+      window.localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(isCollapsed));
     } catch (error) {
-      console.warn(
-        'امکان ذخیره وضعیت باز/جمع سایدبار وجود ندارد:',
-        error
-      );
+      console.warn('امکان ذخیره وضعیت باز/جمع سایدبار وجود ندارد:', error);
     }
   }, [isCollapsed, isSidebarStateLoaded]);
 
@@ -83,99 +70,88 @@ export function AppShell({ children }: AppShellProps) {
    * ذخیره وضعیت قفل سایدبار
    */
   useEffect(() => {
-    if (!isSidebarStateLoaded) {
-      return;
-    }
-
+    if (!isSidebarStateLoaded) return;
     try {
-      localStorage.setItem(
-        SIDEBAR_LOCKED_KEY,
-        String(isSidebarLocked)
-      );
+      window.localStorage.setItem(SIDEBAR_LOCKED_KEY, String(isSidebarLocked));
     } catch (error) {
-      console.warn(
-        'امکان ذخیره وضعیت قفل سایدبار وجود ندارد:',
-        error
-      );
+      console.warn('امکان ذخیره وضعیت قفل سایدبار وجود ندارد:', error);
     }
   }, [isSidebarLocked, isSidebarStateLoaded]);
 
   /*
-   * باز و بسته‌کردن سایدبار از طریق فلش هدر
+   * ذخیره وضعیت حالت ناوبری با کلیک
    */
-  const handleToggleSidebar = () => {
-    // سایدبار باز و قفل است؛ اجازه بسته‌شدن وجود ندارد
-    if (!isCollapsed && isSidebarLocked) {
-      return;
+  useEffect(() => {
+    if (!isSidebarStateLoaded) return;
+    try {
+      window.localStorage.setItem(NAVIGATE_ON_CLICK_KEY, String(navigateOnClick));
+    } catch (error) {
+      console.warn('امکان ذخیره وضعیت حالت ناوبری وجود ندارد:', error);
     }
+  }, [navigateOnClick, isSidebarStateLoaded]);
 
+  const handleToggleSidebar = () => {
+    if (!isCollapsed && isSidebarLocked) return;
     setIsCollapsed((previous) => !previous);
   };
 
-  /*
-   * بستن سایدبار با کلیک بیرون
-   */
   const handleCloseSidebar = () => {
-    // اگر قفل فعال باشد، کلیک بیرون اثری ندارد
-    if (isSidebarLocked) {
-      return;
-    }
-
+    if (isSidebarLocked) return;
     setIsCollapsed(true);
+    setIsProfileActive(false);
   };
 
-  /*
-   * فعال یا غیرفعال‌کردن قفل
-   */
   const handleToggleSidebarLock = () => {
     setIsSidebarLocked((previousLocked) => {
       const nextLocked = !previousLocked;
-
-      /*
-       * وقتی کاربر قفل را فعال می‌کند،
-       * سایدبار حتماً باز می‌ماند.
-       */
       if (nextLocked) {
         setIsCollapsed(false);
       }
-
       return nextLocked;
     });
+  };
+
+  const handleToggleProfileSidebar = () => {
+    setIsProfileActive((previous) => !previous);
+  };
+
+  const handleToggleNavigateOnClick = () => {
+    setNavigateOnClick((previous) => !previous);
   };
 
   return (
     <div
       dir="rtl"
-      className="
-        flex min-h-screen flex-col
-        bg-[color:var(--background)]
-        text-[color:var(--foreground)]
-        transition-colors duration-200
-      "
+      className="flex h-screen min-h-0 flex-col overflow-hidden bg-[color:var(--background)] text-[color:var(--foreground)] transition-colors duration-200"
     >
       <TopHeader
         isCollapsed={isCollapsed}
         isSidebarLocked={isSidebarLocked}
+        isProfileActive={isProfileActive}
+        navigateOnClick={navigateOnClick}
         onToggleSidebar={handleToggleSidebar}
         onToggleSidebarLock={handleToggleSidebarLock}
+        onToggleProfile={handleToggleProfileSidebar}
+        onToggleNavigateOnClick={handleToggleNavigateOnClick}
       />
 
-      <div className="flex min-h-0 flex-1 items-stretch">
+      <div className="flex min-h-0 flex-1 items-stretch overflow-hidden">
         <Sidebar
           isMainCollapsed={isCollapsed}
           isLocked={isSidebarLocked}
+          isProfileActive={isProfileActive}
+          navigateOnClick={navigateOnClick}
+          onSetProfileActive={setIsProfileActive}
           onCloseSidebar={handleCloseSidebar}
         />
 
         <main
-          className="
-            min-w-0 flex-1
-            overflow-y-auto
-            bg-[color:var(--background)]
-            p-6
-          "
+          dir="ltr"
+          className="erp-scrollbar min-h-0 min-w-0 flex-1 bg-[color:var(--background)]"
         >
-          {children}
+          <div dir="rtl" className="min-h-full w-full p-6 text-right">
+            {children}
+          </div>
         </main>
       </div>
     </div>

@@ -1,64 +1,113 @@
 // File: frontend/src/app/api/settings/import/organization/route.ts
-import { NextResponse } from "next/server";
+// Frontend API Route - اعتبارسنجی فایل JSON اطلاعات شرکت و ساختار سازمانی
+
+import { NextResponse } from 'next/server';
+
+interface OrganizationImportBody {
+  company?: {
+    name?: string;
+    [key: string]: unknown;
+  };
+  branches?: unknown[];
+  departments?: unknown[];
+}
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return 'خطای ناشناخته‌ای رخ داد.';
+}
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const body = (await request.json()) as OrganizationImportBody;
 
-    const { company, branches, departments } = body;
-
-    if (!company || typeof company !== "object" || !company.name) {
+    if (
+      !body ||
+      typeof body !== 'object' ||
+      Array.isArray(body)
+    ) {
       return NextResponse.json(
         {
-          message: "اطلاعات شرکت ناقص است. نام شرکت الزامی است."
+          message: 'ساختار فایل JSON معتبر نیست.',
         },
-        { status: 400 }
+        {
+          status: 400,
+        },
       );
     }
 
-    if (branches !== undefined && !Array.isArray(branches)) {
+    const company = body.company;
+    const branches = body.branches ?? [];
+    const departments = body.departments ?? [];
+
+    if (
+      !company ||
+      typeof company !== 'object' ||
+      Array.isArray(company) ||
+      typeof company.name !== 'string' ||
+      company.name.trim().length === 0
+    ) {
       return NextResponse.json(
         {
-          message: "فیلد branches باید آرایه باشد."
+          message:
+            'اطلاعات شرکت ناقص است. فیلد company.name الزامی است.',
         },
-        { status: 400 }
+        {
+          status: 400,
+        },
       );
     }
 
-    if (departments !== undefined && !Array.isArray(departments)) {
+    if (!Array.isArray(branches)) {
       return NextResponse.json(
         {
-          message: "فیلد departments باید آرایه باشد."
+          message: 'فیلد branches باید یک آرایه باشد.',
         },
-        { status: 400 }
+        {
+          status: 400,
+        },
       );
     }
 
-    console.log("Organization import received:", {
-      company,
-      branchesCount: branches?.length ?? 0,
-      departmentsCount: departments?.length ?? 0
-    });
+    if (!Array.isArray(departments)) {
+      return NextResponse.json(
+        {
+          message: 'فیلد departments باید یک آرایه باشد.',
+        },
+        {
+          status: 400,
+        },
+      );
+    }
 
     return NextResponse.json(
       {
-        message: `ساختار سازمان شامل ${branches?.length ?? 0} شعبه و ${departments?.length ?? 0} دپارتمان با موفقیت دریافت شد.`,
+        message: 'اطلاعات سازمان با موفقیت دریافت و اعتبارسنجی شد.',
         data: {
           company,
-          branches: branches ?? [],
-          departments: departments ?? []
-        }
+          branches,
+          departments,
+          summary: {
+            branchesCount: branches.length,
+            departmentsCount: departments.length,
+          },
+        },
       },
-      { status: 200 }
+      {
+        status: 200,
+      },
     );
   } catch (error) {
-    console.error("Organization import error:", error);
-
     return NextResponse.json(
       {
-        message: "بدنه درخواست JSON معتبر نیست."
+        message: `خواندن فایل JSON انجام نشد: ${getErrorMessage(error)}`,
       },
-      { status: 400 }
+      {
+        status: 400,
+      },
     );
   }
 }

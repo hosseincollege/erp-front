@@ -1,14 +1,23 @@
-/**
- * @file frontend/src/lib/settings-api.ts
- * @description کلاینت ارتباط با اندپوینت‌های تنظیمات سامانه ERP
- */
+// Path: frontend/src/lib/settings-api.ts
+// Frontend - Next.js
+// این فایل مسئول برقراری ارتباط با APIهای بخش تنظیمات و سازمان در بک‌اند است.
+//
+// نکته مهم: apiClient مستقیماً به بک‌اند (NEXT_PUBLIC_API_BASE_URL یا
+// http://localhost:3006) درخواست می‌زند و بک‌اند پیشوند /api ندارد؛
+// بنابراین همه مسیرها باید بدون /api باشند. فقط مسیرهای پروکسی Next.js
+// (زیر src/app/api/...) با پیشوند /api فراخوانی می‌شوند.
 
-export interface CompanyData {
+import { apiClient } from './api-client';
+
+export interface CompanySettings {
+  id?: string;
   name: string;
+  slug?: string;
   legalName?: string;
-  economicCode?: string;
-  nationalId?: string;
   registrationNumber?: string;
+  nationalId?: string;
+  economicCode?: string;
+  taxOffice?: string;
   phone?: string;
   email?: string;
   website?: string;
@@ -16,15 +25,75 @@ export interface CompanyData {
   postalCode?: string;
   currency?: string;
   fiscalYearStart?: string;
+  logoUrl?: string;
+  status?: string;
+}
+
+/*
+ * فقط فیلدهایی که DTO بک‌اند برای
+ * PUT /settings/organization/:id
+ * قبول می‌کند.
+ *
+ * فیلدهایی مانند id، slug، ownerId، branches و departments
+ * نباید در درخواست ویرایش سازمان ارسال شوند.
+ */
+export interface UpdateOrganizationSettingsRequest {
+  name?: string;
+  legalName?: string;
+  nationalId?: string;
+  registrationNumber?: string;
+  economicCode?: string;
+  taxOffice?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  address?: string;
+  postalCode?: string;
+  currency?: string;
+  fiscalYearStart?: string;
+  logoUrl?: string;
+  status?: 'ACTIVE' | 'SUSPENDED' | 'ARCHIVED';
+}
+
+export interface CreateOrganizationRequest {
+  name: string;
+  slug: string;
+  legalName?: string;
+  nationalId?: string;
+  registrationNumber?: string;
+  economicCode?: string;
+  taxOffice?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  address?: string;
+  postalCode?: string;
+  currency?: string;
+  fiscalYearStart?: string;
+  logoUrl?: string;
+}
+
+export interface CreateOrganizationResponse {
+  organization: CompanySettings;
+  membership: {
+    id: string;
+    organizationId: string;
+    userId: string;
+  };
+  organizationId: string;
 }
 
 export interface BranchItem {
   id: string;
   name: string;
   code: string;
-  phone?: string;
   address?: string;
+  phone?: string;
+  email?: string;
+  postalCode?: string;
+  isActive: boolean;
   isHeadquarters: boolean;
+  organizationId: string;
 }
 
 export interface DepartmentItem {
@@ -32,21 +101,35 @@ export interface DepartmentItem {
   name: string;
   code: string;
   branchId?: string;
-  branchCode?: string;
   managerName?: string;
+  description?: string;
+  branch?: {
+    id: string;
+    name: string;
+  };
+}
+
+export interface UserRoleItem {
+  id: string;
+  name: string;
+  key: string;
+  description?: string | null;
 }
 
 export interface UserItem {
   id: string;
-  name?: string;
-  fullName?: string;
-  email: string;
-  phone?: string;
-  role: string;
-  roleSlug?: string;
+  username: string;
+  name: string;
+  firstName: string;
+  lastName: string;
+  email?: string | null;
+  phone?: string | null;
+  status: string;
+  isSystemUser: boolean;
+  role?: string | null;
+  roleKey?: string | null;
+  roles: UserRoleItem[];
   department?: string;
-  departmentCode?: string;
-  branchCode?: string;
   isActive: boolean;
 }
 
@@ -54,166 +137,308 @@ export interface RoleItem {
   id: string;
   name: string;
   key: string;
-  slug?: string;
-  description: string;
+  description?: string;
   userCount: number;
   permissions: string[];
 }
 
-const STORAGE_PREFIX = 'erp_settings_';
-
-function getLocal<T>(key: string, defaultVal: T): T {
-  if (typeof window === 'undefined') return defaultVal;
-  const saved = localStorage.getItem(STORAGE_PREFIX + key);
-  return saved ? JSON.parse(saved) : defaultVal;
-}
-
-function setLocal<T>(key: string, val: T): void {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(val));
-}
-
-// ================== شرکت ==================
-export async function getCompanySettings(): Promise<CompanyData> {
-  const emptyCompany: CompanyData = {
-    name: '',
-    legalName: '',
-    economicCode: '',
-    nationalId: '',
-    registrationNumber: '',
-    phone: '',
-    email: '',
-    website: '',
-    address: '',
-    postalCode: '',
-    currency: 'IRR',
-    fiscalYearStart: '',
+/*
+ * Payload ایمپورت ساختار سازمانی — دقیقاً مطابق ImportOrganizationDto بک‌اند:
+ * - branches: name و code اجباری
+ * - departments: name و code اجباری (فیلد code در نسخه قبلی فرانت نبود
+ *   و باعث خطای اعتبارسنجی/500 می‌شد)
+ */
+export interface OrganizationImportPayload {
+  organizationId?: string;
+  organization?: {
+    name?: string;
+    legalName?: string;
+    nationalId?: string;
+    registrationNumber?: string;
+    economicCode?: string;
+    taxOffice?: string;
+    phone?: string;
+    email?: string;
+    website?: string;
+    address?: string;
+    postalCode?: string;
+    currency?: string;
+    fiscalYearStart?: string;
+    logoUrl?: string;
   };
-  return getLocal<CompanyData>('company', emptyCompany);
+  branches: Array<{
+    id?: string;
+    name: string;
+    code: string;
+    address?: string;
+    phone?: string;
+    email?: string;
+    postalCode?: string;
+    isMain?: boolean;
+    isActive?: boolean;
+  }>;
+  departments: Array<{
+    id?: string;
+    name: string;
+    code: string;
+    branchId?: string;
+    branchName?: string;
+    isActive?: boolean;
+  }>;
 }
 
-export async function saveCompanySettings(data: CompanyData): Promise<boolean> {
-  setLocal('company', data);
-  return true;
+/*
+ * اعتبارسنجی organizationId قبل از هر درخواستی که به شناسه نیاز دارد.
+ * اگر شناسه نامعتبر باشد، خطای معنادار پرتاب می‌شود تا به‌جای 500 مبهم،
+ * پیام روشنی به UI برسد.
+ */
+function assertOrgId(orgId: string | undefined | null): string {
+  const id = (orgId ?? '').trim();
+  if (!id) {
+    throw new Error(
+      'شناسه سازمان در دسترس نیست. کاربر به هیچ سازمانی متصل نیست یا توکن معتبر ندارد.',
+    );
+  }
+  return encodeURIComponent(id);
 }
 
-// ================== شعبه‌ها ==================
-export async function getBranches(): Promise<BranchItem[]> {
-  return getLocal<BranchItem[]>('branches', []);
-}
-
-export async function saveBranches(branches: BranchItem[]): Promise<boolean> {
-  setLocal('branches', branches);
-  return true;
-}
-
-// ================== دپارتمان‌ها ==================
-export async function getDepartments(): Promise<DepartmentItem[]> {
-  return getLocal<DepartmentItem[]>('departments', []);
-}
-
-export async function saveDepartments(departments: DepartmentItem[]): Promise<boolean> {
-  setLocal('departments', departments);
-  return true;
-}
-
-// ================== کاربران ==================
-export async function getUsers(): Promise<UserItem[]> {
-  return getLocal<UserItem[]>('users', []);
-}
-
-export async function saveUsers(users: UserItem[]): Promise<boolean> {
-  setLocal('users', users);
-  return true;
-}
-
-// ================== نقش‌ها ==================
-export async function getRoles(): Promise<RoleItem[]> {
-  return getLocal<RoleItem[]>('roles', []);
-}
-
-export async function saveRoles(roles: RoleItem[]): Promise<boolean> {
-  setLocal('roles', roles);
-  return true;
-}
-
-// ================== سرویس درون‌ریزی (Data Import) ==================
 export const settingsApi = {
-  getCompany: getCompanySettings,
-  updateCompany: saveCompanySettings,
-  getBranches,
-  updateBranches: saveBranches,
-  getDepartments,
-  updateDepartments: saveDepartments,
-  getUsers,
-  updateUsers: saveUsers,
-  getRoles,
-  updateRoles: saveRoles,
-
-  importOrganization: async (payload: {
-    company?: CompanyData;
-    branches?: BranchItem[];
-    departments?: DepartmentItem[];
-  }) => {
-    if (payload.company) {
-      await saveCompanySettings(payload.company);
-    }
-    if (payload.branches && Array.isArray(payload.branches)) {
-      const branches: BranchItem[] = payload.branches.map((b, idx) => ({
-        id: b.id || String(Date.now() + idx),
-        name: b.name,
-        code: b.code,
-        phone: b.phone || '',
-        address: b.address || '',
-        isHeadquarters: b.isHeadquarters ?? idx === 0,
-      }));
-      await saveBranches(branches);
-    }
-    if (payload.departments && Array.isArray(payload.departments)) {
-      const departments: DepartmentItem[] = payload.departments.map((d, idx) => ({
-        id: d.id || String(Date.now() + idx + 10),
-        name: d.name,
-        code: d.code,
-        branchCode: d.branchCode || '',
-        managerName: d.managerName || '',
-      }));
-      await saveDepartments(departments);
-    }
-    return { data: { message: 'اطلاعات سازمان، شعب و دپارتمان‌ها با موفقیت ثبت شد.' } };
+  /*
+   * GET /settings/organization/:id
+   * خطا دیگر پنهان نمی‌شود؛ caller تصمیم می‌گیرد با خطا چه کند.
+   */
+  async getCompanySettings(orgId: string): Promise<CompanySettings> {
+    const id = assertOrgId(orgId);
+    return apiClient.get<CompanySettings>(`/settings/organization/${id}`);
   },
 
-  importUsersAndRoles: async (payload: {
-    roles?: RoleItem[];
-    users?: UserItem[];
-  }) => {
-    if (payload.roles && Array.isArray(payload.roles)) {
-      const roles: RoleItem[] = payload.roles.map((r, idx) => ({
-        id: r.id || String(Date.now() + idx),
-        name: r.name,
-        key: r.key || r.slug || 'ROLE',
-        slug: r.slug || r.key,
-        description: r.description || '',
-        userCount: payload.users ? payload.users.filter((u) => (u.roleSlug || u.role) === (r.slug || r.key)).length : 0,
-        permissions: r.permissions || [],
-      }));
-      await saveRoles(roles);
+  async saveCompanySettings(
+    data: CompanySettings,
+    orgId: string,
+  ): Promise<CompanySettings> {
+    /*
+     * DTO بک‌اند برای PUT فقط این فیلدها را قبول می‌کند؛ پس یک payload
+     * تمیز ایجاد می‌کنیم و کل data را مستقیماً ارسال نمی‌کنیم
+     * (ValidationPipe بک‌اند فیلدهای خارج از DTO را رد می‌کند).
+     */
+    const payload: UpdateOrganizationSettingsRequest = {
+      name: data.name,
+      legalName: data.legalName,
+      nationalId: data.nationalId,
+      registrationNumber: data.registrationNumber,
+      economicCode: data.economicCode,
+      taxOffice: data.taxOffice,
+      phone: data.phone,
+      email: data.email,
+      website: data.website,
+      address: data.address,
+      postalCode: data.postalCode,
+      currency: data.currency,
+      fiscalYearStart: data.fiscalYearStart,
+      logoUrl: data.logoUrl,
+      status:
+        data.status === 'ACTIVE' ||
+        data.status === 'SUSPENDED' ||
+        data.status === 'ARCHIVED'
+          ? (data.status as 'ACTIVE' | 'SUSPENDED' | 'ARCHIVED')
+          : undefined,
+    };
+
+    const id = assertOrgId(orgId);
+    return apiClient.put<CompanySettings>(
+      `/settings/organization/${id}`,
+      payload,
+    );
+  },
+
+  /*
+   * POST /settings/organization
+   * پاسخ شامل membership است تا organizationId کاربر بلافاصله در دسترس باشد.
+   */
+  async createCompany(
+    data: CreateOrganizationRequest,
+  ): Promise<CreateOrganizationResponse> {
+    return apiClient.post<
+      CreateOrganizationResponse,
+      CreateOrganizationRequest
+    >('/settings/organization', data);
+  },
+
+  async getBranches(orgId: string): Promise<BranchItem[]> {
+    const id = assertOrgId(orgId);
+    return apiClient.get<BranchItem[]>(`/settings/branches/${id}`);
+  },
+
+  /*
+   * POST /settings/branches
+   * CreateBranchDto بک‌اند organizationId را در body اجباری کرده است.
+   */
+  async createBranch(data: Omit<BranchItem, 'id'>): Promise<BranchItem> {
+    assertOrgId(data.organizationId);
+    return apiClient.post<BranchItem, Omit<BranchItem, 'id'>>(
+      '/settings/branches',
+      data,
+    );
+  },
+
+  /*
+   * PUT /settings/branches/:id
+   * UpdateBranchDto بک‌اند organizationId ندارد؛ آن را از payload حذف می‌کنیم.
+   */
+  async updateBranch(
+    id: string,
+    data: Partial<BranchItem>,
+  ): Promise<BranchItem> {
+    const { organizationId: _ignored, ...payload } = data;
+    return apiClient.put<BranchItem, Partial<BranchItem>>(
+      `/settings/branches/${encodeURIComponent(id)}`,
+      payload,
+    );
+  },
+
+  async deleteBranch(id: string): Promise<void> {
+    await apiClient.delete<void>(`/settings/branches/${encodeURIComponent(id)}`);
+  },
+
+  async getDepartments(orgId: string): Promise<DepartmentItem[]> {
+    const id = assertOrgId(orgId);
+    return apiClient.get<DepartmentItem[]>(`/settings/departments/${id}`);
+  },
+
+  /*
+   * POST /settings/departments
+   * CreateDepartmentDto بک‌اند organizationId را در body اجباری کرده است.
+   */
+  async createDepartment(
+    data: Omit<DepartmentItem, 'id'> & { organizationId: string },
+  ): Promise<DepartmentItem> {
+    assertOrgId(data.organizationId);
+    return apiClient.post<
+      DepartmentItem,
+      Omit<DepartmentItem, 'id'> & { organizationId: string }
+    >('/settings/departments', data);
+  },
+
+  /*
+   * PUT /settings/departments/:id
+   * UpdateDepartmentDto بک‌اند organizationId ندارد.
+   */
+  async updateDepartment(
+    id: string,
+    data: Partial<DepartmentItem>,
+  ): Promise<DepartmentItem> {
+    return apiClient.put<DepartmentItem, Partial<DepartmentItem>>(
+      `/settings/departments/${encodeURIComponent(id)}`,
+      data,
+    );
+  },
+
+  async deleteDepartment(id: string): Promise<void> {
+    await apiClient.delete<void>(
+      `/settings/departments/${encodeURIComponent(id)}`,
+    );
+  },
+
+  async getUsers(orgId: string): Promise<UserItem[]> {
+    const id = assertOrgId(orgId);
+    return apiClient.get<UserItem[]>(`/settings/users/${id}`);
+  },
+
+  async saveUsers(
+    users: UserItem[],
+    orgId: string,
+  ): Promise<UserItem[]> {
+    const id = assertOrgId(orgId);
+    return apiClient.put<UserItem[], UserItem[]>(
+      `/settings/users/${id}`,
+      users,
+    );
+  },
+
+  async getRoles(orgId: string): Promise<RoleItem[]> {
+    const id = assertOrgId(orgId);
+    return apiClient.get<RoleItem[]>(`/settings/roles/${id}`);
+  },
+
+  /*
+   * PUT /settings/roles/:organizationId
+   * کنترلر بک‌اند آرایه خام SaveRoleDto[] می‌گیرد (بدون wrapper مثل { roles }).
+   */
+  async saveRoles(
+    roles: RoleItem[],
+    orgId: string,
+  ): Promise<RoleItem[]> {
+    const id = assertOrgId(orgId);
+    return apiClient.put<RoleItem[], RoleItem[]>(`/settings/roles/${id}`, roles);
+  },
+
+  async exportOrganization(orgId: string): Promise<unknown> {
+    const id = assertOrgId(orgId);
+    return apiClient.get<unknown>(`/settings/export/${id}`);
+  },
+
+  /*
+   * POST /settings/import/:organizationId
+   * ایمپورت کامل داده سازمان با شناسه در URL.
+   */
+  async importOrganization(
+    orgId: string,
+    data: OrganizationImportPayload,
+  ): Promise<CompanySettings> {
+    const id = assertOrgId(orgId);
+    return apiClient.post<CompanySettings, OrganizationImportPayload>(
+      `/settings/import/${id}`,
+      data,
+    );
+  },
+
+  /*
+   * ایمپورت ساختار سازمانی برای organization-tab.tsx
+   * از پروکسی Next.js استفاده می‌کند که مسیر و بدنه را مطابق
+   * ImportOrganizationDto بک‌اند نرمال‌سازی می‌کند.
+   */
+  async importOrganizationStructure(
+    data: OrganizationImportPayload,
+  ): Promise<unknown> {
+    return apiClient.post<unknown, OrganizationImportPayload>(
+      '/api/settings/import/organization-structure',
+      data,
+    );
+  },
+
+  /*
+   * Aliasهای سازگاری برای company-tab.tsx
+   */
+  async getOrganization(orgId?: string): Promise<CompanySettings> {
+    if (!orgId?.trim()) {
+      throw new Error('شناسه سازمان برای دریافت اطلاعات الزامی است.');
     }
-    if (payload.users && Array.isArray(payload.users)) {
-      const users: UserItem[] = payload.users.map((u, idx) => ({
-        id: u.id || String(Date.now() + idx + 20),
-        name: u.fullName || u.name || '',
-        fullName: u.fullName || u.name || '',
-        email: u.email,
-        phone: u.phone || '',
-        role: u.roleSlug || u.role || 'USER',
-        roleSlug: u.roleSlug || u.role,
-        department: u.departmentCode || u.department || '',
-        departmentCode: u.departmentCode || u.department,
-        branchCode: u.branchCode || '',
-        isActive: u.isActive ?? true,
-      }));
-      await saveUsers(users);
+    return this.getCompanySettings(orgId);
+  },
+
+  async updateOrganization(
+    data: CompanySettings,
+    orgId?: string,
+  ): Promise<CompanySettings> {
+    if (!orgId?.trim()) {
+      throw new Error('شناسه سازمان برای ذخیره‌سازی الزامی است.');
     }
-    return { data: { message: 'اطلاعات کاربران و سطوح دسترسی با موفقیت ثبت شد.' } };
+    return this.saveCompanySettings(data, orgId);
   },
 };
+
+export const getUsers = (orgId: string): Promise<UserItem[]> =>
+  settingsApi.getUsers(orgId);
+
+export const saveUsers = (
+  users: UserItem[],
+  orgId: string,
+): Promise<UserItem[]> => settingsApi.saveUsers(users, orgId);
+
+export const getRoles = (orgId: string): Promise<RoleItem[]> =>
+  settingsApi.getRoles(orgId);
+
+export const saveRoles = (
+  roles: RoleItem[],
+  orgId: string,
+): Promise<RoleItem[]> => settingsApi.saveRoles(roles, orgId);

@@ -5,17 +5,15 @@
 
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { getCurrentUser, logout, AuthUser } from '@/lib/auth-api';
+import { getCurrentUser, AuthUser } from '@/lib/auth-api';
 
 import {
+  ArrowLeftRight,
   Bell,
-  ChevronDown,
   ChevronLeft,
   Lock,
-  LogOut,
   Monitor,
   Moon,
   ShieldCheck,
@@ -29,23 +27,26 @@ type ThemeMode = 'system' | 'light' | 'dark';
 interface TopHeaderProps {
   isCollapsed?: boolean;
   isSidebarLocked?: boolean;
+  isProfileActive?: boolean;
+  navigateOnClick?: boolean;
   onToggleSidebar?: () => void;
   onToggleSidebarLock?: () => void;
+  onToggleProfile?: () => void;
+  onToggleNavigateOnClick?: () => void;
 }
 
 export function TopHeader({
   isCollapsed = true,
   isSidebarLocked = false,
+  isProfileActive = false,
+  navigateOnClick = false,
   onToggleSidebar,
   onToggleSidebarLock,
+  onToggleProfile,
+  onToggleNavigateOnClick,
 }: TopHeaderProps) {
-  const router = useRouter();
-
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [theme, setTheme] = useState<ThemeMode>('system');
-
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const applyTheme = (mode: ThemeMode) => {
     const isDark =
@@ -118,48 +119,7 @@ export function TopHeader({
   }, []);
 
   /*
-   * فقط منوی پروفایل با کلیک بیرون بسته می‌شود.
-   *
-   * مهم:
-   * عمداً در TopHeader هیچ منطق کلیک بیرون برای Sidebar وجود ندارد.
-   * مسئولیت باز/بسته شدن با کلیک بیرون فقط با sidebar.tsx است.
-   */
-  useEffect(() => {
-    const handleProfileMenuClickOutside = (
-      event: MouseEvent
-    ) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsMenuOpen(false);
-      }
-    };
-
-    document.addEventListener(
-      'mousedown',
-      handleProfileMenuClickOutside
-    );
-
-    return () => {
-      document.removeEventListener(
-        'mousedown',
-        handleProfileMenuClickOutside
-      );
-    };
-  }, []);
-
-  const handleLogout = async () => {
-    await logout();
-
-    setIsMenuOpen(false);
-    router.push('/login');
-    router.refresh();
-  };
-
-  /*
-   * گردش بین تم‌ها:
-   * system → light → dark → system
+   * گردش بین حالت‌های تم
    */
   const cycleTheme = () => {
     const nextTheme: ThemeMode =
@@ -174,56 +134,25 @@ export function TopHeader({
     applyTheme(nextTheme);
   };
 
-  /*
-   * منطق دکمه‌ی یکپارچه‌ی سایدبار:
-   *
-   * 1) بسته:
-   *    باز کردن سایدبار
-   *
-   * 2) باز و آزاد:
-   *    قفل کردن سایدبار
-   *
-   * 3) باز و قفل:
-   *    باز کردن قفل سایدبار، بدون بستن آن
-   */
   const handleSidebarButtonClick = (
     event: React.MouseEvent<HTMLButtonElement>
   ) => {
     event.preventDefault();
     event.stopPropagation();
 
-    /*
-     * حالت سوم: سایدبار باز و قفل است.
-     * با کلیک فقط قفل باز می‌شود؛ سایدبار باز می‌ماند.
-     */
     if (!isCollapsed && isSidebarLocked) {
       onToggleSidebarLock?.();
       return;
     }
 
-    /*
-     * حالت اول: سایدبار بسته است.
-     * با کلیک باز می‌شود.
-     */
     if (isCollapsed) {
       onToggleSidebar?.();
       return;
     }
 
-    /*
-     * حالت دوم: سایدبار باز و آزاد است.
-     * با کلیک قفل می‌شود.
-     *
-     * طبق منطق AppShell، فعال‌شدن قفل
-     * سایدبار را باز نگه می‌دارد.
-     */
     onToggleSidebarLock?.();
   };
 
-  /*
-   * جلوگیری از رسیدن mousedown کنترل هدر
-   * به listener کلیک بیرون موجود در Sidebar
-   */
   const handleSidebarButtonMouseDown = (
     event: React.MouseEvent<HTMLButtonElement>
   ) => {
@@ -260,6 +189,10 @@ export function TopHeader({
         ? 'حالت فعلی: روشن'
         : 'حالت فعلی: تیره';
 
+  const navigateModeTitle = navigateOnClick
+    ? 'ناوبری خودکار: فعال (کلیک روی ماژول صفحه را باز می‌کند)'
+    : 'ناوبری خودکار: غیرفعال (کلیک روی ماژول فقط منو را باز می‌کند)';
+
   return (
     <header
       dir="rtl"
@@ -270,56 +203,136 @@ export function TopHeader({
         backdrop-blur-md transition-colors duration-200
       "
     >
-      {/* کنترل یکپارچه سه‌حالته سایدبار */}
-      {onToggleSidebar && (
-        <div
-          id="sidebar-controls"
-          className="
-            absolute right-5 top-1/2 z-10
-            -translate-y-1/2
-          "
-        >
-          <button
-            id="sidebar-toggle-btn"
-            type="button"
-            onMouseDown={handleSidebarButtonMouseDown}
-            onClick={handleSidebarButtonClick}
-            title={sidebarButtonTitle}
-            aria-label={sidebarButtonTitle}
-            aria-pressed={!isCollapsed && isSidebarLocked}
-            className={`
-              flex h-10 w-10 cursor-pointer
-              items-center justify-center
-              rounded-xl border
-              transition-all duration-200
+      {/* بخش راست: ۱. فلش کنترل سایدبار -> ۲. سوئیچ ناوبری -> ۳. کپسول حساب کاربری */}
+      <div
+        className="
+          absolute right-5 top-1/2 z-10
+          flex -translate-y-1/2
+          items-center gap-3
+        "
+      >
+        {/* ۱. دکمه کنترل سایدبار (فلش باز/بستن/قفل) */}
+        {onToggleSidebar && (
+          <div id="sidebar-controls">
+            <button
+              id="sidebar-toggle-btn"
+              type="button"
+              onMouseDown={handleSidebarButtonMouseDown}
+              onClick={handleSidebarButtonClick}
+              title={sidebarButtonTitle}
+              aria-label={sidebarButtonTitle}
+              aria-pressed={!isCollapsed && isSidebarLocked}
+              className={`
+                flex h-10 w-10 cursor-pointer
+                items-center justify-center
+                rounded-xl border
+                transition-all duration-200
 
+                ${
+                  !isCollapsed && isSidebarLocked
+                    ? `
+                      border-blue-600
+                      bg-blue-600
+                      text-white
+                      shadow-lg
+                      shadow-blue-500/20
+                      hover:bg-blue-700
+                    `
+                    : `
+                      border-[var(--border)]
+                      text-[var(--foreground)]
+                      hover:bg-slate-100
+                      dark:hover:bg-slate-800
+                    `
+                }
+              `}
+            >
+              <span className="pointer-events-none flex items-center justify-center">
+                {sidebarButtonIcon}
+              </span>
+            </button>
+          </div>
+        )}
+
+        {/* ۲. دکمه فلش دوطرفه (سوئیچ حالت ناوبری) */}
+        {onToggleNavigateOnClick && (
+          <button
+            id="navigate-on-click-toggle-btn"
+            type="button"
+            onClick={onToggleNavigateOnClick}
+            title={navigateModeTitle}
+            aria-label={navigateModeTitle}
+            aria-pressed={navigateOnClick}
+            className={`
+              flex h-10 w-10 cursor-pointer items-center justify-center
+              rounded-xl border transition-all duration-200
               ${
-                !isCollapsed && isSidebarLocked
-                  ? `
-                    border-blue-600
-                    bg-blue-600
-                    text-white
-                    shadow-lg
-                    shadow-blue-500/20
-                    hover:bg-blue-700
-                  `
-                  : `
-                    border-[var(--border)]
-                    text-[var(--foreground)]
-                    hover:bg-slate-100
-                    dark:hover:bg-slate-800
-                  `
+                navigateOnClick
+                  ? 'border-blue-600 bg-blue-600 text-white shadow-lg shadow-blue-500/20 hover:bg-blue-700'
+                  : 'border-[var(--border)] text-[var(--foreground)] hover:bg-slate-100 dark:hover:bg-slate-800'
               }
             `}
           >
-            <span className="pointer-events-none flex items-center justify-center">
-              {sidebarButtonIcon}
-            </span>
+            <ArrowLeftRight size={18} />
           </button>
-        </div>
-      )}
+        )}
 
-      {/* لوگو در مرکز واقعی هدر */}
+        {/* ۳. بخش کپسول حساب کاربری */}
+        <button
+          id="user-profile-header-btn"
+          type="button"
+          onClick={() => onToggleProfile?.()}
+          aria-label="مشاهده پروفایل در سایدبار"
+          className={`
+            flex cursor-pointer select-none
+            items-center gap-2.5
+            rounded-2xl border
+            p-1.5 pl-4 pr-1.5
+            transition-all
+            ${
+              isProfileActive
+                ? 'border-blue-600 bg-blue-50/50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 shadow-sm'
+                : 'border-[var(--border)] hover:bg-slate-100 dark:hover:bg-slate-800/80 text-[var(--foreground)]'
+            }
+          `}
+        >
+          {/* آواتار کاربر */}
+          <div
+            className="
+              pointer-events-none
+              flex h-9 w-9 items-center
+              justify-center rounded-xl
+              bg-gradient-to-br from-blue-500 to-blue-700
+              font-black text-white shadow-inner
+            "
+          >
+            {user?.name ? (
+              user.name.charAt(0).toUpperCase()
+            ) : (
+              <User size={20} />
+            )}
+          </div>
+
+          {/* نام و نقش */}
+          <div className="pointer-events-none text-right">
+            <p className="text-sm font-bold leading-tight">
+              {user?.name || 'admin'}
+            </p>
+
+            <p
+              className="
+                text-[10px] font-medium leading-normal
+                text-blue-600
+                dark:text-blue-400
+              "
+            >
+              {user?.role || 'user'}
+            </p>
+          </div>
+        </button>
+      </div>
+
+      {/* لوگو در مرکز */}
       <div
         className="
           absolute left-1/2 top-1/2
@@ -365,15 +378,15 @@ export function TopHeader({
         </Link>
       </div>
 
-      {/* ابزارهای سمت چپ هدر */}
+      {/* بخش چپ: اعلان‌ها و انتخاب تم */}
       <div
         className="
           absolute left-5 top-1/2 z-10
           flex -translate-y-1/2
-          items-center gap-4
+          items-center gap-3
         "
       >
-        {/* تغییر تم */}
+        {/* انتخاب تم */}
         <button
           type="button"
           onClick={cycleTheme}
@@ -390,7 +403,7 @@ export function TopHeader({
           {themeIcon}
         </button>
 
-        {/* اعلان‌ها */}
+        {/* زنگوله اعلان‌ها */}
         <button
           type="button"
           aria-label="اعلان‌ها"
@@ -403,7 +416,6 @@ export function TopHeader({
           "
         >
           <Bell size={20} />
-
           <span
             className="
               absolute right-2 top-2
@@ -413,126 +425,6 @@ export function TopHeader({
             "
           />
         </button>
-
-        {/* حساب کاربری */}
-        <div ref={dropdownRef} className="relative">
-          <button
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              setIsMenuOpen((previous) => !previous);
-            }}
-            aria-expanded={isMenuOpen}
-            aria-label="منوی حساب کاربری"
-            className="
-              flex cursor-pointer select-none
-              items-center gap-3
-              rounded-2xl border border-[var(--border)]
-              p-1.5 pr-3
-              transition-all
-              hover:bg-slate-100
-              dark:hover:bg-slate-800/80
-            "
-          >
-            <div className="pointer-events-none ml-1 text-right">
-              <p
-                className="
-                  text-sm font-bold
-                  text-[var(--foreground)]
-                "
-              >
-                {user?.name || 'کاربر سیستم'}
-              </p>
-
-              <p
-                className="
-                  text-[10px] font-medium
-                  text-blue-600
-                  dark:text-blue-400
-                "
-              >
-                {user?.role || 'مدیر ارشد'}
-              </p>
-            </div>
-
-            <div
-              className="
-                pointer-events-none
-                flex h-9 w-9 items-center
-                justify-center rounded-xl
-                bg-gradient-to-br from-blue-500 to-blue-700
-                font-black text-white shadow-inner
-              "
-            >
-              {user?.name ? (
-                user.name.charAt(0)
-              ) : (
-                <User size={20} />
-              )}
-            </div>
-
-            <ChevronDown
-              size={14}
-              className={`
-                pointer-events-none
-                text-slate-400
-                transition-transform duration-300
-                dark:text-slate-500
-                ${isMenuOpen ? 'rotate-180' : ''}
-              `}
-            />
-          </button>
-
-          {/* منوی حساب کاربری */}
-          {isMenuOpen && (
-            <div
-              className="
-                absolute left-0 z-50 mt-3 w-56
-                overflow-hidden rounded-2xl
-                border border-[var(--border)]
-                bg-[var(--surface)]
-                py-2 shadow-2xl
-              "
-            >
-              <div
-                className="
-                  mb-1 border-b border-[var(--border)]
-                  px-4 py-3
-                "
-              >
-                <p
-                  className="
-                    truncate text-xs
-                    text-slate-500
-                    dark:text-slate-400
-                  "
-                >
-                  {user?.email || '---'}
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="
-                  flex w-full cursor-pointer
-                  items-center gap-3
-                  px-4 py-3 text-sm
-                  text-red-600 transition-colors
-                  hover:bg-red-50
-                  dark:text-red-400
-                  dark:hover:bg-red-500/10
-                "
-              >
-                <LogOut size={18} />
-
-                <span className="font-semibold">
-                  خروج از حساب
-                </span>
-              </button>
-            </div>
-          )}
-        </div>
       </div>
     </header>
   );
