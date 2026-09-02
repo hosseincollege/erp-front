@@ -13,10 +13,6 @@ export type RolesImportData = {
   roles: RoleImportData[];
 };
 
-/**
- * نقش واردشده هنوز id و userCount ندارد.
- * این دو مقدار بعداً توسط API یا بک‌اند تعیین می‌شوند.
- */
 export type ImportedRoleItem = Omit<RoleItem, 'id' | 'userCount'>;
 
 export const rolesImportSample: RolesImportData = {
@@ -146,8 +142,15 @@ export function parseRolesImportData(value: unknown): RolesImportData {
       const normalizedKey = key.toUpperCase();
 
       if (roleKeys.has(normalizedKey)) {
-        throw new Error(`کلید نقش «${key}» در فایل تکراری throw new Error(`کلید نقش «${key}» در فایل تکراری      name,
-      key: key?.toUpperCase() ?? '',
+        throw new Error(`کلید نقش «${key}» در فایل تکراری است.`);
+      }
+
+      roleKeys.add(normalizedKey);
+    }
+
+    return {
+      name,
+      ...(key ? { key: key.toUpperCase() } : {}),
       ...(description ? { description } : {}),
       permissions,
     };
@@ -158,14 +161,11 @@ export function parseRolesImportData(value: unknown): RolesImportData {
 
 /**
  * تبدیل دادهٔ JSON به مدل قابل ذخیره‌سازی.
- *
- * چون key در RoleItem اجباری است، برای نقش‌هایی که
- * کلید ندارند مقدار خالی قرار داده می‌شود.
  */
 export function rolesImportDataToItems(
   data: RolesImportData,
 ): ImportedRoleItem[] {
-  return data.roles.map((role) => ({
+  return data.roles.map((role): ImportedRoleItem => ({
     key: role.key ?? '',
     name: role.name,
     ...(role.description
