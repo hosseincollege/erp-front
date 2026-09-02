@@ -222,7 +222,6 @@ export function usersImportDataToItems(
         id: `role-${user.role.toLowerCase()}`,
         key: user.role,
         name: user.role,
-        permissions: [],
       };
 
       const generatedId =
