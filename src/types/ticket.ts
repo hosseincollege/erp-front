@@ -1,6 +1,6 @@
 /**
  * @file frontend/src/types/ticket.ts
- * @description Typeهای مربوط به ماژول تیکت.
+ * @description Typeهای مربوط به ماژول تیکت - نسخه اصلاح شده برای سازگاری با بک‌اند
  */
 
 export type TicketStatus =
@@ -34,8 +34,12 @@ export type TicketSource =
   | 'PHONE'
   | 'OTHER';
 
+/**
+ * Payload برای ایجاد تیکت جدید
+ * مطابقت داده شده با CreateTicketDto در بک‌اند
+ */
 export type CreateTicketPayload = {
-  title: string;
+  subject: string; // تغییر از title به subject
   description: string;
   type?: TicketType;
   priority?: TicketPriority;
@@ -44,6 +48,9 @@ export type CreateTicketPayload = {
   dueAt?: string;
 };
 
+/**
+ * ساختار اصلی تیکت دریافتی از API
+ */
 export type Ticket = {
   id: string;
   ticketNumber: number;
@@ -53,6 +60,7 @@ export type Ticket = {
   status: TicketStatus;
   priority: TicketPriority;
   visibility: TicketVisibility;
+  source?: TicketSource; // اضافه شده برای سازگاری
   category?: string | null;
   dueAt?: string | null;
   resolvedAt?: string | null;
@@ -61,6 +69,10 @@ export type Ticket = {
   assigneeId?: string | null;
   createdAt: string;
   updatedAt: string;
+  // اضافه شده برای جلوگیری از خطای Type Mismatch هنگام دریافت لیست تیکت‌ها
+  creator?: {
+    username: string;
+  } | null;
 };
 
 export type TicketMessage = {

@@ -8,6 +8,7 @@
 
 'use client';
 
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
   AlertCircle,
@@ -16,58 +17,13 @@ import {
   Clock3,
   RefreshCw,
   Search,
-  Ticket,
+  Ticket as TicketIcon,
   UserRound,
   XCircle,
 } from 'lucide-react';
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
 
 import { ticketApi } from '@/lib/ticket-api';
-
-type TicketPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
-type TicketStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED';
-
-type TicketSource =
-  | 'PHONE'
-  | 'EMAIL'
-  | 'WHATSAPP'
-  | 'TELEGRAM'
-  | 'WEB'
-  | 'IN_PERSON'
-  | 'OTHER';
-
-type CustomerSummary = {
-  id?: string | null;
-  name?: string | null;
-  phone?: string | null;
-};
-
-type CreatorSummary = {
-  id?: string | null;
-  fullName?: string | null;
-  email?: string | null;
-};
-
-type TicketRecord = {
-  id: string;
-  ticketNumber?: string | null;
-  title: string;
-  description?: string | null;
-  status: TicketStatus;
-  priority: TicketPriority;
-  source?: TicketSource | null;
-  customerName?: string | null;
-  customerPhone?: string | null;
-  customer?: CustomerSummary | null;
-  creator?: CreatorSummary | null;
-  createdAt: string;
-  updatedAt?: string;
-};
+import type { Ticket, TicketPriority, TicketStatus } from '@/types/ticket';
 
 type StatusFilter = TicketStatus | 'ALL';
 type PriorityFilter = TicketPriority | 'ALL';
@@ -77,8 +33,8 @@ type SortOption =
   | 'oldest'
   | 'priority-desc'
   | 'priority-asc'
-  | 'title-asc'
-  | 'title-desc';
+  | 'subject-asc'
+  | 'subject-desc';
 
 const STATUS_OPTIONS: Array<{
   value: StatusFilter;
@@ -87,8 +43,10 @@ const STATUS_OPTIONS: Array<{
   { value: 'ALL', label: 'همه وضعیت‌ها' },
   { value: 'OPEN', label: 'باز' },
   { value: 'IN_PROGRESS', label: 'در حال پیگیری' },
+  { value: 'WAITING_FOR_CUSTOMER', label: 'در انتظار مشتری' },
   { value: 'RESOLVED', label: 'حل‌شده' },
   { value: 'CLOSED', label: 'بسته‌شده' },
+  { value: 'CANCELLED', label: 'لغوشده' },
 ];
 
 const PRIORITY_OPTIONS: Array<{
@@ -110,8 +68,8 @@ const SORT_OPTIONS: Array<{
   { value: 'oldest', label: 'قدیمی‌ترین' },
   { value: 'priority-desc', label: 'اولویت؛ زیاد به کم' },
   { value: 'priority-asc', label: 'اولویت؛ کم به زیاد' },
-  { value: 'title-asc', label: 'عنوان؛ الف تا ی' },
-  { value: 'title-desc', label: 'عنوان؛ ی تا الف' },
+  { value: 'subject-asc', label: 'عنوان؛ الف تا ی' },
+  { value: 'subject-desc', label: 'عنوان؛ ی تا الف' },
 ];
 
 const PRIORITY_SCORE: Record<TicketPriority, number> = {
@@ -141,6 +99,13 @@ function formatDate(value?: string | null): string {
   }).format(date);
 }
 
+function getTicketNumberLabel(ticket: Ticket): string {
+  if (ticket.ticketNumber !== undefined && ticket.ticketNumber !== null) {
+    return `TCK-${ticket.ticketNumber}`;
+  }
+  return `TCK-${ticket.id.slice(0, 6)}`;
+}
+
 function getStatusLabel(status: TicketStatus): string {
   const option = STATUS_OPTIONS.find((item) => item.value === status);
   return option?.label ?? status;
@@ -151,27 +116,6 @@ function getPriorityLabel(priority: TicketPriority): string {
   return option?.label ?? priority;
 }
 
-function getSourceLabel(source?: TicketSource | null): string {
-  switch (source) {
-    case 'PHONE':
-      return 'تلفنی';
-    case 'EMAIL':
-      return 'ایمیل';
-    case 'WHATSAPP':
-      return 'واتساپ';
-    case 'TELEGRAM':
-      return 'تلگرام';
-    case 'WEB':
-      return 'وب‌سایت';
-    case 'IN_PERSON':
-      return 'حضوری';
-    case 'OTHER':
-      return 'سایر';
-    default:
-      return '—';
-  }
-}
-
 function getStatusClassName(status: TicketStatus): string {
   switch (status) {
     case 'RESOLVED':
@@ -179,6 +123,12 @@ function getStatusClassName(status: TicketStatus): string {
 
     case 'IN_PROGRESS':
       return 'bg-amber-500/10 text-amber-400 ring-amber-500/20';
+
+    case 'WAITING_FOR_CUSTOMER':
+      return 'bg-violet-500/10 text-violet-400 ring-violet-500/20';
+
+    case 'CANCELLED':
+      return 'bg-rose-500/10 text-rose-400 ring-rose-500/20';
 
     case 'OPEN':
       return 'bg-blue-500/10 text-blue-400 ring-blue-500/20';
@@ -214,7 +164,7 @@ function getErrorMessage(error: unknown): string {
 }
 
 export default function TicketsPage() {
-  const [tickets, setTickets] = useState<TicketRecord[]>([]);
+  const [tickets, setTickets] = useState<Ticket[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -229,7 +179,7 @@ export default function TicketsPage() {
       setError(null);
 
       const result = await ticketApi.getTickets();
-      setTickets((result || []) as TicketRecord[]);
+      setTickets(result || []);
     } catch (loadError) {
       setError(getErrorMessage(loadError));
     } finally {
@@ -246,15 +196,13 @@ export default function TicketsPage() {
 
     const result = tickets.filter((ticket) => {
       const searchableText = [
-        ticket.ticketNumber ?? '',
-        ticket.title,
+        ticket.ticketNumber !== undefined && ticket.ticketNumber !== null
+          ? String(ticket.ticketNumber)
+          : '',
+        ticket.subject,
         ticket.description ?? '',
-        ticket.customerName ?? '',
-        ticket.customerPhone ?? '',
-        ticket.customer?.name ?? '',
-        ticket.customer?.phone ?? '',
-        ticket.creator?.fullName ?? '',
-        ticket.creator?.email ?? '',
+        ticket.category ?? '',
+        ticket.creator?.username ?? '',
       ]
         .join(' ')
         .toLocaleLowerCase('fa-IR');
@@ -289,11 +237,11 @@ export default function TicketsPage() {
             PRIORITY_SCORE[first.priority] - PRIORITY_SCORE[second.priority]
           );
 
-        case 'title-asc':
-          return first.title.localeCompare(second.title, 'fa');
+        case 'subject-asc':
+          return first.subject.localeCompare(second.subject, 'fa');
 
-        case 'title-desc':
-          return second.title.localeCompare(first.title, 'fa');
+        case 'subject-desc':
+          return second.subject.localeCompare(first.subject, 'fa');
 
         case 'newest':
         default:
@@ -321,7 +269,7 @@ export default function TicketsPage() {
     {
       label: 'کل تیکت‌ها',
       value: tickets.length,
-      icon: Ticket,
+      icon: TicketIcon,
       iconClassName: 'bg-blue-500/10 text-blue-500',
     },
     {
@@ -410,7 +358,7 @@ export default function TicketsPage() {
                 type="search"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="جست‌وجو در شماره، عنوان یا مشتری..."
+                placeholder="جست‌وجو در شماره، عنوان یا دسته‌بندی..."
                 className="h-10 w-full rounded-xl border border-border bg-background pe-10 ps-3 text-xs text-foreground outline-none transition placeholder:text-muted-foreground focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
               />
             </div>
@@ -496,7 +444,7 @@ export default function TicketsPage() {
         ) : filteredTickets.length === 0 ? (
           <div className="flex min-h-56 flex-col items-center justify-center gap-3 p-8 text-center">
             <div className="rounded-full bg-muted p-3.5 text-muted-foreground">
-              <Ticket size={24} />
+              <TicketIcon size={24} />
             </div>
 
             <div>
@@ -533,13 +481,12 @@ export default function TicketsPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[950px] text-right">
+            <table className="w-full min-w-[850px] text-right">
               <thead className="bg-muted/40">
                 <tr className="border-b border-border text-[11px] font-bold text-muted-foreground">
                   <th className="px-5 py-3">شماره تیکت</th>
                   <th className="px-5 py-3">عنوان و شرح</th>
-                  <th className="px-5 py-3">مشتری</th>
-                  <th className="px-5 py-3">منبع</th>
+                  <th className="px-5 py-3">دسته‌بندی</th>
                   <th className="px-5 py-3">وضعیت</th>
                   <th className="px-5 py-3">اولویت</th>
                   <th className="px-5 py-3">ثبت‌کننده</th>
@@ -551,14 +498,14 @@ export default function TicketsPage() {
                 {filteredTickets.map((ticket) => (
                   <tr
                     key={ticket.id}
-                    className="transition hover:bg-accent/40 text-xs"
+                    className="text-xs transition hover:bg-accent/40"
                   >
                     <td className="whitespace-nowrap px-5 py-3.5">
                       <Link
                         href={`/tickets/${ticket.id}`}
                         className="font-bold text-blue-500 hover:text-blue-400 hover:underline"
                       >
-                        {ticket.ticketNumber || `TCK-${ticket.id.slice(0, 6)}`}
+                        {getTicketNumberLabel(ticket)}
                       </Link>
                       <p className="mt-0.5 text-[11px] text-muted-foreground">
                         {formatDate(ticket.createdAt)}
@@ -570,7 +517,7 @@ export default function TicketsPage() {
                         href={`/tickets/${ticket.id}`}
                         className="line-clamp-1 font-medium text-foreground hover:text-blue-400"
                       >
-                        {ticket.title}
+                        {ticket.subject}
                       </Link>
 
                       {ticket.description && (
@@ -580,23 +527,8 @@ export default function TicketsPage() {
                       )}
                     </td>
 
-                    <td className="px-5 py-3.5 text-xs text-foreground">
-                      <div className="flex flex-col">
-                        <span className="font-medium">
-                          {ticket.customer?.name ||
-                            ticket.customerName ||
-                            '—'}
-                        </span>
-                        {(ticket.customer?.phone || ticket.customerPhone) && (
-                          <span className="text-[11px] text-muted-foreground">
-                            {ticket.customer?.phone || ticket.customerPhone}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-
                     <td className="whitespace-nowrap px-5 py-3.5 text-xs text-foreground">
-                      {getSourceLabel(ticket.source)}
+                      {ticket.category || '—'}
                     </td>
 
                     <td className="px-5 py-3.5">
@@ -623,9 +555,7 @@ export default function TicketsPage() {
                       <div className="flex items-center gap-1.5">
                         <UserRound size={13} className="text-muted-foreground" />
                         <span>
-                          {ticket.creator?.fullName ||
-                            ticket.creator?.email ||
-                            '—'}
+                          {ticket.creator?.username || '—'}
                         </span>
                       </div>
                     </td>
