@@ -2,8 +2,20 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Check, ChevronDown, ChevronUp, Copy, Terminal, Trash2 } from 'lucide-react';
-import { clearLogs, subscribeLogs, type LogEntry } from '@/lib/log-store';
+import {
+  Check,
+  ChevronDown,
+  ChevronUp,
+  Copy,
+  Terminal,
+  Trash2,
+} from 'lucide-react';
+
+import {
+  clearLogs,
+  subscribeLogs,
+  type LogEntry,
+} from '@/lib/log-store';
 
 const levelStyles: Record<LogEntry['level'], string> = {
   info: 'text-sky-400',
@@ -19,34 +31,68 @@ const levelLabels: Record<LogEntry['level'], string> = {
   error: 'خطا',
 };
 
+function getLogTime(log: LogEntry): string {
+  const logWithTime = log as LogEntry & {
+    time?: string;
+    timestamp?: string;
+  };
+
+  return logWithTime.time ?? logWithTime.timestamp ?? '';
+}
+
 export function LogConsole() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [expanded, setExpanded] = useState(true);
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => subscribeLogs(setLogs), []);
+  useEffect(() => {
+    const unsubscribe = subscribeLogs(setLogs);
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   const handleCopy = async () => {
-    const text = logs.map((l) => `[${l.time}] [${levelLabels[l.level]}] ${l.message}`).join('\n');
+    const text = logs
+      .map(
+        (log) =>
+          `[${getLogTime(log)}] [${levelLabels[log.level]}] ${log.message}`,
+      )
+      .join('\n');
+
     await navigator.clipboard.writeText(text);
     setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+
+    window.setTimeout(() => {
+      setCopied(false);
+    }, 1500);
   };
 
-  const errorCount = logs.filter((l) => l.level === 'error').length;
+  const errorCount = logs.filter(
+    (log) => log.level === 'error',
+  ).length;
 
   return (
     <section
       dir="rtl"
-      className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden"
+      className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm"
     >
       {/* هدر کنسول */}
       <div className="flex flex-wrap items-center gap-2 border-b border-border bg-surface-muted px-4 py-2.5">
-        <Terminal size={15} className="text-muted-foreground" />
-        <span className="text-xs font-bold">لاگ‌ها</span>
+        <Terminal
+          size={15}
+          className="text-muted-foreground"
+        />
+
+        <span className="text-xs font-bold">
+          لاگ‌ها
+        </span>
+
         <span className="rounded-full bg-surface px-2 py-0.5 text-[10px] font-semibold">
           ({logs.length})
         </span>
+
         {errorCount > 0 && (
           <span className="rounded-full bg-red-500/15 px-2 py-0.5 text-[10px] font-semibold text-red-500">
             {errorCount} خطا
@@ -56,21 +102,36 @@ export function LogConsole() {
         <div className="ms-auto flex items-center gap-1.5">
           <button
             type="button"
-            onClick={() => setExpanded((v) => !v)}
+            onClick={() => setExpanded((value) => !value)}
             className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1 text-[11px] font-semibold hover:bg-surface-hover"
           >
-            {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+            {expanded ? (
+              <ChevronUp size={12} />
+            ) : (
+              <ChevronDown size={12} />
+            )}
+
             {expanded ? 'بستن' : 'بازکردن'}
           </button>
+
           <button
             type="button"
             onClick={handleCopy}
             disabled={!logs.length}
             className="inline-flex items-center gap-1 rounded-lg border border-border px-2.5 py-1 text-[11px] font-semibold hover:bg-surface-hover disabled:opacity-50"
           >
-            {copied ? <Check size={12} className="text-emerald-500" /> : <Copy size={12} />}
+            {copied ? (
+              <Check
+                size={12}
+                className="text-emerald-500"
+              />
+            ) : (
+              <Copy size={12} />
+            )}
+
             {copied ? 'کپی شد' : 'کپی'}
           </button>
+
           <button
             type="button"
             onClick={clearLogs}
@@ -87,16 +148,32 @@ export function LogConsole() {
       {expanded && (
         <div className="erp-scrollbar max-h-56 overflow-y-auto p-3 font-mono text-[11px] leading-6">
           {logs.length === 0 ? (
-            <p className="py-6 text-center text-muted-foreground">هنور لاگی ثبت نشده است.</p>
+            <p className="py-6 text-center text-muted-foreground">
+              هنوز لاگی ثبت نشده است.
+            </p>
           ) : (
             <ul className="space-y-1">
-              {logs.map((l) => (
-                <li key={l.id} className="flex items-start gap-2">
-                  <span className="text-muted-foreground">{l.time}</span>
-                  <span className={`font-bold ${levelStyles[l.level]}`}>
-                    [{levelLabels[l.level]}]
+              {logs.map((log) => (
+                <li
+                  key={log.id}
+                  className="flex items-start gap-2"
+                >
+                  <span className="text-muted-foreground">
+                    {getLogTime(log)}
                   </span>
-                  <span className="break-all" dir="auto">{l.message}</span>
+
+                  <span
+                    className={`font-bold ${levelStyles[log.level]}`}
+                  >
+                    [{levelLabels[log.level]}]
+                  </span>
+
+                  <span
+                    className="break-all"
+                    dir="auto"
+                  >
+                    {log.message}
+                  </span>
                 </li>
               ))}
             </ul>

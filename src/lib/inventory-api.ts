@@ -1,38 +1,43 @@
 // Path: frontend/src/lib/inventory-api.ts
 // Frontend - API client helpers for inventory module
 
-import { apiClient } from "@/lib/api-client";
+import { apiClient } from '@/lib/api-client';
 import type {
   InventoryBalance,
   InventoryMovement,
   InventoryProduct,
   InventorySummary,
   InventoryWarehouse,
-} from "@/types/inventory";
+} from '@/types/inventory';
 
 export const inventoryApi = {
-  getSummary: async () => {
-    const { data } = await apiClient<InventorySummary>("/inventory/summary");
-    return data;
+  getSummary: async (): Promise<InventorySummary> => {
+    return apiClient.get<InventorySummary>(
+      '/inventory/summary',
+    );
   },
 
-  getProducts: async () => {
-    const { data } = await apiClient<InventoryProduct[]>("/inventory/products");
-    return data;
+  getProducts: async (): Promise<InventoryProduct[]> => {
+    return apiClient.get<InventoryProduct[]>(
+      '/inventory/products',
+    );
   },
 
-  getWarehouses: async () => {
-    const { data } = await apiClient<InventoryWarehouse[]>("/inventory/warehouses");
-    return data;
+  getWarehouses: async (): Promise<InventoryWarehouse[]> => {
+    return apiClient.get<InventoryWarehouse[]>(
+      '/inventory/warehouses',
+    );
   },
 
-  getBalances: async () => {
-    const { data } = await apiClient<InventoryBalance[]>("/inventory/balances");
-    return data;
+  getBalances: async (): Promise<InventoryBalance[]> => {
+    return apiClient.get<InventoryBalance[]>(
+      '/inventory/balances',
+    );
   },
 
-  getMovements: async () => {
-    const { data } = await apiClient<InventoryMovement[]>("/inventory/movements");
-    return data;
+  getMovements: async (): Promise<InventoryMovement[]> => {
+    return apiClient.get<InventoryMovement[]>(
+      '/inventory/movements',
+    );
   },
 };

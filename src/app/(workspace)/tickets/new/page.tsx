@@ -18,43 +18,40 @@ import {
   FilePlus2,
   FileText,
   Loader2,
-  Phone,
   Send,
   Sparkles,
-  UserRound,
 } from 'lucide-react';
 
 import { createTicket } from '@/lib/ticket-api';
-
-type TicketPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
-
-type TicketSource =
-  | 'PHONE'
-  | 'EMAIL'
-  | 'WHATSAPP'
-  | 'TELEGRAM'
-  | 'WEB'
-  | 'IN_PERSON'
-  | 'OTHER';
+import type {
+  CreateTicketPayload,
+  TicketPriority,
+  TicketType,
+  TicketVisibility,
+} from '@/types/ticket';
+import {
+  TICKET_TYPE_LABELS,
+  TICKET_VISIBILITY_LABELS,
+} from '@/lib/ticket-constants';
 
 type FormState = {
-  title: string;
+  subject: string;
   description: string;
-  customerName: string;
-  customerPhone: string;
-  customerId: string;
   priority: TicketPriority;
-  source: TicketSource;
+  type: TicketType;
+  visibility: TicketVisibility;
+  category: string;
+  dueAt: string;
 };
 
 const INITIAL_FORM: FormState = {
-  title: '',
+  subject: '',
   description: '',
-  customerName: '',
-  customerPhone: '',
-  customerId: '',
   priority: 'MEDIUM',
-  source: 'PHONE',
+  type: 'SUPPORT',
+  visibility: 'INTERNAL',
+  category: '',
+  dueAt: '',
 };
 
 const PRIORITY_OPTIONS: Array<{
@@ -99,16 +96,6 @@ const PRIORITY_OPTIONS: Array<{
   },
 ];
 
-const SOURCE_OPTIONS: Array<{ value: TicketSource; label: string }> = [
-  { value: 'PHONE', label: 'تماس تلفنی' },
-  { value: 'EMAIL', label: 'ایمیل' },
-  { value: 'WHATSAPP', label: 'واتساپ' },
-  { value: 'TELEGRAM', label: 'تلگرام' },
-  { value: 'WEB', label: 'وب‌سایت' },
-  { value: 'IN_PERSON', label: 'مراجعه حضوری' },
-  { value: 'OTHER', label: 'سایر' },
-];
-
 function getCreatedTicketId(value: unknown): string | null {
   if (!value || typeof value !== 'object') {
     return null;
@@ -116,12 +103,12 @@ function getCreatedTicketId(value: unknown): string | null {
 
   const record = value as Record<string, unknown>;
 
-  if (typeof record.id === 'string') {
-    return record.id;
+  if (typeof record.id === 'string' && record.id.trim()) {
+    return record.id.trim();
   }
 
-  if (typeof record.ticketNumber === 'string') {
-    return record.ticketNumber;
+  if (typeof record.ticketNumber === 'string' || typeof record.ticketNumber === 'number') {
+    return String(record.ticketNumber);
   }
 
   return null;
@@ -158,12 +145,12 @@ export default function NewTicketPage() {
   const validateForm = () => {
     const nextErrors: Partial<Record<keyof FormState, string>> = {};
 
-    if (!form.title.trim()) {
-      nextErrors.title = 'عنوان تیکت الزامی است';
-    } else if (form.title.trim().length < 5) {
-      nextErrors.title = 'عنوان تیکت باید حداقل ۵ کاراکتر باشد';
-    } else if (form.title.trim().length > 150) {
-      nextErrors.title = 'عنوان تیکت نباید بیشتر از ۱۵۰ کاراکتر باشد';
+    if (!form.subject.trim()) {
+      nextErrors.subject = 'عنوان تیکت الزامی است';
+    } else if (form.subject.trim().length < 5) {
+      nextErrors.subject = 'عنوان تیکت باید حداقل ۵ کاراکتر باشد';
+    } else if (form.subject.trim().length > 150) {
+      nextErrors.subject = 'عنوان تیکت نباید بیشتر از ۱۵۰ کاراکتر باشد';
     }
 
     if (!form.description.trim()) {
@@ -172,19 +159,6 @@ export default function NewTicketPage() {
       nextErrors.description = 'شرح درخواست باید حداقل ۱۰ کاراکتر باشد';
     } else if (form.description.trim().length > 5000) {
       nextErrors.description = 'شرح درخواست نباید بیشتر از ۵۰۰۰ کاراکتر باشد';
-    }
-
-    if (form.customerName.trim().length > 120) {
-      nextErrors.customerName = 'نام مشتری نباید بیشتر از ۱۲۰ کاراکتر باشد';
-    }
-
-    if (form.customerPhone.trim().length > 20) {
-      nextErrors.customerPhone =
-        'شماره تماس مشتری نباید بیشتر از ۲۰ کاراکتر باشد';
-    }
-
-    if (form.customerId.trim() && !isUuid(form.customerId.trim())) {
-      nextErrors.customerId = 'شناسه مشتری باید یک شناسه معتبر (UUID) باشد';
     }
 
     setErrors(nextErrors);
@@ -203,26 +177,17 @@ export default function NewTicketPage() {
     setSubmitError(null);
 
     try {
-      const payload = {
-        title: form.title.trim(),
+      const payload: CreateTicketPayload = {
+        subject: form.subject.trim(),
         description: form.description.trim(),
+        type: form.type,
         priority: form.priority,
-        source: form.source,
-        ...(form.customerName.trim()
-          ? { customerName: form.customerName.trim() }
-          : {}),
-        ...(form.customerPhone.trim()
-          ? { customerPhone: form.customerPhone.trim() }
-          : {}),
-        ...(form.customerId.trim()
-          ? { customerId: form.customerId.trim() }
-          : {}),
+        visibility: form.visibility,
+        category: form.category.trim() || undefined,
+        dueAt: form.dueAt ? new Date(form.dueAt).toISOString() : undefined,
       };
 
-      const createdTicket = await createTicket(
-        payload as Parameters<typeof createTicket>[0],
-      );
-
+      const createdTicket = await createTicket(payload);
       const createdTicketId = getCreatedTicketId(createdTicket);
 
       setIsSubmitted(true);
@@ -251,7 +216,7 @@ export default function NewTicketPage() {
 
   return (
     <div dir="rtl" className="w-full space-y-5">
-      {/* ۱. هدر تمام‌عرض ماژول */}
+      {/* هدر تمام‌عرض ماژول */}
       <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3.5">
@@ -265,7 +230,7 @@ export default function NewTicketPage() {
               </h1>
 
               <p className="mt-0.5 text-xs text-muted-foreground">
-                ثبت و ارجاع درخواست، مشکل یا سوال مشتری در چرخه پاسخگویی سازمان
+                ثبت و ارجاع درخواست، مشکل یا سوال در چرخه پاسخگویی سازمان
               </p>
             </div>
           </div>
@@ -309,10 +274,10 @@ export default function NewTicketPage() {
         </section>
       )}
 
-      {/* فرم ثبت تیکت (تمام‌عرض با گرید دو ستونه) */}
+      {/* فرم ثبت تیکت */}
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="grid gap-5 lg:grid-cols-3">
-          {/* ستون اصلی: اطلاعات درخواست (عرض ۲ از ۳ در دسکتاپ) */}
+          {/* ستون اصلی: اطلاعات درخواست */}
           <div className="space-y-5 lg:col-span-2">
             <section className="rounded-2xl border border-border bg-card shadow-sm">
               <div className="flex items-center gap-2.5 border-b border-border/80 px-5 py-4">
@@ -324,15 +289,15 @@ export default function NewTicketPage() {
                 <Field
                   label="عنوان تیکت"
                   required
-                  error={errors.title}
-                  hint={`${form.title.length}/150`}
+                  error={errors.subject}
+                  hint={`${form.subject.length}/150`}
                 >
                   <input
-                    value={form.title}
-                    onChange={(event) => updateField('title', event.target.value)}
+                    value={form.subject}
+                    onChange={(event) => updateField('subject', event.target.value)}
                     placeholder="مثلاً: عدم دسترسی کاربر به بخش صدور فاکتور"
                     maxLength={150}
-                    className={inputClass(Boolean(errors.title))}
+                    className={inputClass(Boolean(errors.subject))}
                   />
                 </Field>
 
@@ -350,78 +315,14 @@ export default function NewTicketPage() {
                     placeholder="شرح دقیق مشکل، مراحل بازتولید و انتظارات مربوطه را وارد کنید..."
                     rows={8}
                     maxLength={5000}
-                    className={`${inputClass(Boolean(errors.description))} resize-y py-3 leading-relaxed`}
+                    className={`${inputClass(Boolean(errors.description))} h-auto resize-y py-3 leading-relaxed`}
                   />
                 </Field>
-              </div>
-            </section>
-
-            {/* بخش مشخصات مشتری */}
-            <section className="rounded-2xl border border-border bg-card shadow-sm">
-              <div className="flex items-center gap-2.5 border-b border-border/80 px-5 py-4">
-                <UserRound className="h-4 w-4 text-blue-500" />
-                <h2 className="text-sm font-bold text-foreground">اطلاعات مشتری</h2>
-              </div>
-
-              <div className="grid gap-4 p-5 sm:grid-cols-2">
-                <Field
-                  label="نام مشتری / سازمان"
-                  error={errors.customerName}
-                  hint="اختیاری"
-                >
-                  <input
-                    value={form.customerName}
-                    onChange={(event) =>
-                      updateField('customerName', event.target.value)
-                    }
-                    placeholder="نام و نام خانوادگی یا شرکت"
-                    maxLength={120}
-                    className={inputClass(Boolean(errors.customerName))}
-                  />
-                </Field>
-
-                <Field
-                  label="شماره تماس"
-                  error={errors.customerPhone}
-                  hint="اختیاری"
-                >
-                  <div className="relative">
-                    <Phone className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <input
-                      dir="ltr"
-                      value={form.customerPhone}
-                      onChange={(event) =>
-                        updateField('customerPhone', event.target.value)
-                      }
-                      placeholder="0912xxxxxxx"
-                      maxLength={20}
-                      className={`${inputClass(Boolean(errors.customerPhone))} pr-10 text-right`}
-                    />
-                  </div>
-                </Field>
-
-                <div className="sm:col-span-2">
-                  <Field
-                    label="شناسه سیستمی مشتری"
-                    error={errors.customerId}
-                    hint="UUID اختیاری"
-                  >
-                    <input
-                      dir="ltr"
-                      value={form.customerId}
-                      onChange={(event) =>
-                        updateField('customerId', event.target.value)
-                      }
-                      placeholder="e.g. 550e8400-e29b-41d4-a716-446655440000"
-                      className={`${inputClass(Boolean(errors.customerId))} font-mono text-xs`}
-                    />
-                  </Field>
-                </div>
               </div>
             </section>
           </div>
 
-          {/* ستون کناری: طبقه‌بندی و اولویت‌بندی (عرض ۱ از ۳ در دسکتاپ) */}
+          {/* ستون کناری: طبقه‌بندی و اولویت‌بندی */}
           <div className="space-y-5">
             <section className="rounded-2xl border border-border bg-card shadow-sm">
               <div className="flex items-center gap-2.5 border-b border-border/80 px-5 py-4">
@@ -471,31 +372,69 @@ export default function NewTicketPage() {
                   </div>
                 </Field>
 
-                <Field label="کانال ورودی تیکت" required>
+                <Field label="نوع تیکت">
                   <select
-                    value={form.source}
+                    value={form.type}
                     onChange={(event) =>
-                      updateField('source', event.target.value as TicketSource)
+                      updateField('type', event.target.value as TicketType)
                     }
                     className={`${inputClass(false)} cursor-pointer`}
                   >
-                    {SOURCE_OPTIONS.map((option) => (
+                    {Object.entries(TICKET_TYPE_LABELS).map(([value, label]) => (
                       <option
-                        key={option.value}
-                        value={option.value}
+                        key={value}
+                        value={value}
                         className="bg-card text-foreground"
                       >
-                        {option.label}
+                        {label}
                       </option>
                     ))}
                   </select>
+                </Field>
+
+                <Field label="سطح دسترسی">
+                  <select
+                    value={form.visibility}
+                    onChange={(event) =>
+                      updateField('visibility', event.target.value as TicketVisibility)
+                    }
+                    className={`${inputClass(false)} cursor-pointer`}
+                  >
+                    {Object.entries(TICKET_VISIBILITY_LABELS).map(([value, label]) => (
+                      <option
+                        key={value}
+                        value={value}
+                        className="bg-card text-foreground"
+                      >
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+
+                <Field label="دسته‌بندی" hint="اختیاری">
+                  <input
+                    value={form.category}
+                    onChange={(event) => updateField('category', event.target.value)}
+                    placeholder="مثلاً: فنی، مالی، زیرساخت..."
+                    className={inputClass(false)}
+                  />
+                </Field>
+
+                <Field label="مهلت اقدام (Due Date)" hint="اختیاری">
+                  <input
+                    type="datetime-local"
+                    value={form.dueAt}
+                    onChange={(event) => updateField('dueAt', event.target.value)}
+                    className={inputClass(false)}
+                  />
                 </Field>
               </div>
             </section>
           </div>
         </div>
 
-        {/* نوار دکمه‌های عملیاتی تمام‌عرض */}
+        {/* نوار دکمه‌های عملیاتی */}
         <section className="flex flex-col-reverse gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
           <button
             type="button"
@@ -566,7 +505,7 @@ function Field({
 
       {children}
 
-      {error && <p className="text-[11px] text-rose-500">{error}</p>}
+      {error && <p className="text-[11px] font-medium text-rose-500">{error}</p>}
     </div>
   );
 }
@@ -583,10 +522,4 @@ function inputClass(hasError: boolean) {
         : 'border-border'
     }
   `;
-}
-
-function isUuid(value: string) {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-    value,
-  );
 }

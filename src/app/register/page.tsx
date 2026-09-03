@@ -52,7 +52,7 @@ const EMPTY_FORM: RegisterFormData = {
   address: '',
 };
 
-const SAMPLE_JSON = {
+const SAMPLE_JSON: RegisterFormData = {
   username: 'admin',
   password: 'ChangeMe123!',
   confirmPassword: 'ChangeMe123!',
@@ -78,8 +78,18 @@ function toStringValue(value: unknown): string {
   return typeof value === 'string' ? value : '';
 }
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return 'ثبت‌نام ناموفق بود.';
+}
+
 function normalizeImportedForm(data: unknown): RegisterFormData {
-  if (!isObject(data)) return EMPTY_FORM;
+  if (!isObject(data)) {
+    return EMPTY_FORM;
+  }
 
   return {
     username: toStringValue(data.username),
@@ -117,15 +127,23 @@ export default function RegisterPage() {
     const init = async () => {
       try {
         const status = await getSetupStatus();
-        if (!mounted) return;
+
+        if (!mounted) {
+          return;
+        }
+
         setSetupAllowed(status.isFirstInstall);
       } catch {
-        if (!mounted) return;
+        if (!mounted) {
+          return;
+        }
+
         setSetupAllowed(false);
         setError('دریافت وضعیت راه‌اندازی سیستم ناموفق بود.');
       } finally {
-        if (!mounted) return;
-        setLoadingSetup(false);
+        if (mounted) {
+          setLoadingSetup(false);
+        }
       }
     };
 
@@ -141,21 +159,27 @@ export default function RegisterPage() {
     [],
   );
 
-  const updateField = (key: keyof RegisterFormData, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
+  const updateField = (
+    key: keyof RegisterFormData,
+    value: string,
+  ) => {
+    setFormData((previousFormData) => ({
+      ...previousFormData,
       [key]: value,
     }));
   };
 
   const downloadSampleJson = () => {
-    const blob = new Blob([sampleJsonText], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
+    const blob = new Blob([sampleJsonText], {
+      type: 'application/json',
+    });
 
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'register-sample.json';
-    a.click();
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+
+    anchor.href = url;
+    anchor.download = 'register-sample.json';
+    anchor.click();
 
     URL.revokeObjectURL(url);
   };
@@ -168,42 +192,58 @@ export default function RegisterPage() {
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = event.target.files?.[0];
+
     event.target.value = '';
 
-    if (!file) return;
+    if (!file) {
+      return;
+    }
 
     try {
       const text = await file.text();
-      const parsed = JSON.parse(text);
+      const parsed: unknown = JSON.parse(text);
       const normalized = normalizeImportedForm(parsed);
 
-      setFormData((prev) => ({
-        ...prev,
+      setFormData((previousFormData) => ({
+        ...previousFormData,
         ...normalized,
       }));
+
       setSuccess('فایل JSON با موفقیت بارگذاری شد.');
       setError('');
     } catch {
+      setSuccess('');
       setError('فایل JSON معتبر نیست.');
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (
+    event: React.FormEvent<HTMLFormElement>,
+  ) => {
+    event.preventDefault();
+
     setError('');
     setSuccess('');
+
+    const username = formData.username.trim();
+    const firstName = formData.firstName.trim();
+    const lastName = formData.lastName.trim();
+    const email = formData.email.trim();
+    const phone = formData.phone.trim();
+    const nationalCode = formData.nationalCode.trim();
+    const birthDate = formData.birthDate.trim();
 
     if (!setupAllowed) {
       setError('ثبت‌نام فقط در حالت نصب اولیه فعال است.');
       return;
     }
 
-    if (!formData.username.trim()) {
+    if (!username) {
       setError('نام کاربری الزامی است.');
       return;
     }
 
-    if (!formData.firstName.trim() || !formData.lastName.trim()) {
+    if (!firstName || !lastName) {
       setError('نام و نام خانوادگی الزامی است.');
       return;
     }
@@ -218,12 +258,12 @@ export default function RegisterPage() {
       return;
     }
 
-    if (formData.nationalCode && !/^\d{10}$/.test(formData.nationalCode)) {
+    if (nationalCode && !/^\d{10}$/.test(nationalCode)) {
       setError('کد ملی باید دقیقاً ۱۰ رقم باشد.');
       return;
     }
 
-    if (formData.birthDate && !/^\d{4}-\d{2}-\d{2}$/.test(formData.birthDate)) {
+    if (birthDate && !/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) {
       setError('تاریخ تولد باید با فرمت YYYY-MM-DD باشد.');
       return;
     }
@@ -232,22 +272,18 @@ export default function RegisterPage() {
 
     try {
       await register({
-        username: formData.username.trim(),
+        username,
         password: formData.password,
-        firstName: formData.firstName.trim(),
-        lastName: formData.lastName.trim(),
-        fatherName: formData.fatherName.trim() || undefined,
-        nationalCode: formData.nationalCode.trim() || undefined,
-        birthDate: formData.birthDate.trim() || undefined,
-        phone: formData.phone.trim() || undefined,
-        email: formData.email.trim() || undefined,
-        address: formData.address.trim() || undefined,
+        firstName,
+        lastName,
+        phone: phone || undefined,
+        email: email || undefined,
       });
 
       setSuccess('ثبت‌نام با موفقیت انجام شد.');
       router.replace('/');
-    } catch (err: any) {
-      setError(err?.message || 'ثبت‌نام ناموفق بود.');
+    } catch (submitError: unknown) {
+      setError(getErrorMessage(submitError));
     } finally {
       setLoading(false);
     }
@@ -255,7 +291,7 @@ export default function RegisterPage() {
 
   if (loadingSetup) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
+      <div className="flex min-h-screen items-center justify-center bg-slate-950 text-white">
         <div className="flex items-center gap-3 text-sm text-slate-300">
           <Loader2 className="h-4 w-4 animate-spin" />
           در حال بررسی وضعیت راه‌اندازی...
@@ -266,17 +302,24 @@ export default function RegisterPage() {
 
   if (!setupAllowed) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white px-4">
+      <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4 text-white">
         <div className="w-full max-w-md border border-slate-800 bg-slate-900 p-6">
           <div className="flex items-center gap-3 text-rose-300">
             <AlertCircle className="h-5 w-5" />
-            <h1 className="text-lg font-semibold">ثبت‌نام غیرفعال است</h1>
+            <h1 className="text-lg font-semibold">
+              ثبت‌نام غیرفعال است
+            </h1>
           </div>
+
           <p className="mt-4 text-sm text-slate-300">
             ثبت‌نام فقط برای راه‌اندازی اولیه سیستم در دسترس است.
           </p>
+
           <div className="mt-6 flex items-center justify-between">
-            <Link className="text-sm text-sky-300 hover:text-sky-200" href="/login">
+            <Link
+              className="text-sm text-sky-300 hover:text-sky-200"
+              href="/login"
+            >
               رفتن به ورود
             </Link>
           </div>
@@ -286,17 +329,24 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white px-4 py-8">
+    <div
+      className="min-h-screen bg-slate-950 px-4 py-8 text-white"
+      dir="rtl"
+    >
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
-            <h1 className="text-2xl font-semibold">ثبت‌نام اولیه</h1>
+            <h1 className="text-2xl font-semibold">
+              ثبت‌نام اولیه
+            </h1>
+
             <p className="mt-1 text-sm text-slate-400">
-              اطلاعات کاربر اصلی سیستم را وارد کنید یا از فایل JSON استفاده کنید.
+              اطلاعات کاربر اصلی سیستم را وارد کنید یا از فایل JSON
+              استفاده کنید.
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={downloadSampleJson}
@@ -325,87 +375,256 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="border border-slate-800 bg-slate-900 p-6">
+        <form
+          onSubmit={handleSubmit}
+          className="border border-slate-800 bg-slate-900 p-6"
+        >
           {error ? (
             <div className="mb-4 flex items-center gap-2 border border-rose-900/60 bg-rose-950/30 px-3 py-2 text-sm text-rose-200">
-              <AlertCircle className="h-4 w-4" />
-              {error}
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>{error}</span>
             </div>
           ) : null}
 
           {success ? (
             <div className="mb-4 flex items-center gap-2 border border-emerald-900/60 bg-emerald-950/30 px-3 py-2 text-sm text-emerald-200">
-              <Check className="h-4 w-4" />
-              {success}
+              <Check className="h-4 w-4 shrink-0" />
+              <span>{success}</span>
             </div>
           ) : null}
 
           <div className="grid gap-4 md:grid-cols-2">
             <Field label="نام کاربری">
-              <input value={formData.username} onChange={(e) => updateField('username', e.target.value)} className="w-full border border-slate-700 bg-slate-950 px-3 py-2 text-sm" />
+              <input
+                type="text"
+                name="username"
+                autoComplete="username"
+                required
+                value={formData.username}
+                onChange={(event) =>
+                  updateField('username', event.target.value)
+                }
+                className="w-full border border-slate-700 bg-slate-950 px-3 py-2 text-sm outline-none focus:border-sky-500"
+              />
             </Field>
+
             <Field label="ایمیل">
-              <input value={formData.email} onChange={(e) => updateField('email', e.target.value)} className="w-full border border-slate-700 bg-slate-950 px-3 py-2 text-sm" />
+              <input
+                type="email"
+                name="email"
+                autoComplete="email"
+                value={formData.email}
+                onChange={(event) =>
+                  updateField('email', event.target.value)
+                }
+                className="w-full border border-slate-700 bg-slate-950 px-3 py-2 text-sm outline-none focus:border-sky-500"
+              />
             </Field>
+
             <Field label="نام">
-              <input value={formData.firstName} onChange={(e) => updateField('firstName', e.target.value)} className="w-full border border-slate-700 bg-slate-950 px-3 py-2 text-sm" />
+              <input
+                type="text"
+                name="firstName"
+                autoComplete="given-name"
+                required
+                value={formData.firstName}
+                onChange={(event) =>
+                  updateField('firstName', event.target.value)
+                }
+                className="w-full border border-slate-700 bg-slate-950 px-3 py-2 text-sm outline-none focus:border-sky-500"
+              />
             </Field>
+
             <Field label="نام خانوادگی">
-              <input value={formData.lastName} onChange={(e) => updateField('lastName', e.target.value)} className="w-full border border-slate-700 bg-slate-950 px-3 py-2 text-sm" />
+              <input
+                type="text"
+                name="lastName"
+                autoComplete="family-name"
+                required
+                value={formData.lastName}
+                onChange={(event) =>
+                  updateField('lastName', event.target.value)
+                }
+                className="w-full border border-slate-700 bg-slate-950 px-3 py-2 text-sm outline-none focus:border-sky-500"
+              />
             </Field>
+
             <Field label="نام پدر">
-              <input value={formData.fatherName} onChange={(e) => updateField('fatherName', e.target.value)} className="w-full border border-slate-700 bg-slate-950 px-3 py-2 text-sm" />
+              <input
+                type="text"
+                name="fatherName"
+                value={formData.fatherName}
+                onChange={(event) =>
+                  updateField('fatherName', event.target.value)
+                }
+                className="w-full border border-slate-700 bg-slate-950 px-3 py-2 text-sm outline-none focus:border-sky-500"
+              />
             </Field>
+
             <Field label="کد ملی">
-              <input value={formData.nationalCode} onChange={(e) => updateField('nationalCode', e.target.value)} className="w-full border border-slate-700 bg-slate-950 px-3 py-2 text-sm" />
+              <input
+                type="text"
+                name="nationalCode"
+                inputMode="numeric"
+                maxLength={10}
+                value={formData.nationalCode}
+                onChange={(event) =>
+                  updateField('nationalCode', event.target.value)
+                }
+                className="w-full border border-slate-700 bg-slate-950 px-3 py-2 text-sm outline-none focus:border-sky-500"
+                dir="ltr"
+              />
             </Field>
+
             <Field label="تاریخ تولد">
-              <input type="date" value={formData.birthDate} onChange={(e) => updateField('birthDate', e.target.value)} className="w-full border border-slate-700 bg-slate-950 px-3 py-2 text-sm" />
+              <input
+                type="date"
+                name="birthDate"
+                value={formData.birthDate}
+                onChange={(event) =>
+                  updateField('birthDate', event.target.value)
+                }
+                className="w-full border border-slate-700 bg-slate-950 px-3 py-2 text-sm outline-none focus:border-sky-500"
+                dir="ltr"
+              />
             </Field>
+
             <Field label="شماره تلفن">
-              <input value={formData.phone} onChange={(e) => updateField('phone', e.target.value)} className="w-full border border-slate-700 bg-slate-950 px-3 py-2 text-sm" />
+              <input
+                type="tel"
+                name="phone"
+                autoComplete="tel"
+                value={formData.phone}
+                onChange={(event) =>
+                  updateField('phone', event.target.value)
+                }
+                className="w-full border border-slate-700 bg-slate-950 px-3 py-2 text-sm outline-none focus:border-sky-500"
+                dir="ltr"
+              />
             </Field>
+
             <Field label="رمز عبور">
-              <div className="flex items-center gap-2 border border-slate-700 bg-slate-950 px-3 py-2">
+              <div className="flex items-center gap-2 border border-slate-700 bg-slate-950 px-3 py-2 focus-within:border-sky-500">
                 <input
                   type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  autoComplete="new-password"
+                  required
+                  minLength={8}
                   value={formData.password}
-                  onChange={(e) => updateField('password', e.target.value)}
+                  onChange={(event) =>
+                    updateField('password', event.target.value)
+                  }
                   className="w-full bg-transparent text-sm outline-none"
+                  dir="ltr"
                 />
-                <button type="button" onClick={() => setShowPassword((v) => !v)}>
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShowPassword((currentValue) => !currentValue)
+                  }
+                  aria-label={
+                    showPassword
+                      ? 'مخفی کردن رمز عبور'
+                      : 'نمایش رمز عبور'
+                  }
+                  title={
+                    showPassword
+                      ? 'مخفی کردن رمز عبور'
+                      : 'نمایش رمز عبور'
+                  }
+                  className="shrink-0 text-slate-400 hover:text-white"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
             </Field>
+
             <Field label="تکرار رمز عبور">
-              <div className="flex items-center gap-2 border border-slate-700 bg-slate-950 px-3 py-2">
+              <div className="flex items-center gap-2 border border-slate-700 bg-slate-950 px-3 py-2 focus-within:border-sky-500">
                 <input
                   type={showConfirmPassword ? 'text' : 'password'}
+                  name="confirmPassword"
+                  autoComplete="new-password"
+                  required
+                  minLength={8}
                   value={formData.confirmPassword}
-                  onChange={(e) => updateField('confirmPassword', e.target.value)}
+                  onChange={(event) =>
+                    updateField(
+                      'confirmPassword',
+                      event.target.value,
+                    )
+                  }
                   className="w-full bg-transparent text-sm outline-none"
+                  dir="ltr"
                 />
-                <button type="button" onClick={() => setShowConfirmPassword((v) => !v)}>
-                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setShowConfirmPassword(
+                      (currentValue) => !currentValue,
+                    )
+                  }
+                  aria-label={
+                    showConfirmPassword
+                      ? 'مخفی کردن تکرار رمز عبور'
+                      : 'نمایش تکرار رمز عبور'
+                  }
+                  title={
+                    showConfirmPassword
+                      ? 'مخفی کردن تکرار رمز عبور'
+                      : 'نمایش تکرار رمز عبور'
+                  }
+                  className="shrink-0 text-slate-400 hover:text-white"
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
             </Field>
+
             <Field label="آدرس" className="md:col-span-2">
-              <textarea value={formData.address} onChange={(e) => updateField('address', e.target.value)} rows={4} className="w-full border border-slate-700 bg-slate-950 px-3 py-2 text-sm" />
+              <textarea
+                name="address"
+                autoComplete="street-address"
+                value={formData.address}
+                onChange={(event) =>
+                  updateField('address', event.target.value)
+                }
+                rows={4}
+                className="w-full resize-y border border-slate-700 bg-slate-950 px-3 py-2 text-sm outline-none focus:border-sky-500"
+              />
             </Field>
           </div>
 
           <div className="mt-6 flex items-center justify-between gap-4">
-            <Link href="/login" className="text-sm text-slate-400 hover:text-slate-200">
+            <Link
+              href="/login"
+              className="text-sm text-slate-400 hover:text-slate-200"
+            >
               رفتن به ورود
             </Link>
+
             <button
               type="submit"
               disabled={loading}
-              className="inline-flex items-center gap-2 bg-sky-500 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+              className="inline-flex items-center gap-2 bg-sky-500 px-4 py-2 text-sm font-medium text-white hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
+              {loading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <UserPlus className="h-4 w-4" />
+              )}
+
               ثبت‌نام
             </button>
           </div>
@@ -426,7 +645,10 @@ function Field({
 }) {
   return (
     <label className={`block ${className}`}>
-      <div className="mb-2 text-sm text-slate-300">{label}</div>
+      <span className="mb-2 block text-sm text-slate-300">
+        {label}
+      </span>
+
       {children}
     </label>
   );

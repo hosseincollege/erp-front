@@ -114,14 +114,12 @@ export async function getTicketById(id: string): Promise<TicketDetails> {
 
 /**
  * ثبت تیکت جدید.
- *
- * title در فرانت به subject در بک‌اند نگاشت می‌شود.
  */
 export async function createTicket(
   payload: CreateTicketPayload,
 ): Promise<Ticket> {
-  const subject = payload.title.trim();
-  const description = payload.description.trim();
+  const subject = payload.subject?.trim();
+  const description = payload.description?.trim();
 
   if (!subject) {
     throw new Error('عنوان تیکت الزامی است.');
@@ -132,7 +130,7 @@ export async function createTicket(
   }
 
   try {
-    const backendPayload = {
+    const backendPayload: Record<string, unknown> = {
       subject,
       description,
       ...(payload.type !== undefined && {
