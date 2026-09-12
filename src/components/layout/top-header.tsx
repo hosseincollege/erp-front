@@ -378,7 +378,7 @@ export function TopHeader({
         </Link>
       </div>
 
-      {/* بخش چپ: اعلان‌ها و انتخاب تم */}
+      {/* بخش چپ: ۱. زنگوله اعلان‌ها (سمت راست) -> ۲. انتخاب تم (سمت چپ) */}
       <div
         className="
           absolute left-5 top-1/2 z-10
@@ -386,24 +386,7 @@ export function TopHeader({
           items-center gap-3
         "
       >
-        {/* انتخاب تم */}
-        <button
-          type="button"
-          onClick={cycleTheme}
-          title={themeTitle}
-          aria-label="تغییر تم"
-          className="
-            rounded-xl p-2
-            text-[var(--foreground)]
-            transition-all
-            hover:bg-slate-100
-            dark:hover:bg-slate-800/80
-          "
-        >
-          {themeIcon}
-        </button>
-
-        {/* زنگوله اعلان‌ها */}
+        {/* زنگوله اعلان‌ها (در چیدمان راست‌به‌چپ به سمت راست می‌افتد) */}
         <button
           type="button"
           aria-label="اعلان‌ها"
@@ -424,6 +407,23 @@ export function TopHeader({
               bg-red-500
             "
           />
+        </button>
+
+        {/* انتخاب تم (در چیدمان راست‌به‌چپ به سمت چپ می‌افتد) */}
+        <button
+          type="button"
+          onClick={cycleTheme}
+          title={themeTitle}
+          aria-label="تغییر تم"
+          className="
+            rounded-xl p-2
+            text-[var(--foreground)]
+            transition-all
+            hover:bg-slate-100
+            dark:hover:bg-slate-800/80
+          "
+        >
+          {themeIcon}
         </button>
       </div>
     </header>

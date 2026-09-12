@@ -295,7 +295,7 @@ export function Sidebar({
           bg-[var(--surface)]
           py-3
           transition-all duration-300
-          ${isMainCollapsed ? 'w-20 items-center px-2' : 'w-44 px-2.5'}
+          ${isMainCollapsed ? 'w-14 items-center px-2' : 'w-38 px-1.5'}
         `}
       >
         <div className="flex w-full flex-col gap-1.5 overflow-y-auto no-scrollbar">
@@ -333,7 +333,7 @@ export function Sidebar({
       {/* ستون دوم: اولویت رندر: پنل پروفایل | زیرمنوی ماژول فعال | پیشخوان خانه */}
       <div
         className="
-          flex w-60 shrink-0 flex-col
+          flex w-50 shrink-0 flex-col
           border-l border-[var(--border)]
           bg-[var(--surface)]/95
           p-4 shadow-sm backdrop-blur
