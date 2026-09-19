@@ -17,8 +17,6 @@ import {
   Sparkles,
 } from 'lucide-react';
 
-import { AppShell } from '@/components/layout/app-shell';
-
 interface Announcement {
   id: string;
   title: string;
@@ -103,119 +101,117 @@ export function AuthenticatedHome() {
   };
 
   return (
-    <AppShell>
-      <div dir="rtl" className="mx-auto max-w-5xl space-y-4">
-        {/* نوار بالایی اعلانات */}
-        <div className="flex items-center justify-between rounded-2xl border border-border bg-card px-5 py-3.5 shadow-sm">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
-              <Megaphone size={18} />
-            </div>
-            <div>
-              <h1 className="text-sm font-bold text-foreground">
-                تابلو اعلانات و اطلاعیه‌ها
-              </h1>
-              <p className="text-[11px] text-muted-foreground">
-                آخرین اخبار، بخشنامه‌ها و هماهنگی‌های درون‌سازمانی
-              </p>
-            </div>
+    <div dir="rtl" className="mx-auto max-w-5xl space-y-4">
+      {/* نوار بالایی اعلانات */}
+      <div className="flex items-center justify-between rounded-2xl border border-border bg-card px-5 py-3.5 shadow-sm">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
+            <Megaphone size={18} />
           </div>
-
-          <div className="flex items-center gap-1.5 rounded-xl bg-muted/60 px-3 py-1.5 text-xs text-muted-foreground">
-            <Bell size={14} className="text-blue-500" />
-            <span>{MOCK_ANNOUNCEMENTS.length} اطلاعیه فعال</span>
+          <div>
+            <h1 className="text-sm font-bold text-foreground">
+              تابلو اعلانات و اطلاعیه‌ها
+            </h1>
+            <p className="text-[11px] text-muted-foreground">
+              آخرین اخبار، بخشنامه‌ها و هماهنگی‌های درون‌سازمانی
+            </p>
           </div>
         </div>
 
-        {/* لیست اطلاعیه‌ها */}
-        <div className="space-y-3">
-          {MOCK_ANNOUNCEMENTS.map((item) => {
-            const isExpanded = expandedId === item.id;
+        <div className="flex items-center gap-1.5 rounded-xl bg-muted/60 px-3 py-1.5 text-xs text-muted-foreground">
+          <Bell size={14} className="text-blue-500" />
+          <span>{MOCK_ANNOUNCEMENTS.length} اطلاعیه فعال</span>
+        </div>
+      </div>
 
-            return (
+      {/* لیست اطلاعیه‌ها */}
+      <div className="space-y-3">
+        {MOCK_ANNOUNCEMENTS.map((item) => {
+          const isExpanded = expandedId === item.id;
+
+          return (
+            <div
+              key={item.id}
+              className={`overflow-hidden rounded-2xl border bg-card transition-all duration-200 ${
+                item.isPinned
+                  ? 'border-blue-500/30 shadow-sm'
+                  : 'border-border shadow-xs'
+              }`}
+            >
+              {/* بخش هدر هر اطلاعیه */}
               <div
-                key={item.id}
-                className={`overflow-hidden rounded-2xl border bg-card transition-all duration-200 ${
-                  item.isPinned
-                    ? 'border-blue-500/30 shadow-sm'
-                    : 'border-border shadow-xs'
-                }`}
+                onClick={() => toggleExpand(item.id)}
+                className="flex cursor-pointer flex-col gap-2.5 p-4 sm:flex-row sm:items-center sm:justify-between hover:bg-muted/20"
               >
-                {/* بخش هدر هر اطلاعیه */}
-                <div
-                  onClick={() => toggleExpand(item.id)}
-                  className="flex cursor-pointer flex-col gap-2.5 p-4 sm:flex-row sm:items-center sm:justify-between hover:bg-muted/20"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="mt-0.5">
-                      {item.isPinned ? (
-                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-500/10 text-blue-500">
-                          <Pin size={14} className="rotate-45" />
-                        </div>
-                      ) : (
-                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                          <Info size={14} />
-                        </div>
-                      )}
-                    </div>
-
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span
-                          className={`rounded-md border px-2 py-0.5 text-[10px] font-semibold ${getCategoryColor(
-                            item.category
-                          )}`}
-                        >
-                          {item.category}
-                        </span>
-                        {item.isPinned && (
-                          <span className="rounded-md bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-500">
-                            سنجاق‌شده
-                          </span>
-                        )}
-                        <h2 className="text-sm font-bold text-foreground">
-                          {item.title}
-                        </h2>
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5">
+                    {item.isPinned ? (
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-500/10 text-blue-500">
+                        <Pin size={14} className="rotate-45" />
                       </div>
-                      <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">
-                        {item.summary}
-                      </p>
-                    </div>
+                    ) : (
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                        <Info size={14} />
+                      </div>
+                    )}
                   </div>
 
-                  <div className="flex items-center justify-between gap-4 sm:justify-end">
-                    <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
-                      <span>{item.author}</span>
-                      <span className="flex items-center gap-1 font-mono">
-                        <Calendar size={12} />
-                        {item.date}
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span
+                        className={`rounded-md border px-2 py-0.5 text-[10px] font-semibold ${getCategoryColor(
+                          item.category
+                        )}`}
+                      >
+                        {item.category}
                       </span>
-                    </div>
-
-                    <button
-                      type="button"
-                      className="flex h-7 w-7 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-muted"
-                    >
-                      {isExpanded ? (
-                        <ChevronUp size={15} />
-                      ) : (
-                        <ChevronDown size={15} />
+                      {item.isPinned && (
+                        <span className="rounded-md bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold text-amber-500">
+                          سنجاق‌شده
+                        </span>
                       )}
-                    </button>
+                      <h2 className="text-sm font-bold text-foreground">
+                        {item.title}
+                      </h2>
+                    </div>
+                    <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">
+                      {item.summary}
+                    </p>
                   </div>
                 </div>
 
-                {/* متن کامل اطلاعیه در صورت باز شدن */}
-                {isExpanded && (
-                  <div className="border-t border-border/70 bg-muted/10 p-4 text-xs leading-6 text-foreground/90">
-                    <p className="whitespace-pre-line">{item.content}</p>
+                <div className="flex items-center justify-between gap-4 sm:justify-end">
+                  <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+                    <span>{item.author}</span>
+                    <span className="flex items-center gap-1 font-mono">
+                      <Calendar size={12} />
+                      {item.date}
+                    </span>
                   </div>
-                )}
+
+                  <button
+                    type="button"
+                    className="flex h-7 w-7 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-muted"
+                  >
+                    {isExpanded ? (
+                      <ChevronUp size={15} />
+                    ) : (
+                      <ChevronDown size={15} />
+                    )}
+                  </button>
+                </div>
               </div>
-            );
-          })}
-        </div>
+
+              {/* متن کامل اطلاعیه در صورت باز شدن */}
+              {isExpanded && (
+                <div className="border-t border-border/70 bg-muted/10 p-4 text-xs leading-6 text-foreground/90">
+                  <p className="whitespace-pre-line">{item.content}</p>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
-    </AppShell>
+    </div>
   );
 }

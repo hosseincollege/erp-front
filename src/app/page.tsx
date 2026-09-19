@@ -3,25 +3,31 @@
  * @description صفحه اصلی ERP Pro.
  *
  * اگر کاربر لاگین نباشد، لندینگ عمومی نمایش داده می‌شود.
- * اگر کاربر لاگین باشد، داشبورد داخل AppShell نمایش داده می‌شود.
+ * اگر کاربر لاگین باشد، به داشبورد داخل ورک‌اسپیس (/dashboard) هدایت می‌شود.
  */
 
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
-import { AuthenticatedHome } from '@/components/home/authenticated-home';
 import { PublicLanding } from '@/components/home/public-landing';
 import { isUserAuthenticated } from '@/lib/auth-api';
 
 export default function HomePage() {
+  const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(
     null
   );
 
   useEffect(() => {
     const checkAuthentication = () => {
-      setIsAuthenticated(isUserAuthenticated());
+      const auth = isUserAuthenticated();
+      setIsAuthenticated(auth);
+
+      if (auth) {
+        router.replace('/dashboard');
+      }
     };
 
     /*
@@ -47,7 +53,7 @@ export default function HomePage() {
       window.removeEventListener('auth:login', checkAuthentication);
       window.removeEventListener('auth:logout', checkAuthentication);
     };
-  }, []);
+  }, [router]);
 
   /*
    * وضعیت احراز هویت هنوز مشخص نشده است.
@@ -83,14 +89,14 @@ export default function HomePage() {
   }
 
   /*
-   * کاربر وارد نشده است؛ نمایش صفحه عمومی
+   * کاربر وارد شده است؛ چون هدایت به /dashboard انجام می‌شود، چیزی رندر نمی‌شود
    */
-  if (!isAuthenticated) {
-    return <PublicLanding />;
+  if (isAuthenticated) {
+    return null;
   }
 
   /*
-   * کاربر وارد شده است؛ نمایش داشبورد
+   * کاربر وارد نشده است؛ نمایش صفحه عمومی
    */
-  return <AuthenticatedHome />;
+  return <PublicLanding />;
 }

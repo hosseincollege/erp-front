@@ -166,7 +166,7 @@ export function Sidebar({
   const [user, setUser] = useState<AuthUser | null>(null);
 
   const isProfileRoute = pathname === '/profile' || pathname.startsWith('/profile/');
-  const isHomeRoute = pathname === '/';
+  const isHomeRoute = pathname === '/' || pathname === '/dashboard' || pathname.startsWith('/dashboard/');
 
   useEffect(() => {
     setUser(getCurrentUser());

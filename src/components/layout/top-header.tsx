@@ -140,16 +140,19 @@ export function TopHeader({
     event.preventDefault();
     event.stopPropagation();
 
+    // اگر سایدبار باز است و قفل است -> قفل را باز کن
     if (!isCollapsed && isSidebarLocked) {
       onToggleSidebarLock?.();
       return;
     }
 
+    // اگر سایدبار بسته است -> بازش کن
     if (isCollapsed) {
       onToggleSidebar?.();
       return;
     }
 
+    // اگر سایدبار باز است و هنوز قفل نیست -> قفلش کن
     onToggleSidebarLock?.();
   };
 
@@ -175,11 +178,11 @@ export function TopHeader({
 
   const themeIcon =
     theme === 'system' ? (
-      <Monitor size={20} />
+      <Monitor size={18} />
     ) : theme === 'light' ? (
-      <Sun size={20} />
+      <Sun size={18} />
     ) : (
-      <Moon size={20} />
+      <Moon size={18} />
     );
 
   const themeTitle =
@@ -223,27 +226,13 @@ export function TopHeader({
               aria-label={sidebarButtonTitle}
               aria-pressed={!isCollapsed && isSidebarLocked}
               className={`
-                flex h-10 w-10 cursor-pointer
+                flex h-9 w-9 cursor-pointer
                 items-center justify-center
-                rounded-xl border
-                transition-all duration-200
-
+                rounded-xl transition-all duration-200
                 ${
                   !isCollapsed && isSidebarLocked
-                    ? `
-                      border-blue-600
-                      bg-blue-600
-                      text-white
-                      shadow-lg
-                      shadow-blue-500/20
-                      hover:bg-blue-700
-                    `
-                    : `
-                      border-[var(--border)]
-                      text-[var(--foreground)]
-                      hover:bg-slate-100
-                      dark:hover:bg-slate-800
-                    `
+                    ? 'border-2 border-blue-600 bg-blue-500/10 text-blue-600 dark:border-blue-500 dark:text-blue-400 shadow-sm shadow-blue-500/20'
+                    : 'border border-[var(--border)] text-[var(--foreground)] hover:bg-slate-100 dark:hover:bg-slate-800'
                 }
               `}
             >
@@ -264,12 +253,12 @@ export function TopHeader({
             aria-label={navigateModeTitle}
             aria-pressed={navigateOnClick}
             className={`
-              flex h-10 w-10 cursor-pointer items-center justify-center
-              rounded-xl border transition-all duration-200
+              flex h-9 w-9 cursor-pointer items-center justify-center
+              rounded-xl transition-all duration-200
               ${
                 navigateOnClick
-                  ? 'border-blue-600 bg-blue-600 text-white shadow-lg shadow-blue-500/20 hover:bg-blue-700'
-                  : 'border-[var(--border)] text-[var(--foreground)] hover:bg-slate-100 dark:hover:bg-slate-800'
+                  ? 'border-2 border-blue-600 bg-blue-500/10 text-blue-600 dark:border-blue-500 dark:text-blue-400 shadow-sm shadow-blue-500/20'
+                  : 'border border-[var(--border)] text-[var(--foreground)] hover:bg-slate-100 dark:hover:bg-slate-800'
               }
             `}
           >
@@ -291,7 +280,7 @@ export function TopHeader({
             transition-all
             ${
               isProfileActive
-                ? 'border-blue-600 bg-blue-50/50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 shadow-sm'
+                ? 'border-2 border-blue-600 bg-blue-500/10 text-blue-600 dark:border-blue-500 dark:text-blue-400 shadow-sm'
                 : 'border-[var(--border)] hover:bg-slate-100 dark:hover:bg-slate-800/80 text-[var(--foreground)]'
             }
           `}
@@ -300,22 +289,22 @@ export function TopHeader({
           <div
             className="
               pointer-events-none
-              flex h-9 w-9 items-center
+              flex h-7 w-7 items-center
               justify-center rounded-xl
               bg-gradient-to-br from-blue-500 to-blue-700
-              font-black text-white shadow-inner
+              font-black text-white shadow-inner text-xs
             "
           >
             {user?.name ? (
               user.name.charAt(0).toUpperCase()
             ) : (
-              <User size={20} />
+              <User size={16} />
             )}
           </div>
 
           {/* نام و نقش */}
           <div className="pointer-events-none text-right">
-            <p className="text-sm font-bold leading-tight">
+            <p className="text-xs font-bold leading-tight">
               {user?.name || 'admin'}
             </p>
 
@@ -340,7 +329,7 @@ export function TopHeader({
         "
       >
         <Link
-          href="/"
+          href="/dashboard"
           aria-label="رفتن به صفحه اصلی"
           className="group flex items-center gap-2"
         >
@@ -378,7 +367,7 @@ export function TopHeader({
         </Link>
       </div>
 
-      {/* بخش چپ: ۱. زنگوله اعلان‌ها (سمت راست) -> ۲. انتخاب تم (سمت چپ) */}
+      {/* بخش چپ: ۱. زنگوله اعلان‌ها -> ۲. انتخاب تم */}
       <div
         className="
           absolute left-5 top-1/2 z-10
@@ -386,19 +375,20 @@ export function TopHeader({
           items-center gap-3
         "
       >
-        {/* زنگوله اعلان‌ها (در چیدمان راست‌به‌چپ به سمت راست می‌افتد) */}
+        {/* زنگوله اعلان‌ها */}
         <button
           type="button"
           aria-label="اعلان‌ها"
           className="
-            relative rounded-xl p-2
+            relative flex h-9 w-9 items-center justify-center
+            rounded-xl border border-[var(--border)]
             text-[var(--foreground)]
             transition-all
             hover:bg-slate-100
             dark:hover:bg-slate-800/80
           "
         >
-          <Bell size={20} />
+          <Bell size={18} />
           <span
             className="
               absolute right-2 top-2
@@ -409,14 +399,15 @@ export function TopHeader({
           />
         </button>
 
-        {/* انتخاب تم (در چیدمان راست‌به‌چپ به سمت چپ می‌افتد) */}
+        {/* انتخاب تم */}
         <button
           type="button"
           onClick={cycleTheme}
           title={themeTitle}
           aria-label="تغییر تم"
           className="
-            rounded-xl p-2
+            flex h-9 w-9 items-center justify-center
+            rounded-xl border border-[var(--border)]
             text-[var(--foreground)]
             transition-all
             hover:bg-slate-100
