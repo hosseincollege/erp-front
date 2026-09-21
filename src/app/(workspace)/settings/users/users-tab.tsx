@@ -1,5 +1,7 @@
 // File: frontend/src/app/(workspace)/settings/users/users-tab.tsx
 
+// File: frontend/src/app/(workspace)/settings/users/users-tab.tsx
+
 'use client';
 
 import {
@@ -31,11 +33,11 @@ import { settingsApi, type UserItem } from '@/lib/settings-api';
 import {
   parseUsersToItems,
   usersImportSample,
-  usersToExportData,
 } from './users-json';
 
 type UserFormData = {
   name: string;
+  username: string;
   email: string;
   role: string;
   department: string;
@@ -44,6 +46,7 @@ type UserFormData = {
 
 const emptyFormData: UserFormData = {
   name: '',
+  username: '',
   email: '',
   role: 'USER',
   department: '',
@@ -101,7 +104,6 @@ export function UsersTab() {
       }
 
       const response = await settingsApi.getUsers(organizationId);
-
       setUsers(response ?? []);
     } catch (error) {
       setErrorMessage(
@@ -174,6 +176,7 @@ export function UsersTab() {
 
     setFormData({
       name: user.name ?? '',
+      username: user.username ?? '',
       email: user.email ?? '',
       role: user.role ?? user.roleKey ?? 'USER',
       department: user.department ?? '',
@@ -181,35 +184,6 @@ export function UsersTab() {
     });
 
     setIsUserModalOpen(true);
-  };
-
-  const handleExportUsers = () => {
-    try {
-      setErrorMessage(null);
-
-      const exportData = usersToExportData(users);
-      const blob = new Blob([JSON.stringify(exportData, null, 2)], {
-        type: 'application/json;charset=utf-8',
-      });
-
-      const url = URL.createObjectURL(blob);
-      const anchor = document.createElement('a');
-
-      anchor.href = url;
-      anchor.download = `users-${new Date().toISOString().slice(0, 10)}.json`;
-
-      document.body.appendChild(anchor);
-      anchor.click();
-      document.body.removeChild(anchor);
-
-      URL.revokeObjectURL(url);
-
-      setSuccessMessage('فایل کاربران با موفقیت آماده و دانلود شد.');
-    } catch (error) {
-      setErrorMessage(
-        getErrorMessage(error, 'ساخت فایل خروجی کاربران با خطا مواجه شد.'),
-      );
-    }
   };
 
   const handleDownloadImportSample = () => {
@@ -345,6 +319,7 @@ export function UsersTab() {
 
     const name = formData.name.trim();
     const email = formData.email.trim().toLowerCase();
+    const username = formData.username.trim() || email.split('@')[0];
     const role = formData.role.trim() || 'USER';
     const department = formData.department.trim();
     const { firstName, lastName } = getNameParts(name);
@@ -386,10 +361,10 @@ export function UsersTab() {
           return {
             ...user,
             name,
+            username,
             firstName,
             lastName,
             email,
-            username: user.username || email.split('@')[0],
             role,
             roleKey: role,
             department: department || undefined,
@@ -400,7 +375,7 @@ export function UsersTab() {
       } else {
         const newUser: UserItem = {
           id: createUserId(),
-          username: email.split('@')[0],
+          username,
           name,
           firstName,
           lastName,
@@ -547,16 +522,6 @@ export function UsersTab() {
             <Upload className="size-4" />
             درون‌ریزی JSON
           </button>
-
-          <button
-            type="button"
-            onClick={handleExportUsers}
-            disabled={isSaving || users.length === 0}
-            className="inline-flex items-center justify-center gap-2 rounded-lg border bg-background px-4 py-2 text-sm font-medium transition hover:bg-muted disabled:pointer-events-none disabled:opacity-60"
-          >
-            <Download className="size-4" />
-            برون‌بری JSON
-          </button>
         </div>
       </div>
 
@@ -599,8 +564,8 @@ export function UsersTab() {
                         <div className="font-medium">
                           {user.name || user.username}
                         </div>
-                        <div className="mt-1 text-xs text-muted-foreground">
-                          {user.username}
+                        <div className="mt-1 text-xs text-muted-foreground" dir="ltr">
+                          @{user.username}
                         </div>
                       </td>
 
@@ -726,31 +691,57 @@ export function UsersTab() {
                   }
                   required
                   autoFocus
+                  placeholder="مثلاً: علی رضایی"
                   className="w-full rounded-lg border bg-background px-3 py-2.5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
               </div>
 
-              <div>
-                <label
-                  htmlFor="user-email"
-                  className="mb-1.5 block text-sm font-medium"
-                >
-                  ایمیل
-                </label>
-                <input
-                  id="user-email"
-                  type="email"
-                  dir="ltr"
-                  value={formData.email}
-                  onChange={(event) =>
-                    setFormData((current) => ({
-                      ...current,
-                      email: event.target.value,
-                    }))
-                  }
-                  required
-                  className="w-full rounded-lg border bg-background px-3 py-2.5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-                />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label
+                    htmlFor="user-username"
+                    className="mb-1.5 block text-sm font-medium"
+                  >
+                    نام کاربری
+                  </label>
+                  <input
+                    id="user-username"
+                    dir="ltr"
+                    value={formData.username}
+                    onChange={(event) =>
+                      setFormData((current) => ({
+                        ...current,
+                        username: event.target.value,
+                      }))
+                    }
+                    placeholder="اختیاری (پیش‌فرض: ایمیل)"
+                    className="w-full rounded-lg border bg-background px-3 py-2.5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="user-email"
+                    className="mb-1.5 block text-sm font-medium"
+                  >
+                    ایمیل
+                  </label>
+                  <input
+                    id="user-email"
+                    type="email"
+                    dir="ltr"
+                    value={formData.email}
+                    onChange={(event) =>
+                      setFormData((current) => ({
+                        ...current,
+                        email: event.target.value,
+                      }))
+                    }
+                    required
+                    placeholder="user@example.com"
+                    className="w-full rounded-lg border bg-background px-3 py-2.5 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
@@ -892,7 +883,7 @@ export function UsersTab() {
                 className="flex w-full items-center justify-center gap-2 rounded-lg border px-4 py-3 text-sm font-medium transition hover:bg-muted disabled:opacity-50"
               >
                 <Download className="size-4" />
-                دانلود فایل نمونه
+                دانلود فایل نمونه JSON
               </button>
 
               <input

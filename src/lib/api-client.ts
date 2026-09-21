@@ -110,7 +110,6 @@ function buildUrl(path: string): string {
   return `${API_BASE_URL}${normalizedPath}`;
 }
 
-
 function extractErrorMessage(
   payload: ApiErrorPayload | string | null,
   status: number,
@@ -176,6 +175,10 @@ async function parseResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     if (response.status === 401) {
       clearAccessToken();
+      // هدایت خودکار کاربر به صفحه لاگین هنگام نامعتبر بودن یا انقضای توکن
+      if (isBrowser() && !window.location.pathname.startsWith('/login')) {
+        window.location.href = '/login';
+      }
     }
 
     const errorPayload = payload as ApiErrorPayload | string | null;
@@ -313,6 +316,6 @@ export const apiClient = {
 export function logout(): void {
   clearAccessToken();
   if (isBrowser()) {
-    window.location.href = '/';
+    window.location.href = '/login';
   }
 }

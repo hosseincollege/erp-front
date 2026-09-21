@@ -9,6 +9,8 @@ import type { UserItem, UserRoleItem } from '@/lib/settings-api';
 export interface UserImportData {
   id?: string;
   name: string;
+  username?: string;
+  password?: string;
   email: string;
   role: string;
   department?: string;
@@ -30,12 +32,23 @@ export interface UsersImportResult {
 }
 
 /**
- * فایل نمونه برای دانلود از رابط کاربری.
+ * فایل نمونه برای دانلود از رابط کاربری همراه با کاربر دمو (GAPGPTMASKTOKENw3xxqzzmmoX5X / GAPGPTMASKTOKENw3xxqzzmmoX6X).
  */
 export const usersImportSample: UsersImportData = {
   users: [
     {
+      name: 'کاربر نمایشی (دمو)',
+      username: 'GAPGPTMASKTOKENw3xxqzzmmoX7X',
+      password: 'GAPGPTMASKTOKENw3xxqzzmmoX8X',
+      email: 'GAPGPTMASKTOKENw3xxqzzmmoX9X@example.com',
+      role: 'ADMIN',
+      department: 'فناوری اطلاعات',
+      isActive: true,
+    },
+    {
       name: 'علی رضایی',
+      username: 'ali.rezaei',
+      password: 'GAPGPTMASKTOKENw3xxqzzmmoX10X',
       email: 'ali.rezaei@example.com',
       role: 'ADMIN',
       department: 'مدیریت',
@@ -43,6 +56,8 @@ export const usersImportSample: UsersImportData = {
     },
     {
       name: 'مریم احمدی',
+      username: 'maryam.a',
+      password: 'GAPGPTMASKTOKENw3xxqzzmmoX11X',
       email: 'maryam.ahmadi@example.com',
       role: 'ACCOUNTANT',
       department: 'امور مالی',
@@ -50,6 +65,8 @@ export const usersImportSample: UsersImportData = {
     },
     {
       name: 'سارا کریمی',
+      username: 'sara.k',
+      password: 'GAPGPTMASKTOKENw3xxqzzmmoX12X',
       email: 'sara.karimi@example.com',
       role: 'HR_MANAGER',
       department: 'منابع انسانی',
@@ -57,6 +74,8 @@ export const usersImportSample: UsersImportData = {
     },
     {
       name: 'رضا محمدی',
+      username: 'reza.m',
+      password: 'GAPGPTMASKTOKENw3xxqzzmmoX13X',
       email: 'reza.mohammadi@example.com',
       role: 'USER',
       department: 'فروش',
@@ -100,6 +119,8 @@ function parseUser(
 
   const id = normalizeOptionalString(record.id);
   const name = normalizeRequiredString(record.name);
+  const username = normalizeOptionalString(record.username);
+  const password = normalizeOptionalString(record.password);
   const email = normalizeEmail(record.email);
   const role = normalizeRequiredString(record.role);
   const department = normalizeOptionalString(record.department);
@@ -111,9 +132,7 @@ function parseUser(
   if (!email) {
     errors.push(`کاربر ردیف ${index + 1}: فیلد «email» الزامی است.`);
   } else if (!isValidEmail(email)) {
-    errors.push(
-      `کاربر ردیف ${index + 1}: ایمیل «${email}» معتبر نیست.`,
-    );
+    errors.push(`کاربر ردیف ${index + 1}: ایمیل «${email}» معتبر نیست.`);
   }
 
   if (!role) {
@@ -136,6 +155,8 @@ function parseUser(
   return {
     id,
     name,
+    username,
+    password,
     email,
     role,
     department,
@@ -216,7 +237,7 @@ export function usersImportDataToItems(
       const nameParts = trimmedName ? trimmedName.split(/\s+/) : [];
       const firstName = nameParts[0] || user.name || '';
       const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
-      const username = user.email.split('@')[0] || `user_${Date.now()}`;
+      const username = user.username || user.email.split('@')[0] || `user_${Date.now()}`;
       const isActive = user.isActive ?? true;
 
       const roleItem: UserRoleItem = {
@@ -259,6 +280,7 @@ export function usersToExportData(users: UserItem[]): UsersImportData {
   return {
     users: users.map((user) => ({
       name: user.name,
+      username: user.username,
       email: user.email ?? '',
       role: user.role || (user.roles && user.roles[0]?.key) || 'USER',
       department: user.department || undefined,
