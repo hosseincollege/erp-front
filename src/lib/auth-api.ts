@@ -1,4 +1,4 @@
-//frontend/src/lib/auth-api.ts
+// frontend/src/lib/auth-api.ts
 
 import {
   apiClient,
@@ -21,7 +21,7 @@ export interface AuthUser {
   firstName?: string;
   lastName?: string;
   phone?: string;
-  organizationId?: string;
+  organizationId?: string | null;
 }
 
 export interface LoginPayload {
@@ -65,15 +65,9 @@ function getUserDisplayName(user: {
   firstName?: string;
   lastName?: string;
 }): string {
-  if (user.name) {
-    return user.name;
-  }
+  if (user.name) return user.name;
 
-  const fullName = [user.firstName, user.lastName]
-    .filter(Boolean)
-    .join(' ')
-    .trim();
-
+  const fullName = [user.firstName, user.lastName].filter(Boolean).join(' ').trim();
   return fullName || 'کاربر';
 }
 
@@ -97,33 +91,27 @@ function normalizeUser(
     firstName,
     lastName,
     phone: responseUser?.phone ?? fallback.phone,
-    organizationId: responseUser?.organizationId ?? fallback.organizationId,
+    organizationId: responseUser?.organizationId ?? fallback.organizationId ?? null,
   };
 }
 
 function saveUser(user: AuthUser): void {
   if (!isBrowser()) return;
-
   window.localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
 }
 
 function clearUser(): void {
   if (!isBrowser()) return;
-
   window.localStorage.removeItem(USER_STORAGE_KEY);
 }
 
-function persistSession(
-  response: AuthResponse,
-  fallbackUser: Partial<AuthUser>,
-): AuthUser {
+function persistSession(response: AuthResponse, fallbackUser: Partial<AuthUser>): AuthUser {
   if (response.access_token) {
     setAccessToken(response.access_token);
   }
 
   const user = normalizeUser(response.user, fallbackUser);
   saveUser(user);
-
   return user;
 }
 
@@ -133,7 +121,7 @@ export async function login(payload: LoginPayload): Promise<AuthResponse> {
     { identifier: string; password: string }
   >('/auth/login', {
     identifier: payload.email,
-    password: payload.password,
+    password: payload.password, // FIX
   });
 
   persistSession(response, {
@@ -144,20 +132,15 @@ export async function login(payload: LoginPayload): Promise<AuthResponse> {
   return response;
 }
 
-export async function register(
-  payload: RegisterPayload,
-): Promise<AuthResponse> {
-  const response = await apiClient.post<AuthResponse, RegisterPayload>(
-    '/auth/register',
-    {
-      username: payload.username,
-      email: payload.email || undefined,
-      phone: payload.phone || undefined,
-      firstName: payload.firstName,
-      lastName: payload.lastName,
-      password: payload.password,
-    },
-  );
+export async function register(payload: RegisterPayload): Promise<AuthResponse> {
+  const response = await apiClient.post<AuthResponse, RegisterPayload>('/auth/register', {
+    username: payload.username,
+    email: payload.email || undefined,
+    phone: payload.phone || undefined,
+    firstName: payload.firstName,
+    lastName: payload.lastName,
+    password: payload.password, // FIX
+  });
 
   persistSession(response, {
     name: `${payload.firstName} ${payload.lastName}`.trim(),
@@ -175,10 +158,7 @@ export function getCurrentUser(): AuthUser | null {
   if (!isBrowser()) return null;
 
   const rawUser = window.localStorage.getItem(USER_STORAGE_KEY);
-
-  if (!rawUser) {
-    return null;
-  }
+  if (!rawUser) return null;
 
   try {
     return JSON.parse(rawUser) as AuthUser;

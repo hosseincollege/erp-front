@@ -1,10 +1,6 @@
 /**
  * @file src/app/login/page.tsx
- * @description صفحه ورود با هدر عمومی، سازگاری کامل تم لایت/دارک و رفع تداخل Autofill.
- *
- * نکته:
- * - لینک ثبت‌نام عمومی عمداً حذف شده است.
- * - پس از راه‌اندازی اولیه، ساخت کاربر جدید فقط باید توسط مدیر از داخل پنل انجام شود.
+ * @description صفحه ورود با هدر عمومی، سازگاری کامل تم لایت/دارک، باکس حساب آزمایشی (Demo) و رفع تداخل Autofill.
  */
 
 'use client';
@@ -42,6 +38,15 @@ export default function LoginPage() {
     }
   };
 
+  // تابع پر کردن خودکار اطلاعات دمو
+  const handleFillDemo = () => {
+    setFormData({
+      email: 'demo',
+      password: 'demo',
+    });
+    setError(null);
+  };
+
   return (
     <main dir="rtl" className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
       <style jsx global>{`
@@ -63,6 +68,27 @@ export default function LoginPage() {
           <h1 className="mb-6 text-center text-2xl font-bold text-[var(--foreground)]">
             ورود به سیستم
           </h1>
+
+          {/* باکس حساب دمو - مرتب و جمع‌وجور */}
+          <div className="mb-6 rounded-xl border border-blue-500/20 bg-blue-500/10 p-3.5 text-xs text-blue-900 dark:border-blue-500/30 dark:bg-blue-950/40 dark:text-blue-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4 font-mono text-[13px]">
+                <div>
+                  نام کاربری: <span className="font-bold text-blue-600 dark:text-blue-400">demo</span>
+                </div>
+                <div>
+                  کلمه عبور: <span className="font-bold text-blue-600 dark:text-blue-400">demo</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleFillDemo}
+                className="rounded-md bg-blue-600/10 px-2 py-1 text-[11px] font-medium text-blue-600 transition hover:bg-blue-600 hover:text-white dark:bg-blue-400/10 dark:text-blue-300 dark:hover:bg-blue-500 dark:hover:text-white"
+              >
+                پر کردن خودکار
+              </button>
+            </div>
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {error ? (

@@ -32,15 +32,15 @@ export interface UsersImportResult {
 }
 
 /**
- * فایل نمونه برای دانلود از رابط کاربری همراه با کاربر دمو (GAPGPTMASKTOKENw3xxqzzmmoX5X / GAPGPTMASKTOKENw3xxqzzmmoX6X).
+ * فایل نمونه برای دانلود از رابط کاربری همراه با کاربر دمو.
  */
 export const usersImportSample: UsersImportData = {
   users: [
     {
       name: 'کاربر نمایشی (دمو)',
-      username: 'GAPGPTMASKTOKENw3xxqzzmmoX7X',
-      password: 'GAPGPTMASKTOKENw3xxqzzmmoX8X',
-      email: 'GAPGPTMASKTOKENw3xxqzzmmoX9X@example.com',
+      username: 'demo',
+      password: 'GAPGPTMASKTOKENin931f88goX0X',
+      email: 'demo@example.com',
       role: 'ADMIN',
       department: 'فناوری اطلاعات',
       isActive: true,
@@ -48,7 +48,7 @@ export const usersImportSample: UsersImportData = {
     {
       name: 'علی رضایی',
       username: 'ali.rezaei',
-      password: 'GAPGPTMASKTOKENw3xxqzzmmoX10X',
+      password: 'GAPGPTMASKTOKENin931f88goX1X',
       email: 'ali.rezaei@example.com',
       role: 'ADMIN',
       department: 'مدیریت',
@@ -57,7 +57,7 @@ export const usersImportSample: UsersImportData = {
     {
       name: 'مریم احمدی',
       username: 'maryam.a',
-      password: 'GAPGPTMASKTOKENw3xxqzzmmoX11X',
+      password: 'GAPGPTMASKTOKENin931f88goX2X',
       email: 'maryam.ahmadi@example.com',
       role: 'ACCOUNTANT',
       department: 'امور مالی',
@@ -66,7 +66,7 @@ export const usersImportSample: UsersImportData = {
     {
       name: 'سارا کریمی',
       username: 'sara.k',
-      password: 'GAPGPTMASKTOKENw3xxqzzmmoX12X',
+      password: 'GAPGPTMASKTOKENin931f88goX3X',
       email: 'sara.karimi@example.com',
       role: 'HR_MANAGER',
       department: 'منابع انسانی',
@@ -75,7 +75,7 @@ export const usersImportSample: UsersImportData = {
     {
       name: 'رضا محمدی',
       username: 'reza.m',
-      password: 'GAPGPTMASKTOKENw3xxqzzmmoX13X',
+      password: 'GAPGPTMASKTOKENin931f88goX4X',
       email: 'reza.mohammadi@example.com',
       role: 'USER',
       department: 'فروش',
@@ -259,7 +259,7 @@ export function usersImportDataToItems(
         lastName,
         email: user.email,
         phone: null,
-        status: isActive ? 'ACTIVE' : 'INACTIVE',
+        status: isActive ? 'ACTIVE' : 'DISABLED',
         isSystemUser: false,
         role: user.role,
         roleKey: user.role,
@@ -278,13 +278,21 @@ export function parseUsersToItems(rawData: unknown): UsersImportResult {
 
 export function usersToExportData(users: UserItem[]): UsersImportData {
   return {
-    users: users.map((user) => ({
-      name: user.name,
-      username: user.username,
-      email: user.email ?? '',
-      role: user.role || (user.roles && user.roles[0]?.key) || 'USER',
-      department: user.department || undefined,
-      isActive: user.isActive ?? (user.status === 'ACTIVE'),
-    })),
+    users: users.map((user) => {
+      const firstRole = user.roles?.[0];
+      const roleFromRoles =
+        typeof firstRole === 'string'
+          ? firstRole
+          : firstRole?.key;
+
+      return {
+        name: user.name || 'نامشخص',
+        username: user.username,
+        email: user.email ?? '',
+        role: user.role || roleFromRoles || 'USER',
+        department: user.department || undefined,
+        isActive: user.isActive ?? (user.status === 'ACTIVE'),
+      };
+    }),
   };
 }

@@ -117,20 +117,22 @@ export interface UserRoleItem {
 }
 
 export interface UserItem {
-  id: string;
+  id?: string;
   username: string;
-  name: string;
-  firstName: string;
-  lastName: string;
+  password?: string;
+  name?: string;
+  firstName?: string;
+  lastName?: string;
   email?: string | null;
   phone?: string | null;
-  status: string;
-  isSystemUser: boolean;
+  status?: string;
+  isSystemUser?: boolean;
   role?: string | null;
   roleKey?: string | null;
-  roles: UserRoleItem[];
+  roles?: UserRoleItem[] | string[];
+  roleIds?: string[];
   department?: string;
-  isActive: boolean;
+  isActive?: boolean;
 }
 
 export interface RoleItem {
@@ -145,8 +147,7 @@ export interface RoleItem {
 /*
  * Payload ایمپورت ساختار سازمانی — دقیقاً مطابق ImportOrganizationDto بک‌اند:
  * - branches: name و code اجباری
- * - departments: name و code اجباری (فیلد code در نسخه قبلی فرانت نبود
- *   و باعث خطای اعتبارسنجی/500 می‌شد)
+ * - departments: name و code اجباری
  */
 export interface OrganizationImportPayload {
   organizationId?: string;
@@ -189,8 +190,6 @@ export interface OrganizationImportPayload {
 
 /*
  * اعتبارسنجی organizationId قبل از هر درخواستی که به شناسه نیاز دارد.
- * اگر شناسه نامعتبر باشد، خطای معنادار پرتاب می‌شود تا به‌جای 500 مبهم،
- * پیام روشنی به UI برسد.
  */
 function assertOrgId(orgId: string | undefined | null): string {
   const id = (orgId ?? '').trim();
@@ -205,7 +204,6 @@ function assertOrgId(orgId: string | undefined | null): string {
 export const settingsApi = {
   /*
    * GET /settings/organization/:id
-   * خطا دیگر پنهان نمی‌شود؛ caller تصمیم می‌گیرد با خطا چه کند.
    */
   async getCompanySettings(orgId: string): Promise<CompanySettings> {
     const id = assertOrgId(orgId);
@@ -216,11 +214,6 @@ export const settingsApi = {
     data: CompanySettings,
     orgId: string,
   ): Promise<CompanySettings> {
-    /*
-     * DTO بک‌اند برای PUT فقط این فیلدها را قبول می‌کند؛ پس یک payload
-     * تمیز ایجاد می‌کنیم و کل data را مستقیماً ارسال نمی‌کنیم
-     * (ValidationPipe بک‌اند فیلدهای خارج از DTO را رد می‌کند).
-     */
     const payload: UpdateOrganizationSettingsRequest = {
       name: data.name,
       legalName: data.legalName,
@@ -253,7 +246,6 @@ export const settingsApi = {
 
   /*
    * POST /settings/organization
-   * پاسخ شامل membership است تا organizationId کاربر بلافاصله در دسترس باشد.
    */
   async createCompany(
     data: CreateOrganizationRequest,
@@ -269,10 +261,6 @@ export const settingsApi = {
     return apiClient.get<BranchItem[]>(`/settings/branches/${id}`);
   },
 
-  /*
-   * POST /settings/branches
-   * CreateBranchDto بک‌اند organizationId را در body اجباری کرده است.
-   */
   async createBranch(data: Omit<BranchItem, 'id'>): Promise<BranchItem> {
     assertOrgId(data.organizationId);
     return apiClient.post<BranchItem, Omit<BranchItem, 'id'>>(
@@ -281,10 +269,6 @@ export const settingsApi = {
     );
   },
 
-  /*
-   * PUT /settings/branches/:id
-   * UpdateBranchDto بک‌اند organizationId ندارد؛ آن را از payload حذف می‌کنیم.
-   */
   async updateBranch(
     id: string,
     data: Partial<BranchItem>,
@@ -305,10 +289,6 @@ export const settingsApi = {
     return apiClient.get<DepartmentItem[]>(`/settings/departments/${id}`);
   },
 
-  /*
-   * POST /settings/departments
-   * CreateDepartmentDto بک‌اند organizationId را در body اجباری کرده است.
-   */
   async createDepartment(
     data: Omit<DepartmentItem, 'id'> & { organizationId: string },
   ): Promise<DepartmentItem> {
@@ -319,10 +299,6 @@ export const settingsApi = {
     >('/settings/departments', data);
   },
 
-  /*
-   * PUT /settings/departments/:id
-   * UpdateDepartmentDto بک‌اند organizationId ندارد.
-   */
   async updateDepartment(
     id: string,
     data: Partial<DepartmentItem>,
@@ -360,10 +336,6 @@ export const settingsApi = {
     return apiClient.get<RoleItem[]>(`/settings/roles/${id}`);
   },
 
-  /*
-   * PUT /settings/roles/:organizationId
-   * کنترلر بک‌اند آرایه خام SaveRoleDto[] می‌گیرد (بدون wrapper مثل { roles }).
-   */
   async saveRoles(
     roles: RoleItem[],
     orgId: string,
@@ -377,10 +349,6 @@ export const settingsApi = {
     return apiClient.get<unknown>(`/settings/export/${id}`);
   },
 
-  /*
-   * POST /settings/import/:organizationId
-   * ایمپورت کامل داده سازمان با شناسه در URL.
-   */
   async importOrganization(
     orgId: string,
     data: OrganizationImportPayload,
@@ -392,11 +360,6 @@ export const settingsApi = {
     );
   },
 
-  /*
-   * ایمپورت ساختار سازمانی برای organization-tab.tsx
-   * از پروکسی Next.js استفاده می‌کند که مسیر و بدنه را مطابق
-   * ImportOrganizationDto بک‌اند نرمال‌سازی می‌کند.
-   */
   async importOrganizationStructure(
     data: OrganizationImportPayload,
   ): Promise<unknown> {
@@ -406,9 +369,6 @@ export const settingsApi = {
     );
   },
 
-  /*
-   * Aliasهای سازگاری برای company-tab.tsx
-   */
   async getOrganization(orgId?: string): Promise<CompanySettings> {
     if (!orgId?.trim()) {
       throw new Error('شناسه سازمان برای دریافت اطلاعات الزامی است.');
