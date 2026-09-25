@@ -1,207 +1,213 @@
 /**
  * @file src/components/home/public-landing.tsx
- * @description صفحه لندینگ عمومی ERP Pro برای کاربرانی که وارد سیستم نشده‌اند.
+ * @description لندینگ پیج عمومی یکپارچه‌شده سامانه با نمایش ادغام‌شده معرفی، ماژول‌ها و آمار بازدید
  */
 
 'use client';
 
+import { useEffect, useState } from 'react';
 import {
+  Activity,
   BarChart3,
-  CheckCircle2,
+  CalendarDays,
   ClipboardList,
+  Eye,
+  Globe,
   Headphones,
-  Layers3,
-  PackageCheck,
+  Layers,
   ShieldCheck,
   Sparkles,
+  TrendingUp,
   Users,
 } from 'lucide-react';
 
 import { PublicHeader } from '@/components/layout/public-header';
 
+type VisitStats = {
+  daily: number;
+  weekly: number;
+  monthly: number;
+  yearly: number;
+};
+
 export function PublicLanding() {
+  const [stats, setStats] = useState<VisitStats>({
+    daily: 0,
+    weekly: 0,
+    monthly: 0,
+    yearly: 0,
+  });
+  const [isLoading, setIsLoading] = useState(true);
+
+  // واکشی داده‌های آمار بازدید و ثبت بازدید
+  useEffect(() => {
+    let isMounted = true;
+
+    const backendUrl = (
+      process.env.NEXT_PUBLIC_API_URL ||
+      process.env.NEXT_PUBLIC_API_BASE_URL ||
+      'http://localhost:3006'
+    ).replace(/\/+$/, '');
+
+    const trackAndFetchStats = async () => {
+      try {
+        // ثبت بازدید کاربر در پس‌زمینه
+        fetch(`${backendUrl}/settings/public-track`, {
+          method: 'POST',
+        }).catch(() => null);
+
+        // واکشی آمار
+        const response = await fetch(`${backendUrl}/settings/public-stats`, {
+          cache: 'no-store',
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const resData = await response.json();
+        const data = resData?.data || resData;
+
+        if (isMounted && data) {
+          setStats({
+            daily: Number(data.daily ?? data.today ?? 0),
+            weekly: Number(data.weekly ?? data.week ?? 0),
+            monthly: Number(data.monthly ?? data.month ?? 0),
+            yearly: Number(data.yearly ?? data.year ?? 0),
+          });
+        }
+      } catch (error) {
+        console.warn('عدم برقراری ارتباط با سرویس آمار:', error);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+
+    trackAndFetchStats();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const features = [
     {
       icon: Headphones,
       title: 'مدیریت تیکت و پشتیبانی',
-      desc: 'درخواست‌ها، پیگیری‌ها و پاسخ‌گویی به مشتریان را در یک محیط منظم و متمرکز مدیریت کنید.',
+      desc: 'درخواست‌ها، تیکت‌های مشتریان و گردش کار تیم پشتیبانی را در بستری متمرکز و یکپارچه مدیریت کنید.',
+      badge: 'مرکز تماس و تیکتینگ',
       color: 'text-blue-500',
       bg: 'bg-blue-500/10',
+      borderHover: 'hover:border-blue-500/40',
     },
     {
       icon: Users,
-      title: 'مدیریت مشتریان و ارتباطات',
-      desc: 'اطلاعات مشتریان، سوابق ارتباطی و وضعیت تعاملات را یکجا در اختیار داشته باشید.',
+      title: 'مدیریت مشتریان (CRM)',
+      desc: 'پرونده مشتریان، سوابق تعاملات، پیگیری‌های دوره‌ای و تاریخچه فعالیت‌ها را همیشه همراه داشته باشید.',
+      badge: 'روابط سازمانی',
       color: 'text-violet-500',
       bg: 'bg-violet-500/10',
+      borderHover: 'hover:border-violet-500/40',
     },
     {
       icon: ClipboardList,
-      title: 'مدیریت فرآیندها و وظایف',
-      desc: 'وظایف تیم‌ها، گردش کار و فعالیت‌های سازمانی را دقیق‌تر و هماهنگ‌تر پیش ببرید.',
+      title: 'فرآیندها و کنترل پروژه‌ها',
+      desc: 'تخصیص وظایف به اعضای تیم، سنجش پیشرفت و زمان‌بندی دقیق اجرای پروژه‌های خرد و کلان.',
+      badge: 'جریان کاری پویا',
       color: 'text-emerald-500',
       bg: 'bg-emerald-500/10',
+      borderHover: 'hover:border-emerald-500/40',
     },
     {
       icon: BarChart3,
-      title: 'گزارش‌گیری و تحلیل مدیریتی',
-      desc: 'با گزارش‌های روشن و هدفمند، وضعیت کسب‌وکار را بهتر تحلیل کرده و تصمیم دقیق‌تری بگیرید.',
-      color: 'text-orange-500',
-      bg: 'bg-orange-500/10',
-    },
-  ];
-
-  const highlights = [
-    {
-      icon: Layers3,
-      title: 'یکپارچگی بین بخش‌ها',
-      desc: 'اطلاعات واحدهای مختلف سازمان در یک سامانه متمرکز می‌شود.',
-    },
-    {
-      icon: PackageCheck,
-      title: 'کاهش کارهای تکراری',
-      desc: 'فرآیندهای روزمره با نظم بیشتر و اتلاف زمان کمتر انجام می‌شوند.',
-    },
-    {
-      icon: ShieldCheck,
-      title: 'امنیت و کنترل بهتر',
-      desc: 'دسترسی‌ها، داده‌ها و فرآیندهای سازمانی با ساختاری امن‌تر مدیریت می‌شوند.',
+      title: 'گزارش‌گیری و تحلیل داده‌ها',
+      desc: 'داشبوردهای تحلیلی شفاف از امور مالی، فروش و عملکرد منابع انسانی برای اتخاذ تصمیمات دقیق مدیریتی.',
+      badge: 'هوش تجاری',
+      color: 'text-amber-500',
+      bg: 'bg-amber-500/10',
+      borderHover: 'hover:border-amber-500/40',
     },
   ];
 
   return (
-    <main dir="rtl" className="min-h-screen overflow-hidden bg-background text-foreground">
+    <main
+      dir="rtl"
+      className="relative min-h-screen bg-background text-foreground selection:bg-primary/20 selection:text-primary"
+    >
+      {/* هدر عمومی */}
       <PublicHeader />
 
-      <section className="relative isolate">
-        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-          <div className="absolute right-[-12rem] top-[-10rem] h-[30rem] w-[30rem] rounded-full bg-primary/10 blur-3xl" />
-          <div className="absolute bottom-[-14rem] left-[-10rem] h-[30rem] w-[30rem] rounded-full bg-blue-500/10 blur-3xl" />
-        </div>
+      {/* افکت نوری پس‌زمینه */}
+      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute -top-40 left-1/2 -z-10 h-[550px] w-[800px] -translate-x-1/2 rounded-full bg-gradient-to-tr from-primary/15 via-blue-500/10 to-transparent blur-[140px]" />
+        <div className="absolute top-[500px] right-10 -z-10 h-[400px] w-[400px] rounded-full bg-violet-500/5 blur-[120px]" />
+      </div>
 
-        <div className="mx-auto grid w-full max-w-7xl gap-12 px-5 pb-20 pt-12 sm:px-8 lg:grid-cols-[1.08fr_0.92fr] lg:items-center lg:pb-28 lg:pt-20">
-          <div className="max-w-3xl">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-2 text-sm font-bold text-primary">
-              <CheckCircle2 size={17} />
-              سامانه یکپارچه مدیریت سازمان
+      {/* بخش ادغام‌شده: معرفی و امکانات کلیدی پلتفرم */}
+      <section className="relative isolate pt-12 pb-16 sm:pt-16 sm:pb-20">
+        <div className="mx-auto w-full max-w-7xl px-5 sm:px-8">
+          {/* هدر و معرفی Hero */}
+          <div className="mx-auto max-w-3xl text-center">
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-xs font-bold text-primary shadow-xs backdrop-blur-md">
+              <Sparkles size={14} className="animate-pulse" />
+              <span>پلتفرم یکپارچه مدیریت هوشمند فرآیندهای سازمانی</span>
             </div>
 
-            <h1 className="text-4xl font-black leading-[1.3] tracking-tight sm:text-5xl lg:text-7xl">
-              مدیریت بخش‌های مختلف کسب‌وکار،
-              <span className="block text-primary">در یک بستر منظم و هوشمند</span>
+            <h1 className="mt-6 text-3xl font-black tracking-tight leading-[1.3] sm:text-5xl lg:text-6xl">
+              کنترل یکپارچه سازمان با{' '}
+              <span className="bg-gradient-to-l from-primary via-blue-500 to-indigo-500 bg-clip-text text-transparent">
+                ERP Pro
+              </span>
             </h1>
 
-            <p className="mt-6 max-w-2xl text-base leading-8 text-muted-foreground sm:text-lg">
-              ERP Pro به سازمان‌ها کمک می‌کند فرآیندهای کلیدی مثل مدیریت مشتریان،
-              تیکت‌های پشتیبانی، عملیات داخلی، وظایف تیمی و گزارش‌های مدیریتی را در
-              یک سامانه واحد مدیریت کنند؛ ساده‌تر، شفاف‌تر و هماهنگ‌تر.
+            <p className="mt-5 text-sm leading-8 text-muted-foreground sm:text-base sm:leading-8">
+              سامانه‌ای جامع، امن و ماژولار برای نظارت بر تیکت‌ها، ارتباط با مشتریان، پایش
+              امور مالی و کنترل زنجیره انبار و پروژه‌ها؛ همه‌چیز متمرکز، سریع و مطمئن.
             </p>
 
-            <div className="mt-10 flex flex-wrap gap-5 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="text-emerald-500" size={18} />
-                ساختار امن و قابل اتکا
+            {/* هایلایت‌های شاخص */}
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs font-semibold text-muted-foreground sm:text-sm">
+              <div className="flex items-center gap-1.5">
+                <ShieldCheck size={17} className="text-emerald-500" />
+                <span>امنیت داده در سطح سازمانی</span>
               </div>
-
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="text-emerald-500" size={18} />
-                مناسب برای تیم‌های در حال رشد
+              <div className="h-3.5 w-px bg-border" />
+              <div className="flex items-center gap-1.5">
+                <Layers size={17} className="text-blue-500" />
+                <span>ماژولار و قابل توسعه</span>
               </div>
-
-              <div className="flex items-center gap-2">
-                <Sparkles className="text-emerald-500" size={18} />
-                تجربه کاربری ساده و متمرکز
+              <div className="h-3.5 w-px bg-border" />
+              <div className="flex items-center gap-1.5">
+                <Activity size={17} className="text-primary" />
+                <span>پایش لحظه‌ای عملکرد</span>
               </div>
             </div>
           </div>
 
-          <div className="relative">
-            <div className="absolute -inset-5 rounded-[2rem] bg-primary/10 blur-2xl" />
-
-            <div className="relative rounded-[2rem] border border-border bg-card p-5 shadow-2xl sm:p-7">
-              <div className="mb-6 flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">ERP Pro چه کمکی می‌کند؟</p>
-                  <h2 className="mt-1 text-xl font-black">نمایی از ارزش سامانه</h2>
-                </div>
-
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                  <Sparkles size={22} />
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                {highlights.map((item) => {
-                  const Icon = item.icon;
-
-                  return (
-                    <div
-                      key={item.title}
-                      className="rounded-2xl border border-border bg-muted/40 p-4"
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                          <Icon size={20} />
-                        </div>
-
-                        <div>
-                          <h3 className="text-sm font-black text-foreground sm:text-base">
-                            {item.title}
-                          </h3>
-                          <p className="mt-1 text-xs leading-6 text-muted-foreground sm:text-sm">
-                            {item.desc}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="mt-4 rounded-2xl border border-primary/20 bg-primary/5 p-5">
-                <p className="text-sm font-bold text-primary">مناسب برای سازمان‌های خدماتی، فروش، پشتیبانی و تیم‌های عملیاتی</p>
-                <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                  اگر به‌دنبال یک محیط منسجم برای کنترل بهتر فرآیندها، اطلاعات و ارتباطات داخلی و خارجی هستید، ERP Pro می‌تواند هسته مرکزی مدیریت سازمان شما باشد.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="border-y border-border bg-muted/20">
-        <div className="mx-auto w-full max-w-7xl px-5 py-16 sm:px-8 lg:py-20">
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="text-sm font-black text-primary">امکانات ERP Pro</p>
-
-            <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">
-              ابزارهایی برای مدیریت بهتر سازمان
-            </h2>
-
-            <p className="mt-4 leading-8 text-muted-foreground">
-              ماژول‌های کاربردی ERP Pro کمک می‌کنند اطلاعات، ارتباطات و فرآیندهای کاری
-              در یک مسیر روشن‌تر و هماهنگ‌تر مدیریت شوند.
-            </p>
-          </div>
-
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {/* کارت‌های ماژول‌ها و امکانات (به‌صورت یکپارچه در زیر معرفی) */}
+          <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {features.map((feature) => {
               const Icon = feature.icon;
-
               return (
                 <div
                   key={feature.title}
-                  className="group rounded-3xl border border-border bg-card p-6 transition-all hover:-translate-y-1 hover:border-primary/30 hover:shadow-xl"
+                  className={`group relative rounded-3xl border border-border/80 bg-card/60 p-6 backdrop-blur-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${feature.borderHover}`}
                 >
-                  <div
-                    className={`flex h-12 w-12 items-center justify-center rounded-2xl ${feature.bg} ${feature.color}`}
-                  >
-                    <Icon size={23} />
+                  <div className="flex items-center justify-between">
+                    <div
+                      className={`flex h-12 w-12 items-center justify-center rounded-2xl ${feature.bg} ${feature.color} shadow-xs transition-transform group-hover:scale-105`}
+                    >
+                      <Icon size={22} />
+                    </div>
+                    <span className="rounded-full bg-muted/60 px-2.5 py-1 text-[11px] font-bold text-muted-foreground">
+                      {feature.badge}
+                    </span>
                   </div>
 
-                  <h3 className="mt-5 text-lg font-black">{feature.title}</h3>
-
-                  <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                  <h2 className="mt-5 text-base font-black text-foreground sm:text-lg">
+                    {feature.title}
+                  </h2>
+                  <p className="mt-2.5 text-xs leading-6 text-muted-foreground sm:text-sm sm:leading-7">
                     {feature.desc}
                   </p>
                 </div>
@@ -211,14 +217,92 @@ export function PublicLanding() {
         </div>
       </section>
 
-      <footer className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-5 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-8">
-        <p>© تمامی حقوق برای ERP Pro محفوظ است.</p>
+      {/* بخش آمار بازدیدکنندگان */}
+      <section className="border-t border-border/70 bg-muted/30 py-16 backdrop-blur-xs sm:py-20">
+        <div className="mx-auto w-full max-w-7xl px-5 sm:px-8">
+          <div className="mb-10 text-center">
+            <span className="inline-block rounded-lg bg-primary/10 px-3 py-1 text-xs font-extrabold text-primary">
+              شاخص‌های آماری
+            </span>
+            <h2 className="mt-3 text-2xl font-black sm:text-3xl">
+              آمار بازدیدکنندگان سامانه
+            </h2>
+            <p className="mt-2 text-xs text-muted-foreground sm:text-sm">
+              تعداد مراجعات منحصربه‌فرد (Unique IP) ثبت‌شده در بستر سامانه
+            </p>
+          </div>
 
-        <div className="flex items-center gap-2">
-          <ShieldCheck size={16} className="text-primary" />
-          سامانه امن مدیریت سازمان
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            {[
+              {
+                label: 'بازدید امروز',
+                value: stats.daily,
+                icon: Eye,
+                color: 'text-blue-500',
+                bg: 'bg-blue-500/10',
+              },
+              {
+                label: 'بازدید این هفته',
+                value: stats.weekly,
+                icon: TrendingUp,
+                color: 'text-emerald-500',
+                bg: 'bg-emerald-500/10',
+              },
+              {
+                label: 'بازدید این ماه',
+                value: stats.monthly,
+                icon: CalendarDays,
+                color: 'text-violet-500',
+                bg: 'bg-violet-500/10',
+              },
+              {
+                label: 'بازدید کل سال',
+                value: stats.yearly,
+                icon: Globe,
+                color: 'text-amber-500',
+                bg: 'bg-amber-500/10',
+              },
+            ].map((item) => (
+              <div
+                key={item.label}
+                className="relative overflow-hidden rounded-3xl border border-border/80 bg-card/70 p-5 shadow-xs backdrop-blur-lg transition-all hover:border-primary/30 hover:shadow-md sm:p-6"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-extrabold text-muted-foreground">
+                    {item.label}
+                  </span>
+                  <div
+                    className={`flex h-9 w-9 items-center justify-center rounded-xl ${item.bg} ${item.color}`}
+                  >
+                    <item.icon size={18} />
+                  </div>
+                </div>
+
+                <div className="mt-5 text-2xl font-black text-foreground sm:text-3xl">
+                  {isLoading ? (
+                    <div className="h-8 w-16 animate-pulse rounded-lg bg-muted" />
+                  ) : (
+                    Number(item.value || 0).toLocaleString('fa-IR')
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* فوتر */}
+      <footer className="border-t border-border/80 bg-card/40 backdrop-blur-md">
+        <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-4 px-5 py-6 text-xs font-semibold text-muted-foreground sm:flex-row sm:px-8 sm:text-sm">
+          <p>© تمامی حقوق برای پلتفرم جامع ERP Pro محفوظ است.</p>
+          <div className="flex items-center gap-2 text-foreground/80">
+            <ShieldCheck size={16} className="text-primary" />
+            <span>سامانه امن و یکپارچه سازمانی</span>
+          </div>
         </div>
       </footer>
     </main>
   );
 }
+
+export default PublicLanding;

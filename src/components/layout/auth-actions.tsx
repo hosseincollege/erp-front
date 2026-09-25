@@ -1,64 +1,48 @@
 /**
  * =====================================================
- *  فایل: auth-actions.tsx
- *  هدف: مدیریت جداگانه‌ی احراز هویت و اکانت کاربر
- *  توضیح: تمام منطق لاگین، لاگ‌اوت، نمایش نام کاربر و
- *         ریدایرکت بعد از خروج فقط در این فایل است.
- *  نکته: این کامپوننت مستقل از TopHeader است تا منطق
- *        اکانت در هدر قاطی نشود.
+ *  فایل: src/components/layout/auth-actions.tsx
+ *  هدف: مدیریت وضعیت حساب کاربری واردشده (نام و خروج)
+ *  توضیح: این کامپوننت در هدر پنل کاربری لاگین‌شده استفاده می‌شود.
  * =====================================================
  */
 
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { LogOut, UserCircle2 } from 'lucide-react';
+import { Loader2, LogOut, UserCircle2 } from 'lucide-react';
 import { logout } from '@/lib/auth-api';
 
-/**
- * تعریف نوع پراپ‌های این کامپوننت
- */
 type AuthActionsProps = {
   userName?: string | null;
 };
 
-/**
- * کامپوننت اصلی مدیریت اکانت
- */
 export function AuthActions({ userName }: AuthActionsProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  /**
-   * هندلر خروج از حساب کاربری
-   * ۱) پاک کردن سشن/توکن
-   * ۲) رفتن به صفحه اصلی
-   * ۳) ریفرش کامل تا UI به‌روز شود
-   */
   const handleLogout = async () => {
     try {
       setLoading(true);
-
-      // پاک کردن سشن/توکن از بک‌اند یا localStorage
       await logout();
-
-      // رفتن به صفحه عمومی و ریفرش واقعی
+    } catch (error) {
+      console.error('Logout failed, redirecting anyway:', error);
+    } finally {
+      // هدایت به صفحه اصلی و تازه‌سازی کامل وضعیت احراز هویت
       router.replace('/');
       router.refresh();
-    } catch (error) {
-      console.error('Logout failed:', error);
-    } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center gap-3">
-      {/* نمایش نام کاربر */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <UserCircle2 size={18} />
-        <span>{userName || 'کاربر مهمان'}</span>
+    <div dir="rtl" className="flex items-center gap-3">
+      {/* نمایش مشخصات کاربر لاگین‌شده */}
+      <div className="flex items-center gap-2 rounded-xl bg-muted/50 px-3 py-1.5 text-xs text-foreground/80 border border-border/60">
+        <UserCircle2 size={16} className="text-primary shrink-0" />
+        <span className="font-medium max-w-[140px] truncate">
+          {userName || 'کاربر سیستم'}
+        </span>
       </div>
 
       {/* دکمه خروج */}
@@ -66,10 +50,16 @@ export function AuthActions({ userName }: AuthActionsProps) {
         type="button"
         onClick={handleLogout}
         disabled={loading}
-        className="inline-flex items-center gap-2 rounded-xl bg-destructive px-3 py-2 text-sm text-destructive-foreground transition hover:opacity-90 disabled:opacity-50"
+        title="خروج از حساب کاربری"
+        aria-label="خروج از حساب کاربری"
+        className="inline-flex items-center gap-1.5 rounded-xl border border-destructive/20 bg-destructive/10 px-3 py-1.5 text-xs font-medium text-destructive transition-all hover:bg-destructive hover:text-destructive-foreground disabled:cursor-not-allowed disabled:opacity-50"
       >
-        <LogOut size={16} />
-        {loading ? 'درحال خروج...' : 'خروج'}
+        {loading ? (
+          <Loader2 size={14} className="animate-spin" />
+        ) : (
+          <LogOut size={14} className="rotate-180" />
+        )}
+        <span>{loading ? 'درحال خروج...' : 'خروج'}</span>
       </button>
     </div>
   );

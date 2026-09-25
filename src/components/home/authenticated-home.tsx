@@ -1,21 +1,25 @@
 /**
  * @file src/components/home/authenticated-home.tsx
- * @description داشبورد اصلی کاربر لاگین‌شده (تابلو اعلانات و اطلاعیه‌های سازمانی).
+ * @description داشبورد اصلی کاربر لاگین‌شده (آمار بازدید و تابلو اعلانات سازمانی).
  */
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Bell,
   Calendar,
   ChevronDown,
   ChevronUp,
+  Eye,
+  Globe,
   Info,
   Megaphone,
   Pin,
-  Sparkles,
+  TrendingUp,
+  Users,
 } from 'lucide-react';
+import { StatCard } from '@/components/ui/stat-card';
 
 interface Announcement {
   id: string;
@@ -27,6 +31,13 @@ interface Announcement {
   author: string;
   isPinned?: boolean;
   priority: 'HIGH' | 'MEDIUM' | 'NORMAL';
+}
+
+interface VisitStats {
+  daily: number;
+  weekly: number;
+  monthly: number;
+  yearly: number;
 }
 
 const MOCK_ANNOUNCEMENTS: Announcement[] = [
@@ -95,34 +106,118 @@ function getCategoryColor(category: Announcement['category']) {
 
 export function AuthenticatedHome() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [stats, setStats] = useState<VisitStats>({
+    daily: 0,
+    weekly: 0,
+    monthly: 0,
+    yearly: 0,
+  });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadStats() {
+      try {
+        const backendUrl =
+          process.env.NEXT_PUBLIC_API_URL ||
+          process.env.NEXT_PUBLIC_API_BASE_URL ||
+          'http://localhost:3006';
+
+        const res = await fetch(`${backendUrl}/settings/public-stats`, {
+          cache: 'no-store',
+        });
+
+        if (!res.ok) return;
+
+        const data = await res.json();
+        if (isMounted && data) {
+          setStats({
+            daily: Number(data.daily ?? data.today ?? 0),
+            weekly: Number(data.weekly ?? data.week ?? 0),
+            monthly: Number(data.monthly ?? data.month ?? 0),
+            yearly: Number(data.yearly ?? data.year ?? 0),
+          });
+        }
+      } catch {
+        // جلوگیری از ثبت خطای مسدودکننده در صورت عدم اتصال سرور
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+
+    loadStats();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const toggleExpand = (id: string) => {
     setExpandedId((prev) => (prev === id ? null : id));
   };
 
+  const formatNumber = (num: number) => {
+    if (isLoading) return '...';
+    return Number(num || 0).toLocaleString('fa-IR');
+  };
+
   return (
-    <div dir="rtl" className="mx-auto max-w-5xl space-y-4">
-      {/* نوار بالایی اعلانات */}
-      <div className="flex items-center justify-between rounded-2xl border border-border bg-card px-5 py-3.5 shadow-sm">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
-            <Megaphone size={18} />
+    <div dir="rtl" className="mx-auto max-w-5xl space-y-5">
+      {/* بخش ادغام‌شده: هدر خلاصه و آمار سامانه */}
+      <section className="overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5">
+        <div className="flex flex-col gap-3 border-b border-border/60 pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
+              <Megaphone size={20} />
+            </div>
+            <div>
+              <h1 className="text-sm font-bold text-foreground">
+                تابلو اعلانات و آمار بازدید
+              </h1>
+              <p className="text-[11px] text-muted-foreground">
+                مرور وضعیت تردد در سامانه و جدیدترین اطلاعیه‌های سازمانی
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-sm font-bold text-foreground">
-              تابلو اعلانات و اطلاعیه‌ها
-            </h1>
-            <p className="text-[11px] text-muted-foreground">
-              آخرین اخبار، بخشنامه‌ها و هماهنگی‌های درون‌سازمانی
-            </p>
+
+          <div className="flex w-fit items-center gap-1.5 rounded-xl bg-muted/60 px-3 py-1.5 text-xs text-muted-foreground">
+            <Bell size={14} className="text-blue-500" />
+            <span>{MOCK_ANNOUNCEMENTS.length} اطلاعیه فعال</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 rounded-xl bg-muted/60 px-3 py-1.5 text-xs text-muted-foreground">
-          <Bell size={14} className="text-blue-500" />
-          <span>{MOCK_ANNOUNCEMENTS.length} اطلاعیه فعال</span>
+        {/* کارت‌های خلاصه آمار در قالب فشرده */}
+        <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <StatCard
+            label="بازدید امروز"
+            value={formatNumber(stats.daily)}
+            hint="۲۴ ساعت گذشته"
+            icon={Eye}
+            tone="primary"
+          />
+          <StatCard
+            label="این هفته"
+            value={formatNumber(stats.weekly)}
+            hint="۷ روز اخیر"
+            icon={TrendingUp}
+            tone="success"
+          />
+          <StatCard
+            label="این ماه"
+            value={formatNumber(stats.monthly)}
+            hint="۳۰ روز اخیر"
+            icon={Users}
+            tone="warning"
+          />
+          <StatCard
+            label="کل سال"
+            value={formatNumber(stats.yearly)}
+            hint="مجموع سال جاری"
+            icon={Globe}
+            tone="primary"
+          />
         </div>
-      </div>
+      </section>
 
       {/* لیست اطلاعیه‌ها */}
       <div className="space-y-3">
@@ -138,10 +233,10 @@ export function AuthenticatedHome() {
                   : 'border-border shadow-xs'
               }`}
             >
-              {/* بخش هدر هر اطلاعیه */}
+              {/* هدر هر اطلاعیه */}
               <div
                 onClick={() => toggleExpand(item.id)}
-                className="flex cursor-pointer flex-col gap-2.5 p-4 sm:flex-row sm:items-center sm:justify-between hover:bg-muted/20"
+                className="flex cursor-pointer flex-col gap-2.5 p-4 hover:bg-muted/20 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5">
@@ -191,6 +286,7 @@ export function AuthenticatedHome() {
 
                   <button
                     type="button"
+                    aria-label="نمایش جزئیات اطلاعیه"
                     className="flex h-7 w-7 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-muted"
                   >
                     {isExpanded ? (

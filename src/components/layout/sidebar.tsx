@@ -128,6 +128,7 @@ const navigation: NavigationItem[] = [
     sub: [
       { title: 'پیکربندی عمومی', href: '/settings/general' },
       { title: 'مدیریت کاربران', href: '/settings/users' },
+      { title: 'مدیریت پروژه‌ها', href: '/settings/projects' },
     ],
   },
   {
