@@ -1,0 +1,9 @@
+import type { UiMessage } from '../types';
+
+const messages = {
+
+    settingsTitle:'Configuración general', settingsDescription:'Elige el color principal y el idioma. El modo claro u oscuro está disponible en el encabezado.', accentTitle:'Color principal', accentDescription:'El color elegido se previsualiza al instante. Pulsa «Guardar cambios» para conservarlo; si sales sin guardar, se restaura el color anterior.', preview:'Vista previa', primaryAction:'Acción principal', selectedItem:'Elemento seleccionado', languageTitle:'Idioma de visualización', languageDescription:'Persa, inglés, árabe, chino simplificado, francés, español, alemán, ruso, japonés y portugués brasileño.', languageHelp:'Para cambiar el idioma, ve a Configuración → General, selecciónalo y pulsa «Guardar cambios».', languageLabel:'Idioma', saveChanges:'Guardar cambios', blue:'Azul', green:'Verde', red:'Rojo', yellow:'Amarillo', purple:'Morado', customColor:'Color personalizado', accentPreviewHint:'Vista previa del color elegido', openSidebar:'Abrir menú lateral', unlockSidebar:'Desbloquear menú', lockSidebar:'Bloquear menú', themeSystem:'Tema: sistema', themeLight:'Tema: claro', themeDark:'Tema: oscuro', viewProfile:'Ver perfil en el menú', admin:'administrador', user:'Usuario', dashboard:'Ir al panel', notifications:'Notificaciones', changeTheme:'Cambiar tema', navigateOn:'La navegación automática está activa; haz clic en un módulo para abrirlo', navigateOff:'La navegación automática está desactivada; haz clic en un módulo para abrir su menú', organizationLogo:'Logotipo de la organización', logoBackgroundTitle:'Fondo del logotipo', logoBackgroundHint:'Elige el fondo que se muestra detrás del logotipo en el encabezado.', backgroundNone:'Sin fondo', backgroundDark:'Fondo oscuro', backgroundWhite:'Fondo blanco',
+    invalidLogoBackground: 'El fondo del logotipo debe ser transparente, oscuro o blanco.',
+} satisfies Record<UiMessage, string>;
+
+export default messages;

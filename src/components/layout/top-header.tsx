@@ -234,7 +234,7 @@ export function TopHeader({
                 ${
                   !isCollapsed && isSidebarLocked
                     ? 'border-2 border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)] shadow-sm shadow-[var(--primary)]/20'
-                    : 'border border-[var(--border)] text-[var(--foreground)] hover:border-[var(--primary)]/50 hover:bg-[var(--primary-soft)] hover:text-[var(--primary)]'
+                    : 'border border-[var(--border)] text-[var(--foreground)]'
                 }
               `}
             >
@@ -261,7 +261,7 @@ export function TopHeader({
               ${
                 navigateOnClick
                   ? 'border-2 border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)] shadow-sm shadow-[var(--primary)]/20'
-                  : 'border border-[var(--border)] text-[var(--foreground)] hover:border-[var(--primary)]/50 hover:bg-[var(--primary-soft)] hover:text-[var(--primary)]'
+                  : 'border border-[var(--border)] text-[var(--foreground)]'
               }
             `}
           >
@@ -303,7 +303,7 @@ export function TopHeader({
             ${
               isProfileActive
                 ? 'border-2 border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)] shadow-sm'
-                : 'border-[var(--border)] hover:border-[var(--primary)]/50 hover:bg-[var(--primary-soft)] hover:text-[var(--primary)] text-[var(--foreground)]'
+                : 'border-[var(--border)] text-[var(--foreground)]'
             }
           `}
         >
@@ -353,10 +353,10 @@ export function TopHeader({
           href="/dashboard"
           aria-label={message('dashboard')}
           dir="ltr"
-          className="group relative flex h-12 w-12 items-center justify-center rounded-xl transition-all duration-150 hover:bg-primary-soft/60 active:scale-[0.99]"
+          className="group relative flex h-12 w-12 origin-center items-center justify-center rounded-xl transition-transform duration-150 hover:scale-[1.04] active:scale-[0.96]"
         >
           <span
-            className="absolute right-[calc(100%+0.5rem)] top-1/2 w-max max-w-[min(24vw,15rem)] -translate-y-1/2 truncate text-left font-black tracking-tight text-[var(--foreground)] transition-colors group-hover:text-primary"
+            className="absolute right-[calc(100%+0.0625rem)] top-1/2 w-max max-w-[min(24vw,15rem)] -translate-y-1/2 truncate text-left font-black tracking-tight text-[var(--foreground)]"
             style={{ fontSize: english ? '0.8rem' : '0.95rem' }}
           >
             {organizationBranding?.name || 'ERP Pro'}
@@ -366,7 +366,7 @@ export function TopHeader({
             className={`
               flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden
               rounded-xl border p-0.5
-              shadow-sm transition-all duration-150 group-hover:scale-[1.04]
+              shadow-sm transition-shadow duration-150
               ${logoBackgroundClassName}
             `}
           >
@@ -391,7 +391,7 @@ export function TopHeader({
             )}
           </div>
 
-          <span className="absolute left-[calc(100%+0.5rem)] top-1/2 -translate-y-1/2 text-[11px] font-bold tracking-wide text-primary transition-transform group-hover:translate-x-0.5">
+          <span className="absolute left-[calc(100%+0.0625rem)] top-1/2 -translate-y-1/2 text-[11px] font-bold tracking-wide text-primary">
             ERP
           </span>
         </Link>

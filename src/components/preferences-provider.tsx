@@ -10,29 +10,20 @@ import {
   type CSSProperties,
   type ReactNode,
 } from 'react';
+import {
+  getLocaleDirection,
+  supportedLocales,
+  type Locale,
+} from '@/lib/languages/types';
 
-export const supportedLocales = [
-  'fa', 'en', 'ar', 'zh-CN', 'fr', 'es', 'de', 'ru', 'ja', 'pt-BR',
-] as const;
-export type Locale = (typeof supportedLocales)[number];
+export {
+  getLocaleDirection,
+  localeOptions,
+  supportedLocales,
+} from '@/lib/languages/types';
+export type { Locale } from '@/lib/languages/types';
+
 export type AccentColor = 'blue' | 'green' | 'red' | 'amber' | 'violet' | `#${string}`;
-
-export const localeOptions: Array<{ id: Locale; name: string; direction: 'rtl' | 'ltr' }> = [
-  { id: 'fa', name: 'فارسی', direction: 'rtl' },
-  { id: 'en', name: 'English', direction: 'ltr' },
-  { id: 'ar', name: 'العربية', direction: 'rtl' },
-  { id: 'zh-CN', name: '中文（简体）', direction: 'ltr' },
-  { id: 'fr', name: 'Français', direction: 'ltr' },
-  { id: 'es', name: 'Español', direction: 'ltr' },
-  { id: 'de', name: 'Deutsch', direction: 'ltr' },
-  { id: 'ru', name: 'Русский', direction: 'ltr' },
-  { id: 'ja', name: '日本語', direction: 'ltr' },
-  { id: 'pt-BR', name: 'Português (Brasil)', direction: 'ltr' },
-];
-
-export function getLocaleDirection(locale: Locale): 'rtl' | 'ltr' {
-  return localeOptions.find((option) => option.id === locale)?.direction ?? 'ltr';
-}
 
 type PreferencesContextValue = {
   locale: Locale;
