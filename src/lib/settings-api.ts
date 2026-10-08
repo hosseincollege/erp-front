@@ -7,7 +7,7 @@
 // بنابراین همه مسیرها باید بدون /api باشند. فقط مسیرهای پروکسی Next.js
 // (زیر src/app/api/...) با پیشوند /api فراخوانی می‌شوند.
 
-import { apiClient } from './api-client';
+import { API_BASE_URL, apiClient, getAccessToken } from './api-client';
 
 export interface CompanySettings {
   id?: string;
@@ -26,7 +26,21 @@ export interface CompanySettings {
   currency?: string;
   fiscalYearStart?: string;
   logoUrl?: string;
+  logoTone?: 'LIGHT' | 'DARK';
+  logoBackground?: 'NONE' | 'DARK' | 'LIGHT';
   status?: string;
+}
+
+export interface OrganizationAccess {
+  canView: boolean;
+  canEdit: boolean;
+}
+
+export interface OrganizationBranding {
+  name: string;
+  logoUrl: string | null;
+  logoTone: 'LIGHT' | 'DARK';
+  logoBackground: 'NONE' | 'DARK' | 'LIGHT';
 }
 
 /*
@@ -52,6 +66,8 @@ export interface UpdateOrganizationSettingsRequest {
   currency?: string;
   fiscalYearStart?: string;
   logoUrl?: string;
+  logoTone?: 'LIGHT' | 'DARK';
+  logoBackground?: 'NONE' | 'DARK' | 'LIGHT';
   status?: 'ACTIVE' | 'SUSPENDED' | 'ARCHIVED';
 }
 
@@ -71,6 +87,8 @@ export interface CreateOrganizationRequest {
   currency?: string;
   fiscalYearStart?: string;
   logoUrl?: string;
+  logoTone?: 'LIGHT' | 'DARK';
+  logoBackground?: 'NONE' | 'DARK' | 'LIGHT';
 }
 
 export interface CreateOrganizationResponse {
@@ -101,12 +119,51 @@ export interface DepartmentItem {
   name: string;
   code: string;
   branchId?: string;
-  managerName?: string;
-  description?: string;
+  managerEmployeeId?: string | null;
   branch?: {
     id: string;
     name: string;
   };
+}
+
+export interface DepartmentEmployeeSummary {
+  id: string;
+  employeeCode: string;
+  firstName: string;
+  lastName: string;
+  jobTitle: string | null;
+  status: string;
+  departmentId: string | null;
+  managerId: string | null;
+  manager: Pick<DepartmentEmployeeSummary, 'id' | 'firstName' | 'lastName' | 'jobTitle'> | null;
+  roles: Array<{ key: string; name: string }>;
+}
+
+export interface DepartmentTeamSummary {
+  id: string;
+  name: string;
+  code: string;
+  manager: DepartmentEmployeeSummary | null;
+  members: DepartmentEmployeeSummary[];
+  memberCount: number;
+}
+
+export interface DepartmentOverview {
+  id: string;
+  name: string;
+  code: string;
+  isActive: boolean;
+  branch: { id: string; name: string } | null;
+  manager: DepartmentEmployeeSummary | null;
+  employees: DepartmentEmployeeSummary[];
+  teams: DepartmentTeamSummary[];
+}
+
+export interface DepartmentTeamPayload {
+  name: string;
+  code: string;
+  managerEmployeeId?: string | null;
+  employeeIds?: string[];
 }
 
 export interface UserRoleItem {
@@ -210,6 +267,37 @@ export const settingsApi = {
     return apiClient.get<CompanySettings>(`/settings/organization/${id}`);
   },
 
+  async uploadOrganizationLogo(
+    orgId: string,
+    file: File,
+  ): Promise<{ logoUrl: string }> {
+    const id = assertOrgId(orgId);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const token = getAccessToken();
+    const response = await fetch(
+      `${API_BASE_URL}/settings/organization/${id}/logo`,
+      {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        body: formData,
+      },
+    );
+    const result = (await response.json().catch(() => null)) as
+      | { logoUrl?: string; message?: string | string[] }
+      | null;
+
+    if (!response.ok || !result?.logoUrl) {
+      const message = Array.isArray(result?.message)
+        ? result.message.join(' | ')
+        : result?.message;
+      throw new Error(message || 'بارگذاری لوگو انجام نشد.');
+    }
+
+    return { logoUrl: result.logoUrl };
+  },
+
   async saveCompanySettings(
     data: CompanySettings,
     orgId: string,
@@ -229,12 +317,8 @@ export const settingsApi = {
       currency: data.currency,
       fiscalYearStart: data.fiscalYearStart,
       logoUrl: data.logoUrl,
-      status:
-        data.status === 'ACTIVE' ||
-        data.status === 'SUSPENDED' ||
-        data.status === 'ARCHIVED'
-          ? (data.status as 'ACTIVE' | 'SUSPENDED' | 'ARCHIVED')
-          : undefined,
+      logoTone: data.logoTone,
+      logoBackground: data.logoBackground,
     };
 
     const id = assertOrgId(orgId);
@@ -287,6 +371,88 @@ export const settingsApi = {
   async getDepartments(orgId: string): Promise<DepartmentItem[]> {
     const id = assertOrgId(orgId);
     return apiClient.get<DepartmentItem[]>(`/settings/departments/${id}`);
+  },
+
+  async getDepartmentOverview(id: string): Promise<DepartmentOverview> {
+    return apiClient.get<DepartmentOverview>(
+      `/settings/departments/${encodeURIComponent(id)}/overview`,
+    );
+  },
+
+  async getAvailableDepartmentEmployees(
+    id: string,
+  ): Promise<DepartmentEmployeeSummary[]> {
+    return apiClient.get<DepartmentEmployeeSummary[]>(
+      `/settings/departments/${encodeURIComponent(id)}/available-employees`,
+    );
+  },
+
+  async setDepartmentManager(
+    id: string,
+    managerEmployeeId: string | null,
+  ): Promise<DepartmentOverview> {
+    return apiClient.put<DepartmentOverview>(
+      `/settings/departments/${encodeURIComponent(id)}/manager`,
+      { managerEmployeeId },
+    );
+  },
+
+  async assignDepartmentEmployee(
+    id: string,
+    employeeId: string,
+  ): Promise<DepartmentOverview> {
+    return apiClient.post<DepartmentOverview>(
+      `/settings/departments/${encodeURIComponent(id)}/employees`,
+      { employeeId },
+    );
+  },
+
+  async removeDepartmentEmployee(
+    id: string,
+    employeeId: string,
+  ): Promise<DepartmentOverview> {
+    return apiClient.delete<DepartmentOverview>(
+      `/settings/departments/${encodeURIComponent(id)}/employees/${encodeURIComponent(employeeId)}`,
+    );
+  },
+
+  async setEmployeeManager(
+    departmentId: string,
+    employeeId: string,
+    managerId: string | null,
+  ): Promise<DepartmentOverview> {
+    return apiClient.put<DepartmentOverview>(
+      `/settings/departments/${encodeURIComponent(departmentId)}/employees/${encodeURIComponent(employeeId)}/manager`,
+      { managerId },
+    );
+  },
+
+  async createDepartmentTeam(
+    departmentId: string,
+    data: DepartmentTeamPayload,
+  ): Promise<DepartmentOverview> {
+    return apiClient.post<DepartmentOverview>(
+      `/settings/departments/${encodeURIComponent(departmentId)}/teams`,
+      data,
+    );
+  },
+
+  async updateDepartmentTeam(
+    teamId: string,
+    data: DepartmentTeamPayload,
+  ): Promise<DepartmentOverview> {
+    return apiClient.put<DepartmentOverview>(
+      `/settings/teams/${encodeURIComponent(teamId)}`,
+      data,
+    );
+  },
+
+  async deleteDepartmentTeam(
+    teamId: string,
+  ): Promise<DepartmentOverview> {
+    return apiClient.delete<DepartmentOverview>(
+      `/settings/teams/${encodeURIComponent(teamId)}`,
+    );
   },
 
   async createDepartment(
@@ -376,6 +542,22 @@ export const settingsApi = {
     return this.getCompanySettings(orgId);
   },
 
+  async getOrganizationAccess(orgId: string): Promise<OrganizationAccess> {
+    const id = assertOrgId(orgId);
+    return apiClient.get<OrganizationAccess>(
+      `/settings/organization/${id}/access`,
+    );
+  },
+
+  async getOrganizationBranding(
+    orgId: string,
+  ): Promise<OrganizationBranding> {
+    const id = assertOrgId(orgId);
+    return apiClient.get<OrganizationBranding>(
+      `/settings/organization/${id}/branding`,
+    );
+  },
+
   async updateOrganization(
     data: CompanySettings,
     orgId?: string,
@@ -386,6 +568,14 @@ export const settingsApi = {
     return this.saveCompanySettings(data, orgId);
   },
 };
+
+export function resolveOrganizationLogoUrl(
+  logoUrl?: string | null,
+): string | null {
+  if (!logoUrl) return null;
+  if (logoUrl.startsWith('/uploads/')) return `${API_BASE_URL}${logoUrl}`;
+  return logoUrl;
+}
 
 export const getUsers = (orgId: string): Promise<UserItem[]> =>
   settingsApi.getUsers(orgId);

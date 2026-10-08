@@ -7,7 +7,17 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { getCurrentUser, AuthUser } from '@/lib/auth-api';
+import Image from 'next/image';
+import {
+  getCurrentOrganizationId,
+  getCurrentUser,
+  AuthUser,
+} from '@/lib/auth-api';
+import {
+  resolveOrganizationLogoUrl,
+  settingsApi,
+  type OrganizationBranding,
+} from '@/lib/settings-api';
 
 import {
   ArrowLeftRight,
@@ -21,8 +31,9 @@ import {
   Unlock,
   User,
 } from 'lucide-react';
-
-type ThemeMode = 'system' | 'light' | 'dark';
+import { useTheme } from '@/components/theme-provider';
+import { getLocaleDirection, usePreferences } from '@/components/preferences-provider';
+import { uiMessage } from '@/lib/ui-messages';
 
 interface TopHeaderProps {
   isCollapsed?: boolean;
@@ -46,26 +57,37 @@ export function TopHeader({
   onToggleNavigateOnClick,
 }: TopHeaderProps) {
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [theme, setTheme] = useState<ThemeMode>('system');
-
-  const applyTheme = (mode: ThemeMode) => {
-    const isDark =
-      mode === 'dark' ||
-      (mode === 'system' &&
-        window.matchMedia('(prefers-color-scheme: dark)').matches);
-
-    document.documentElement.classList.toggle('dark', isDark);
-
-    document.documentElement.style.colorScheme = isDark
-      ? 'dark'
-      : 'light';
-  };
+  const [organizationBranding, setOrganizationBranding] =
+    useState<OrganizationBranding | null>(null);
+  const { theme, setTheme } = useTheme();
+  const { locale } = usePreferences();
+  const english = locale !== 'fa';
+  const message = (key: Parameters<typeof uiMessage>[1]) => uiMessage(locale, key);
 
   /*
    * دریافت اطلاعات کاربر و اعمال تم ذخیره‌شده
    */
   useEffect(() => {
     setUser(getCurrentUser());
+    let isCurrent = true;
+
+    const refreshOrganizationBranding = () => {
+      const organizationId = getCurrentOrganizationId();
+      if (!organizationId) {
+        setOrganizationBranding(null);
+        return;
+      }
+      void settingsApi
+        .getOrganizationBranding(organizationId)
+        .then((branding) => {
+          if (isCurrent) setOrganizationBranding(branding);
+        })
+        .catch(() => {
+          if (isCurrent) setOrganizationBranding(null);
+        });
+    };
+
+    refreshOrganizationBranding();
 
     const handleAuthChange = () => {
       setUser(getCurrentUser());
@@ -73,31 +95,9 @@ export function TopHeader({
 
     window.addEventListener('auth:logout', handleAuthChange);
     window.addEventListener('storage', handleAuthChange);
-
-    const savedTheme =
-      (localStorage.getItem('erp-theme') as ThemeMode | null) ||
-      'system';
-
-    setTheme(savedTheme);
-    applyTheme(savedTheme);
-
-    const mediaQuery = window.matchMedia(
-      '(prefers-color-scheme: dark)'
-    );
-
-    const handleSystemThemeChange = () => {
-      const currentTheme =
-        (localStorage.getItem('erp-theme') as ThemeMode | null) ||
-        'system';
-
-      if (currentTheme === 'system') {
-        applyTheme('system');
-      }
-    };
-
-    mediaQuery.addEventListener?.(
-      'change',
-      handleSystemThemeChange
+    window.addEventListener(
+      'organization-branding-changed',
+      refreshOrganizationBranding,
     );
 
     return () => {
@@ -110,11 +110,11 @@ export function TopHeader({
         'storage',
         handleAuthChange
       );
-
-      mediaQuery.removeEventListener?.(
-        'change',
-        handleSystemThemeChange
+      window.removeEventListener(
+        'organization-branding-changed',
+        refreshOrganizationBranding,
       );
+      isCurrent = false;
     };
   }, []);
 
@@ -122,16 +122,10 @@ export function TopHeader({
    * گردش بین حالت‌های تم
    */
   const cycleTheme = () => {
-    const nextTheme: ThemeMode =
-      theme === 'system'
-        ? 'light'
-        : theme === 'light'
-          ? 'dark'
-          : 'system';
+    const nextTheme =
+      theme === 'system' ? 'light' : theme === 'light' ? 'dark' : 'system';
 
     setTheme(nextTheme);
-    localStorage.setItem('erp-theme', nextTheme);
-    applyTheme(nextTheme);
   };
 
   const handleSidebarButtonClick = (
@@ -163,10 +157,10 @@ export function TopHeader({
   };
 
   const sidebarButtonTitle = isCollapsed
-    ? 'باز کردن سایدبار'
+    ? message('openSidebar')
     : isSidebarLocked
-      ? 'باز کردن قفل سایدبار'
-      : 'قفل کردن سایدبار';
+      ? message('unlockSidebar')
+      : message('lockSidebar');
 
   const sidebarButtonIcon = isCollapsed ? (
     <ChevronLeft size={18} />
@@ -187,18 +181,25 @@ export function TopHeader({
 
   const themeTitle =
     theme === 'system'
-      ? 'حالت فعلی: سیستم'
+    ? message('themeSystem')
       : theme === 'light'
-        ? 'حالت فعلی: روشن'
-        : 'حالت فعلی: تیره';
+      ? message('themeLight')
+      : message('themeDark');
 
   const navigateModeTitle = navigateOnClick
-    ? 'ناوبری خودکار: فعال (کلیک روی ماژول صفحه را باز می‌کند)'
-    : 'ناوبری خودکار: غیرفعال (کلیک روی ماژول فقط منو را باز می‌کند)';
+    ? message('navigateOn')
+    : message('navigateOff');
+  const logoBackground = organizationBranding?.logoBackground ?? 'NONE';
+  const logoBackgroundClassName =
+    logoBackground === 'DARK'
+      ? 'border-zinc-700 bg-zinc-900'
+      : logoBackground === 'LIGHT'
+        ? 'border-zinc-200 bg-white'
+        : 'border-transparent bg-transparent';
 
   return (
     <header
-      dir="rtl"
+      dir={getLocaleDirection(locale)}
       className="
         sticky top-0 z-50 relative flex h-16
         items-center border-b border-[var(--border)]
@@ -206,17 +207,18 @@ export function TopHeader({
         backdrop-blur-md transition-colors duration-200
       "
     >
-      {/* بخش راست: ۱. فلش کنترل سایدبار -> ۲. سوئیچ ناوبری -> ۳. کپسول حساب کاربری */}
+      {/* کنترل‌های سایدبار، زنگوله و تم، سپس کپسول حساب کاربری */}
       <div
+        dir="rtl"
         className="
           absolute right-5 top-1/2 z-10
           flex -translate-y-1/2
-          items-center gap-3
+          items-center gap-2
         "
       >
         {/* ۱. دکمه کنترل سایدبار (فلش باز/بستن/قفل) */}
         {onToggleSidebar && (
-          <div id="sidebar-controls">
+          <div id="sidebar-controls" className="order-1">
             <button
               id="sidebar-toggle-btn"
               type="button"
@@ -231,8 +233,8 @@ export function TopHeader({
                 rounded-xl transition-all duration-200
                 ${
                   !isCollapsed && isSidebarLocked
-                    ? 'border-2 border-blue-600 bg-blue-500/10 text-blue-600 dark:border-blue-500 dark:text-blue-400 shadow-sm shadow-blue-500/20'
-                    : 'border border-[var(--border)] text-[var(--foreground)] hover:bg-slate-100 dark:hover:bg-slate-800'
+                    ? 'border-2 border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)] shadow-sm shadow-[var(--primary)]/20'
+                    : 'border border-[var(--border)] text-[var(--foreground)] hover:border-[var(--primary)]/50 hover:bg-[var(--primary-soft)] hover:text-[var(--primary)]'
                 }
               `}
             >
@@ -254,11 +256,12 @@ export function TopHeader({
             aria-pressed={navigateOnClick}
             className={`
               flex h-9 w-9 cursor-pointer items-center justify-center
+              order-2
               rounded-xl transition-all duration-200
               ${
                 navigateOnClick
-                  ? 'border-2 border-blue-600 bg-blue-500/10 text-blue-600 dark:border-blue-500 dark:text-blue-400 shadow-sm shadow-blue-500/20'
-                  : 'border border-[var(--border)] text-[var(--foreground)] hover:bg-slate-100 dark:hover:bg-slate-800'
+                  ? 'border-2 border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)] shadow-sm shadow-[var(--primary)]/20'
+                  : 'border border-[var(--border)] text-[var(--foreground)] hover:border-[var(--primary)]/50 hover:bg-[var(--primary-soft)] hover:text-[var(--primary)]'
               }
             `}
           >
@@ -266,22 +269,41 @@ export function TopHeader({
           </button>
         )}
 
+        <button
+          type="button"
+          onClick={cycleTheme}
+          title={themeTitle}
+          aria-label={message('changeTheme')}
+          className="order-4 flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border)] text-[var(--foreground)] transition-all duration-200 hover:bg-slate-100 dark:hover:bg-slate-800/80"
+        >
+          {themeIcon}
+        </button>
+
+        <button
+          type="button"
+          aria-label={message('notifications')}
+          className="order-5 relative flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border)] text-[var(--foreground)] transition-all duration-200 hover:bg-slate-100 dark:hover:bg-slate-800/80"
+        >
+          <Bell size={18} />
+          <span className="absolute right-2 top-2 h-2 w-2 rounded-full border-2 border-[var(--surface)] bg-red-500" />
+        </button>
+
         {/* ۳. بخش کپسول حساب کاربری */}
         <button
           id="user-profile-header-btn"
           type="button"
           onClick={() => onToggleProfile?.()}
-          aria-label="مشاهده پروفایل در سایدبار"
+          aria-label={message('viewProfile')}
           className={`
-            flex cursor-pointer select-none
+            order-3 flex cursor-pointer select-none
             items-center gap-2.5
             rounded-2xl border
             p-1.5 pl-4 pr-1.5
             transition-all
             ${
               isProfileActive
-                ? 'border-2 border-blue-600 bg-blue-500/10 text-blue-600 dark:border-blue-500 dark:text-blue-400 shadow-sm'
-                : 'border-[var(--border)] hover:bg-slate-100 dark:hover:bg-slate-800/80 text-[var(--foreground)]'
+                ? 'border-2 border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)] shadow-sm'
+                : 'border-[var(--border)] hover:border-[var(--primary)]/50 hover:bg-[var(--primary-soft)] hover:text-[var(--primary)] text-[var(--foreground)]'
             }
           `}
         >
@@ -291,9 +313,9 @@ export function TopHeader({
               pointer-events-none
               flex h-7 w-7 items-center
               justify-center rounded-xl
-              bg-gradient-to-br from-blue-500 to-blue-700
               font-black text-white shadow-inner text-xs
             "
+            style={{ backgroundColor: 'var(--primary)' }}
           >
             {user?.name ? (
               user.name.charAt(0).toUpperCase()
@@ -305,23 +327,22 @@ export function TopHeader({
           {/* نام و نقش */}
           <div className="pointer-events-none text-right">
             <p className="text-xs font-bold leading-tight">
-              {user?.name || 'admin'}
+              {user?.name || message('admin')}
             </p>
 
             <p
               className="
                 text-[10px] font-medium leading-normal
-                text-blue-600
-                dark:text-blue-400
+                text-primary
               "
             >
-              {user?.role || 'user'}
+              {user?.role || message('user')}
             </p>
           </div>
         </button>
       </div>
 
-      {/* لوگو در مرکز */}
+      {/* نام شرکت در چپ، لوگوی دقیقاً وسط و ERP در راست؛ کل نشان به داشبورد می‌رود */}
       <div
         className="
           absolute left-1/2 top-1/2
@@ -330,92 +351,50 @@ export function TopHeader({
       >
         <Link
           href="/dashboard"
-          aria-label="رفتن به صفحه اصلی"
-          className="group flex items-center gap-2"
+          aria-label={message('dashboard')}
+          dir="ltr"
+          className="group relative flex h-12 w-12 items-center justify-center rounded-xl transition-all duration-150 hover:bg-primary-soft/60 active:scale-[0.99]"
         >
-          <div
-            className="
-              flex h-8 w-8 items-center justify-center
-              rounded-lg bg-blue-600
-              shadow-lg shadow-blue-500/20
-              transition-transform duration-200
-              group-hover:rotate-12
-            "
+          <span
+            className="absolute right-[calc(100%+0.5rem)] top-1/2 w-max max-w-[min(24vw,15rem)] -translate-y-1/2 truncate text-left font-black tracking-tight text-[var(--foreground)] transition-colors group-hover:text-primary"
+            style={{ fontSize: english ? '0.8rem' : '0.95rem' }}
           >
-            <ShieldCheck size={20} className="text-white" />
+            {organizationBranding?.name || 'ERP Pro'}
+          </span>
+
+          <div
+            className={`
+              flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden
+              rounded-xl border p-0.5
+              shadow-sm transition-all duration-150 group-hover:scale-[1.04]
+              ${logoBackgroundClassName}
+            `}
+          >
+            {organizationBranding?.logoUrl ? (
+              <Image
+                src={
+                  resolveOrganizationLogoUrl(organizationBranding.logoUrl) || ''
+                }
+                alt={message('organizationLogo')}
+                width={32}
+                height={32}
+                unoptimized
+                className="h-full w-full object-contain"
+                onError={() =>
+                  setOrganizationBranding((current) =>
+                    current ? { ...current, logoUrl: null } : current,
+                  )
+                }
+              />
+            ) : (
+              <ShieldCheck size={23} className="text-primary" />
+            )}
           </div>
 
-          <span
-            className="
-              text-xl font-black tracking-tight
-              text-[var(--foreground)]
-              transition-colors
-              group-hover:text-blue-600
-              dark:group-hover:text-blue-400
-            "
-          >
-            ERP{' '}
-            <span
-              className="
-                text-lg font-medium italic
-                text-blue-600 dark:text-blue-500
-              "
-            >
-              Pro
-            </span>
+          <span className="absolute left-[calc(100%+0.5rem)] top-1/2 -translate-y-1/2 text-[11px] font-bold tracking-wide text-primary transition-transform group-hover:translate-x-0.5">
+            ERP
           </span>
         </Link>
-      </div>
-
-      {/* بخش چپ: ۱. زنگوله اعلان‌ها -> ۲. انتخاب تم */}
-      <div
-        className="
-          absolute left-5 top-1/2 z-10
-          flex -translate-y-1/2
-          items-center gap-3
-        "
-      >
-        {/* زنگوله اعلان‌ها */}
-        <button
-          type="button"
-          aria-label="اعلان‌ها"
-          className="
-            relative flex h-9 w-9 items-center justify-center
-            rounded-xl border border-[var(--border)]
-            text-[var(--foreground)]
-            transition-all
-            hover:bg-slate-100
-            dark:hover:bg-slate-800/80
-          "
-        >
-          <Bell size={18} />
-          <span
-            className="
-              absolute right-2 top-2
-              h-2 w-2 rounded-full
-              border-2 border-[var(--surface)]
-              bg-red-500
-            "
-          />
-        </button>
-
-        {/* انتخاب تم */}
-        <button
-          type="button"
-          onClick={cycleTheme}
-          title={themeTitle}
-          aria-label="تغییر تم"
-          className="
-            flex h-9 w-9 items-center justify-center
-            rounded-xl border border-[var(--border)]
-            text-[var(--foreground)]
-            transition-all
-            hover:bg-slate-100
-            dark:hover:bg-slate-800/80
-          "
-        >
-          {themeIcon}
-        </button>
       </div>
     </header>
   );

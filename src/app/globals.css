@@ -133,6 +133,106 @@ html.dark {
     0 10px 24px rgba(0, 0, 0, 0.2);
 }
 
+.erp-app-shell[data-accent="green"] {
+  --primary: #16a34a;
+  --primary-hover: #15803d;
+  --primary-soft: #f0fdf4;
+  --ring: rgba(22, 163, 74, 0.28);
+  --sidebar-active: #16a34a;
+}
+
+html.dark .erp-app-shell[data-accent="green"] {
+  --primary: #16a34a;
+  --primary-hover: #22c55e;
+  --primary-soft: rgba(22, 163, 74, 0.18);
+  --ring: rgba(22, 163, 74, 0.3);
+  --sidebar-active: #16a34a;
+}
+
+.erp-app-shell[data-accent="red"] {
+  --primary: #ef4444;
+  --primary-hover: #dc2626;
+  --primary-soft: #fef2f2;
+  --ring: rgba(239, 68, 68, 0.26);
+  --sidebar-active: #ef4444;
+}
+
+html.dark .erp-app-shell[data-accent="red"] {
+  --primary: #ef4444;
+  --primary-hover: #f87171;
+  --primary-soft: rgba(239, 68, 68, 0.18);
+  --ring: rgba(239, 68, 68, 0.3);
+  --sidebar-active: #ef4444;
+}
+
+.erp-app-shell[data-accent="amber"] {
+  --primary: #facc15;
+  --primary-hover: #eab308;
+  --primary-soft: #fefce8;
+  --primary-foreground: #1c1917;
+  --ring: rgba(250, 204, 21, 0.28);
+  --sidebar-active: #eab308;
+}
+
+html.dark .erp-app-shell[data-accent="amber"] {
+  --primary: #facc15;
+  --primary-hover: #fde047;
+  --primary-soft: rgba(250, 204, 21, 0.18);
+  --primary-foreground: #1c1917;
+  --ring: rgba(250, 204, 21, 0.32);
+  --sidebar-active: #eab308;
+}
+
+.erp-app-shell[data-accent="violet"] {
+  --primary: #8b5cf6;
+  --primary-hover: #7c3aed;
+  --primary-soft: #f5f3ff;
+  --ring: rgba(139, 92, 246, 0.28);
+  --sidebar-active: #8b5cf6;
+}
+
+html.dark .erp-app-shell[data-accent="violet"] {
+  --primary: #8b5cf6;
+  --primary-hover: #a78bfa;
+  --primary-soft: rgba(139, 92, 246, 0.18);
+  --ring: rgba(139, 92, 246, 0.32);
+  --sidebar-active: #8b5cf6;
+}
+
+html:not([data-locale="fa"]) body {
+  font-family: system-ui, sans-serif;
+}
+
+.erp-app-shell[data-accent]:not([data-accent="blue"]) .bg-blue-600 {
+  background-color: var(--primary) !important;
+}
+
+.erp-app-shell[data-accent]:not([data-accent="blue"]) .bg-blue-600.text-white {
+  color: var(--primary-foreground) !important;
+}
+
+.erp-app-shell[data-accent]:not([data-accent="blue"]) .bg-blue-600\/10,
+.erp-app-shell[data-accent]:not([data-accent="blue"]) .bg-blue-50,
+.erp-app-shell[data-accent]:not([data-accent="blue"]) .bg-blue-100,
+html.dark .erp-app-shell[data-accent]:not([data-accent="blue"]) .dark\:bg-blue-500\/10,
+html.dark .erp-app-shell[data-accent]:not([data-accent="blue"]) .dark\:bg-blue-600\/20,
+html.dark .erp-app-shell[data-accent]:not([data-accent="blue"]) .dark\:bg-blue-900\/40 {
+  background-color: var(--primary-soft) !important;
+}
+
+.erp-app-shell[data-accent]:not([data-accent="blue"]) .text-blue-600,
+html.dark .erp-app-shell[data-accent]:not([data-accent="blue"]) .dark\:text-blue-400 {
+  color: var(--primary) !important;
+}
+
+.erp-app-shell[data-accent]:not([data-accent="blue"]) .border-blue-600 {
+  border-color: var(--primary) !important;
+}
+
+.erp-app-shell[data-accent]:not([data-accent="blue"]) .hover\:bg-blue-700:hover {
+  background-color: var(--primary-hover) !important;
+}
+
 /* تنظیمات پایه */
 * {
   box-sizing: border-box;

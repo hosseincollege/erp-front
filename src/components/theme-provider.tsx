@@ -70,6 +70,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       : "system";
 
     const initialResolvedTheme = applyTheme(initialTheme);
+    const savedAccent = window.localStorage.getItem('erp-accent-color');
+    const accentColors = ['blue', 'green', 'red', 'amber', 'violet'];
+    document.documentElement.dataset.accent =
+      savedAccent && (accentColors.includes(savedAccent) || /^#[0-9a-fA-F]{6}$/.test(savedAccent))
+        ? savedAccent
+        : 'blue';
 
     setThemeState(initialTheme);
     setResolvedTheme(initialResolvedTheme);

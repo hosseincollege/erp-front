@@ -26,6 +26,9 @@ import type {
  * سازگاری با پاسخ‌های احتمالی backend:
  * - داده مستقیم
  * - { success, data, message }
+ *
+ * نکته:
+ * apiClient ما generic است، ولی ممکن است backend گاهی envelope برگرداند.
  */
 type ApiEnvelope<T> = {
   success?: boolean;
@@ -34,52 +37,63 @@ type ApiEnvelope<T> = {
 };
 
 function normalizeResponse<T>(response: unknown): T {
-  const envelope = response as ApiEnvelope<T>;
-
-  if (
-    envelope &&
-    typeof envelope === "object" &&
-    "data" in envelope
-  ) {
-    return envelope.data as T;
+  if (response && typeof response === "object" && "data" in (response as any)) {
+    return (response as ApiEnvelope<T>).data as T;
   }
 
   return response as T;
 }
 
 /**
+ * T;
+  }
+
+  return response as T;
+}
+
+/**
+ * باشد، فیلدهای مرتبط با ساخت اکانت را ارسال نکنیم
+ *   تا backend گیر اعتبارسنجی/منطق‌های اضافی نیفتد.
+ * - roleIds خالی را هم حذف می‌کنیم (اختیاری).
+ */
+function sanitizeCreateEmployeePayload(
+  payload: CreateEmployeePayload,
+): CreateEmployeePayload {
+  const createAccount = Boolean(payload.createAccount);
+
+  if (!createAccount) {
+    const { createAccount: _ca, username: _u, password: _p, roleIds: _r, ...rest } =
+      payload;
+
+    // بهتر است createAccount را هم نفرستیم (undefined) تا درخواست تمیز بماند
+    return rest as CreateEmployeePayload;
+  }
+
+  // createAccount=true
+  // اگر roleIds خالی باشد، حذفش کنیم تا بعضی backendها اشتباه برداشت نکنند
+  if (!payload.roleIds || payload.roleIds.length === 0) {
+    const { roleIds: _r, ...rest } = payload;
+    return rest;
+  }
+
+  return payload;
+}
+
+/**
  * تبدیل فیلترهای کارکنان به query string.
  */
-function buildEmployeeQueryString(
-  query: EmployeeListQuery = {},
-): string {
+function buildEmployeeQueryString(query: EmployeeListQuery = {}): string {
   const params = new URLSearchParams();
 
-  if (query.search?.trim()) {
-    params.set("search", query.search.trim());
-  }
-
-  if (query.status && query.status !== "ALL") {
-    params.set("status", query.status);
-  }
-
-  if (
-    query.employmentType &&
-    query.employmentType !== "ALL"
-  ) {
+  if (query.search?.trim()) params.set("search", query.search.trim());
+  if (query.status && query.status !== "ALL") params.set("status", query.status);
+  if (query.employmentType && query.employmentType !== "ALL") {
     params.set("employmentType", query.employmentType);
   }
-
-  if (query.branchId) {
-    params.set("branchId", query.branchId);
-  }
-
-  if (query.departmentId) {
-    params.set("departmentId", query.departmentId);
-  }
+  if (query.branchId) params.set("branchId", query.branchId);
+  if (query.departmentId) params.set("departmentId", query.departmentId);
 
   const serialized = params.toString();
-
   return serialized ? `?${serialized}` : "";
 }
 
@@ -91,20 +105,13 @@ function buildLeaveRequestQueryString(
 ): string {
   const params = new URLSearchParams();
 
-  if (query.employeeId) {
-    params.set("employeeId", query.employeeId);
-  }
-
-  if (query.status && query.status !== "ALL") {
-    params.set("status", query.status);
-  }
-
+  if (query.employeeId) params.set("employeeId", query.employeeId);
+  if (query.status && query.status !== "ALL") params.set("status", query.status);
   if (query.leaveType && query.leaveType !== "ALL") {
     params.set("leaveType", query.leaveType);
   }
 
   const serialized = params.toString();
-
   return serialized ? `?${serialized}` : "";
 }
 
@@ -114,10 +121,7 @@ export const humanResourcesApi = {
    * GET /human-resources/dashboard
    */
   async getDashboard(): Promise<HrDashboardSummary> {
-    const response = await apiClient.get<unknown>(
-      "/human-resources/dashboard",
-    );
-
+    const response = await apiClient.get<unknown>("/human-resources/dashboard");
     return normalizeResponse<HrDashboardSummary>(response);
   },
 
@@ -125,9 +129,7 @@ export const humanResourcesApi = {
    * دریافت فهرست کارکنان به همراه فیلترهای اختیاری.
    * GET /human-resources/employees
    */
-  async getEmployees(
-    query: EmployeeListQuery = {},
-  ): Promise<Employee[]> {
+  async getEmployees(query: EmployeeListQuery = {}): Promise<Employee[]> {
     const queryString = buildEmployeeQueryString(query);
 
     const response = await apiClient.get<unknown>(
@@ -150,15 +152,15 @@ export const humanResourcesApi = {
   },
 
   /**
-   * ایجاد کارمند جدید.
+   * ایجاد کارمند جدید (Employee-First + ساخت اکانت اختیاری).
    * POST /human-resources/employees
    */
-  async createEmployee(
-    payload: CreateEmployeePayload,
-  ): Promise<Employee> {
+  async createEmployee(payload: CreateEmployeePayload): Promise<Employee> {
+    const sanitized = sanitizeCreateEmployeePayload(payload);
+
     const response = await apiClient.post<unknown>(
       "/human-resources/employees",
-      payload,
+      sanitized,
     );
 
     return normalizeResponse<Employee>(response);
@@ -200,9 +202,7 @@ export const humanResourcesApi = {
    * دریافت جزئیات یک درخواست مرخصی.
    * GET /human-resources/leave-requests/:id
    */
-  async getLeaveRequestById(
-    id: string,
-  ): Promise<LeaveRequest> {
+  async getLeaveRequestById(id: string): Promise<LeaveRequest> {
     const response = await apiClient.get<unknown>(
       `/human-resources/leave-requests/${id}`,
     );

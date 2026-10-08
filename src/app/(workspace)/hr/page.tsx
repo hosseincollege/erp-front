@@ -6,28 +6,32 @@
  * - شروع مستقیم با ۴ کارت شاخص عملکرد (KPIs)
  * - تب‌بندی تفکیک‌شده برای پرسنل و مرخصی‌ها
  * - ابزارهای جستجو، فیلتر و دکمه به‌روزرسانی در نوار ابزار
+ * - قابلیت ثبت کارمند جدید تکی و ورود گروهی کارکنان (JSON)
  */
 
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  Users,
-  UserCheck,
-  UserMinus,
+  AlertCircle,
+  Briefcase,
   CalendarClock,
+  CheckCircle2,
+  Clock,
+  Filter,
+  Plus,
   RefreshCw,
   Search,
-  Filter,
-  Briefcase,
-  Clock,
-  AlertCircle,
-  CheckCircle2,
+  Upload,
+  UserCheck,
+  UserMinus,
+  Users,
   XCircle,
 } from "lucide-react";
 
 import { ApiClientError, humanResourcesApi } from "@/lib/human-resources-api";
 import type {
+  CreateEmployeePayload,
   Employee,
   EmployeeListQuery,
   EmployeeStatus,
@@ -39,108 +43,20 @@ import type {
   LeaveType,
 } from "@/types/human-resources";
 
+import {
+  employeeStatusLabels,
+  employmentTypeLabels,
+  leaveStatusLabels,
+  leaveTypeLabels,
+  formatDate,
+  formatDuration,
+  getEmployeeName,
+} from "./hr-utils";
+import { HrEmployeeStatusBadge, HrLeaveStatusBadge } from "./hr-badges";
+import { EmployeeFormModal } from "./employee-form-modal";
+import { EmployeeImportModal } from "./employee-import-modal";
+
 type HrTab = "employees" | "leaves";
-
-// برچسب‌ها و متون فارسی
-const employeeStatusLabels: Record<EmployeeStatus, string> = {
-  ACTIVE: "فعال",
-  ON_LEAVE: "در مرخصی",
-  INACTIVE: "غیرفعال",
-  TERMINATED: "خاتمه‌یافته",
-};
-
-const employmentTypeLabels: Record<EmploymentType, string> = {
-  FULL_TIME: "تمام‌وقت",
-  PART_TIME: "پاره‌وقت",
-  CONTRACTOR: "قراردادی",
-  INTERN: "کارآموز",
-  TEMPORARY: "موقت",
-};
-
-const leaveTypeLabels: Record<LeaveType, string> = {
-  ANNUAL: "استحقاقی",
-  SICK: "استعلاجی",
-  UNPAID: "بدون حقوق",
-  HOURLY: "ساعتی",
-  MATERNITY: "زایمان",
-  PATERNITY: "پدری",
-  OTHER: "سایر",
-};
-
-const leaveStatusLabels: Record<LeaveRequestStatus, string> = {
-  DRAFT: "پیش‌نویس",
-  PENDING: "در انتظار بررسی",
-  APPROVED: "تأیید شده",
-  REJECTED: "رد شده",
-  CANCELLED: "لغو شده",
-};
-
-// توابع کمکی فرمت‌دهی
-function formatDate(value?: string | null) {
-  if (!value) return "—";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "—";
-
-  return new Intl.DateTimeFormat("fa-IR", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  }).format(date);
-}
-
-function formatDuration(minutes: number) {
-  if (!minutes || minutes < 1) return "—";
-
-  const days = Math.floor(minutes / 1440);
-  const remainingMinutes = minutes % 1440;
-  const hours = Math.floor(remainingMinutes / 60);
-  const mins = remainingMinutes % 60;
-
-  const parts: string[] = [];
-  if (days > 0) parts.push(`${days} روز`);
-  if (hours > 0) parts.push(`${hours} ساعت`);
-  if (mins > 0 && days === 0) parts.push(`${mins} دقیقه`);
-
-  return parts.join(" و ");
-}
-
-function getEmployeeName(employee?: Employee) {
-  if (!employee) return "کارمند نامشخص";
-  return `${employee.firstName} ${employee.lastName}`.trim();
-}
-
-function HrEmployeeStatusBadge({ status }: { status: EmployeeStatus }) {
-  const config: Record<EmployeeStatus, { bg: string; text: string }> = {
-    ACTIVE: { bg: "bg-emerald-500/10", text: "text-emerald-600 dark:text-emerald-400" },
-    ON_LEAVE: { bg: "bg-blue-500/10", text: "text-blue-600 dark:text-blue-400" },
-    INACTIVE: { bg: "bg-muted", text: "text-muted-foreground" },
-    TERMINATED: { bg: "bg-rose-500/10", text: "text-rose-600 dark:text-rose-400" },
-  };
-  const c = config[status] || config.INACTIVE;
-
-  return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${c.bg} ${c.text}`}>
-      {employeeStatusLabels[status]}
-    </span>
-  );
-}
-
-function HrLeaveStatusBadge({ status }: { status: LeaveRequestStatus }) {
-  const config: Record<LeaveRequestStatus, { bg: string; text: string }> = {
-    DRAFT: { bg: "bg-muted", text: "text-muted-foreground" },
-    PENDING: { bg: "bg-amber-500/10", text: "text-amber-600 dark:text-amber-400" },
-    APPROVED: { bg: "bg-emerald-500/10", text: "text-emerald-600 dark:text-emerald-400" },
-    REJECTED: { bg: "bg-rose-500/10", text: "text-rose-600 dark:text-rose-400" },
-    CANCELLED: { bg: "bg-muted", text: "text-muted-foreground line-through" },
-  };
-  const c = config[status] || config.DRAFT;
-
-  return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${c.bg} ${c.text}`}>
-      {leaveStatusLabels[status]}
-    </span>
-  );
-}
 
 export default function HrPage() {
   const [activeTab, setActiveTab] = useState<HrTab>("employees");
@@ -151,6 +67,11 @@ export default function HrPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // استیت‌های مربوط به مودال‌های ثبت کارمند
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isSavingEmployee, setIsSavingEmployee] = useState(false);
 
   const [employeeSearch, setEmployeeSearch] = useState("");
   const [employeeStatus, setEmployeeStatus] = useState<EmployeeStatus | "ALL">("ALL");
@@ -197,17 +118,10 @@ export default function HrPage() {
     async (showRefreshState = false) => {
       try {
         setError(null);
-        if (showRefreshState) {
-          setRefreshing(true);
-        } else {
-          setLoading(true);
-        }
+        if (showRefreshState) setRefreshing(true);
+        else setLoading(true);
 
-        await Promise.all([
-          loadDashboard(),
-          loadEmployees(),
-          loadLeaveRequests(),
-        ]);
+        await Promise.all([loadDashboard(), loadEmployees(), loadLeaveRequests()]);
       } catch (requestError) {
         if (requestError instanceof ApiClientError) {
           setError(requestError.message);
@@ -226,15 +140,21 @@ export default function HrPage() {
     void loadAllData();
   }, [loadAllData]);
 
-  async function updateLeaveStatus(
-    leaveRequestId: string,
-    status: "APPROVED" | "REJECTED",
-  ) {
-    const actionLabel = status === "APPROVED" ? "تأیید" : "رد";
-    const reviewerNote = window.prompt(
-      `یادداشت ${actionLabel} درخواست مرخصی را وارد کنید (اختیاری):`,
-    );
+  // ثبت کارمند جدید و بروزرسانی داده‌های صفحه
+  const handleCreateEmployee = async (payload: CreateEmployeePayload) => {
+    try {
+      setIsSavingEmployee(true);
+      setError(null);
+      await humanResourcesApi.createEmployee(payload);
+      await Promise.all([loadDashboard(), loadEmployees()]);
+    } finally {
+      setIsSavingEmployee(false);
+    }
+  };
 
+  async function updateLeaveStatus(leaveRequestId: string, status: "APPROVED" | "REJECTED") {
+    const actionLabel = status === "APPROVED" ? "تأیید" : "رد";
+    const reviewerNote = window.prompt(`یادداشت ${actionLabel} درخواست مرخصی را وارد کنید (اختیاری):`);
     if (reviewerNote === null) return;
 
     try {
@@ -248,11 +168,8 @@ export default function HrPage() {
 
       await Promise.all([loadDashboard(), loadLeaveRequests()]);
     } catch (requestError) {
-      if (requestError instanceof ApiClientError) {
-        setError(requestError.message);
-      } else {
-        setError(`عملیات ${actionLabel} درخواست مرخصی انجام نشد.`);
-      }
+      if (requestError instanceof ApiClientError) setError(requestError.message);
+      else setError(`عملیات ${actionLabel} درخواست مرخصی انجام نشد.`);
     } finally {
       setUpdatingLeaveId(null);
     }
@@ -286,9 +203,7 @@ export default function HrPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-muted-foreground">کل کارکنان</p>
-              <p className="mt-2 text-xl font-bold text-foreground">
-                {dashboard?.employees.total ?? 0}
-              </p>
+              <p className="mt-2 text-xl font-bold text-foreground">{dashboard?.employees.total ?? 0}</p>
               <p className="mt-1 text-[11px] text-muted-foreground">نیروی ثبت‌شده در سامانه</p>
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
@@ -301,9 +216,7 @@ export default function HrPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-muted-foreground">کارکنان فعال</p>
-              <p className="mt-2 text-xl font-bold text-emerald-500">
-                {dashboard?.employees.active ?? 0}
-              </p>
+              <p className="mt-2 text-xl font-bold text-emerald-500">{dashboard?.employees.active ?? 0}</p>
               <p className="mt-1 text-[11px] text-muted-foreground">مشغول به کار</p>
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500">
@@ -316,9 +229,7 @@ export default function HrPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-muted-foreground">کارکنان در مرخصی</p>
-              <p className="mt-2 text-xl font-bold text-amber-500">
-                {dashboard?.employees.onLeave ?? 0}
-              </p>
+              <p className="mt-2 text-xl font-bold text-amber-500">{dashboard?.employees.onLeave ?? 0}</p>
               <p className="mt-1 text-[11px] text-muted-foreground">عدم حضور امروز</p>
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500">
@@ -331,9 +242,7 @@ export default function HrPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-muted-foreground">درخواست‌های در انتظار</p>
-              <p className="mt-2 text-xl font-bold text-purple-500">
-                {dashboard?.leaveRequests.pending ?? 0}
-              </p>
+              <p className="mt-2 text-xl font-bold text-purple-500">{dashboard?.leaveRequests.pending ?? 0}</p>
               <p className="mt-1 text-[11px] text-muted-foreground">نیازمند بررسی و تأیید</p>
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-500/10 text-purple-500">
@@ -346,7 +255,7 @@ export default function HrPage() {
       {/* ۲. بخش تب‌ها و جداول عملیاتی */}
       <section className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-sm">
         {/* نوار جابجایی تب‌ها و ابزار به‌روزرسانی */}
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between border-b border-border pb-4">
+        <div className="flex flex-col gap-4 border-b border-border pb-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap items-center gap-1.5 rounded-xl bg-muted/60 p-1">
             <button
               type="button"
@@ -376,6 +285,27 @@ export default function HrPage() {
           </div>
 
           <div className="flex items-center gap-2.5">
+            {/* دکمه ورود گروهی پرسنل (JSON) */}
+            <button
+              type="button"
+              onClick={() => setIsImportModalOpen(true)}
+              className="inline-flex h-9.5 items-center justify-center gap-1.5 rounded-xl border border-border bg-background px-3 text-xs font-semibold text-foreground transition-all hover:bg-muted active:scale-95"
+            >
+              <Upload size={14} className="text-muted-foreground" />
+              <span>ورود گروهی (JSON)</span>
+            </button>
+
+            {/* دکمه ثبت کارمند جدید */}
+            <button
+              type="button"
+              onClick={() => setIsCreateModalOpen(true)}
+              className="inline-flex h-9.5 items-center justify-center gap-1.5 rounded-xl bg-primary px-3.5 text-xs font-bold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 active:scale-95"
+            >
+              <Plus size={15} />
+              <span>ثبت کارمند جدید</span>
+            </button>
+
+            {/* دکمه به‌روزرسانی */}
             <button
               type="button"
               onClick={() => void loadAllData(true)}
@@ -395,7 +325,10 @@ export default function HrPage() {
             {/* فیلترهای بخش پرسنل */}
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               <div className="relative">
-                <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" size={15} />
+                <Search
+                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                  size={15}
+                />
                 <input
                   value={employeeSearch}
                   onChange={(e) => setEmployeeSearch(e.target.value)}
@@ -405,7 +338,10 @@ export default function HrPage() {
               </div>
 
               <div className="relative">
-                <Filter className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" size={14} />
+                <Filter
+                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                  size={14}
+                />
                 <select
                   value={employeeStatus}
                   onChange={(e) => setEmployeeStatus(e.target.value as EmployeeStatus | "ALL")}
@@ -421,7 +357,10 @@ export default function HrPage() {
               </div>
 
               <div className="relative">
-                <Briefcase className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" size={14} />
+                <Briefcase
+                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                  size={14}
+                />
                 <select
                   value={employmentType}
                   onChange={(e) => setEmploymentType(e.target.value as EmploymentType | "ALL")}
@@ -452,17 +391,32 @@ export default function HrPage() {
                       <th className="px-4 py-3.5 text-center">تاریخ استخدام</th>
                     </tr>
                   </thead>
+
                   <tbody className="divide-y divide-border">
                     {loading ? (
                       Array.from({ length: 4 }).map((_, i) => (
                         <tr key={i} className="animate-pulse">
-                          <td className="px-4 py-4"><div className="h-4 w-20 rounded bg-muted"></div></td>
-                          <td className="px-4 py-4"><div className="h-4 w-32 rounded bg-muted"></div></td>
-                          <td className="px-4 py-4"><div className="h-4 w-24 rounded bg-muted"></div></td>
-                          <td className="px-4 py-4"><div className="h-4 w-20 rounded bg-muted"></div></td>
-                          <td className="px-4 py-4"><div className="h-4 w-28 rounded bg-muted"></div></td>
-                          <td className="px-4 py-4 text-center"><div className="mx-auto h-5 w-16 rounded bg-muted"></div></td>
-                          <td className="px-4 py-4 text-center"><div className="mx-auto h-4 w-20 rounded bg-muted"></div></td>
+                          <td className="px-4 py-4">
+                            <div className="h-4 w-20 rounded bg-muted" />
+                          </td>
+                          <td className="px-4 py-4">
+                            <div className="h-4 w-32 rounded bg-muted" />
+                          </td>
+                          <td className="px-4 py-4">
+                            <div className="h-4 w-24 rounded bg-muted" />
+                          </td>
+                          <td className="px-4 py-4">
+                            <div className="h-4 w-20 rounded bg-muted" />
+                          </td>
+                          <td className="px-4 py-4">
+                            <div className="h-4 w-28 rounded bg-muted" />
+                          </td>
+                          <td className="px-4 py-4 text-center">
+                            <div className="mx-auto h-5 w-16 rounded bg-muted" />
+                          </td>
+                          <td className="px-4 py-4 text-center">
+                            <div className="mx-auto h-4 w-20 rounded bg-muted" />
+                          </td>
                         </tr>
                       ))
                     ) : employees.length === 0 ? (
@@ -485,26 +439,18 @@ export default function HrPage() {
                           </td>
 
                           <td className="px-4 py-4">
-                            <div className="font-semibold text-foreground">
-                              {getEmployeeName(employee)}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              {employee.phone || employee.email || "—"}
-                            </div>
+                            <div className="font-semibold text-foreground">{getEmployeeName(employee)}</div>
+                            <div className="text-xs text-muted-foreground">{employee.phone || employee.email || "—"}</div>
                           </td>
 
-                          <td className="px-4 py-4 text-foreground/80">
-                            {employee.jobTitle || "—"}
-                          </td>
+                          <td className="px-4 py-4 text-foreground/80">{employee.jobTitle || "—"}</td>
 
                           <td className="px-4 py-4 text-xs text-muted-foreground">
                             {employmentTypeLabels[employee.employmentType]}
                           </td>
 
                           <td className="px-4 py-4">
-                            <div className="text-foreground">
-                              {employee.branch?.name || employee.branch?.title || "—"}
-                            </div>
+                            <div className="text-foreground">{employee.branch?.name || employee.branch?.title || "—"}</div>
                             <div className="text-xs text-muted-foreground">
                               {employee.department?.name || employee.department?.title || "—"}
                             </div>
@@ -514,9 +460,7 @@ export default function HrPage() {
                             <HrEmployeeStatusBadge status={employee.status} />
                           </td>
 
-                          <td className="px-4 py-4 text-center text-xs text-muted-foreground">
-                            {formatDate(employee.hiredAt)}
-                          </td>
+                          <td className="px-4 py-4 text-center text-xs text-muted-foreground">{formatDate(employee.hiredAt)}</td>
                         </tr>
                       ))
                     )}
@@ -533,7 +477,10 @@ export default function HrPage() {
             {/* فیلترهای مرخصی */}
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="relative">
-                <Filter className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" size={14} />
+                <Filter
+                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                  size={14}
+                />
                 <select
                   value={leaveStatus}
                   onChange={(e) => setLeaveStatus(e.target.value as LeaveRequestStatus | "ALL")}
@@ -549,7 +496,10 @@ export default function HrPage() {
               </div>
 
               <div className="relative">
-                <CalendarClock className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" size={14} />
+                <CalendarClock
+                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                  size={14}
+                />
                 <select
                   value={leaveType}
                   onChange={(e) => setLeaveType(e.target.value as LeaveType | "ALL")}
@@ -579,16 +529,29 @@ export default function HrPage() {
                       <th className="px-4 py-3.5 text-center">عملیات</th>
                     </tr>
                   </thead>
+
                   <tbody className="divide-y divide-border">
                     {loading ? (
                       Array.from({ length: 3 }).map((_, i) => (
                         <tr key={i} className="animate-pulse">
-                          <td className="px-4 py-4"><div className="h-4 w-32 rounded bg-muted"></div></td>
-                          <td className="px-4 py-4"><div className="h-4 w-20 rounded bg-muted"></div></td>
-                          <td className="px-4 py-4"><div className="h-4 w-36 rounded bg-muted"></div></td>
-                          <td className="px-4 py-4"><div className="h-4 w-16 rounded bg-muted"></div></td>
-                          <td className="px-4 py-4 text-center"><div className="mx-auto h-5 w-20 rounded bg-muted"></div></td>
-                          <td className="px-4 py-4 text-center"><div className="mx-auto h-7 w-24 rounded bg-muted"></div></td>
+                          <td className="px-4 py-4">
+                            <div className="h-4 w-32 rounded bg-muted" />
+                          </td>
+                          <td className="px-4 py-4">
+                            <div className="h-4 w-20 rounded bg-muted" />
+                          </td>
+                          <td className="px-4 py-4">
+                            <div className="h-4 w-36 rounded bg-muted" />
+                          </td>
+                          <td className="px-4 py-4">
+                            <div className="h-4 w-16 rounded bg-muted" />
+                          </td>
+                          <td className="px-4 py-4 text-center">
+                            <div className="mx-auto h-5 w-20 rounded bg-muted" />
+                          </td>
+                          <td className="px-4 py-4 text-center">
+                            <div className="mx-auto h-7 w-24 rounded bg-muted" />
+                          </td>
                         </tr>
                       ))
                     ) : leaveRequests.length === 0 ? (
@@ -598,9 +561,7 @@ export default function HrPage() {
                             <AlertCircle size={20} />
                           </div>
                           <p className="mt-2 text-sm font-bold text-foreground">درخواست مرخصی یافت نشد</p>
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            هیچ درخواستی با فیلترهای انتخابی مطابقت ندارد.
-                          </p>
+                          <p className="mt-1 text-xs text-muted-foreground">هیچ درخواستی با فیلترهای انتخابی مطابقت ندارد.</p>
                         </td>
                       </tr>
                     ) : (
@@ -611,17 +572,13 @@ export default function HrPage() {
                         return (
                           <tr key={leaveRequest.id} className="transition-colors hover:bg-muted/30">
                             <td className="px-4 py-4">
-                              <div className="font-semibold text-foreground">
-                                {getEmployeeName(leaveRequest.employee)}
-                              </div>
+                              <div className="font-semibold text-foreground">{getEmployeeName(leaveRequest.employee)}</div>
                               <div className="font-mono text-xs text-muted-foreground">
                                 {leaveRequest.employee?.employeeCode || "—"}
                               </div>
                             </td>
 
-                            <td className="px-4 py-4 text-foreground/80">
-                              {leaveTypeLabels[leaveRequest.leaveType]}
-                            </td>
+                            <td className="px-4 py-4 text-foreground/80">{leaveTypeLabels[leaveRequest.leaveType]}</td>
 
                             <td className="px-4 py-4">
                               <div className="flex items-center gap-1.5 text-xs text-foreground">
@@ -632,9 +589,7 @@ export default function HrPage() {
                               </div>
                             </td>
 
-                            <td className="px-4 py-4 font-semibold text-foreground">
-                              {formatDuration(leaveRequest.durationMinutes)}
-                            </td>
+                            <td className="px-4 py-4 font-semibold text-foreground">{formatDuration(leaveRequest.durationMinutes)}</td>
 
                             <td className="px-4 py-4 text-center">
                               <HrLeaveStatusBadge status={leaveRequest.status} />
@@ -678,6 +633,23 @@ export default function HrPage() {
           </div>
         )}
       </section>
+
+      {/* مودال ثبت کارمند جدید تکی */}
+      <EmployeeFormModal
+        isOpen={isCreateModalOpen}
+        isSaving={isSavingEmployee}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSave={handleCreateEmployee}
+      />
+
+      {/* مودال ورود گروهی پرسنل از طریق فایل JSON */}
+      <EmployeeImportModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onSuccess={async () => {
+          await loadAllData(true);
+        }}
+      />
     </div>
   );
 }

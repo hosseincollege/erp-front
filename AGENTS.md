@@ -7,10 +7,18 @@ Your job is to think proactively, plan features, write robust modular code, and 
 
 ## 🏗️ 1. Architecture Rules & Conventions
 
+### Preserve the application shell
+- Keep the existing `AppShell`, `TopHeader`, sidebar structure, module navigation, and page frame intact unless the user explicitly asks for a specific structural change.
+- Improve settings and module page contents within the current shell; global preferences must be additive and preserve responsive behavior.
+- Persian and RTL remain the default. Apply English/LTR only when the user selects English.
+
 ### Frontend (Next.js App Router):
 - **Layout Persistence:** All authenticated pages live under `src/app/(workspace)/`. Never re-instantiate `AppShell` inside child page components to prevent sidebar flickering/state resets.
 - **RTL & Persian UI:** The app is strictly Persian RTL with Tailwind CSS (`dir="rtl"`, Vazirmatn font).
 - **State Management:** Use localStorage persistence with hydration guards (`isMounted` or `isSidebarStateLoaded`).
+- **Internationalization:** Support `fa`, `en`, `ar`, `zh-CN`, `fr`, `es`, `de`, `ru`, `ja`, and `pt-BR` through shared locale metadata and the translation catalog in `src/lib/ui-messages.ts`. Persian and Arabic use RTL; other supported locales use LTR. Every new or edited user-facing string must have translations for all supported locales; use the shared localization layer instead of component-level language ternaries.
+- **Accent preview:** Preview unsaved accent colors only inside the authenticated ERP shell; restore the persisted accent when leaving settings without saving. Keep public landing and login pages on the default blue brand color.
+- **Organization logo:** The saved header logo background is one of `NONE`, `DARK`, or `LIGHT` (white). Keep the settings form, API, import/export data, and header behavior aligned.
 
 ### Backend (NestJS + Prisma):
 - **Modular Design:** Every feature has its own Module, Controller, Service, and DTOs with `class-validator`.

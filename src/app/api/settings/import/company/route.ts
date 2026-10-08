@@ -17,6 +17,8 @@ interface CompanyImportPayload {
   currency?: string;
   fiscalYearStart?: string;
   logoUrl?: string;
+  logoTone?: 'LIGHT' | 'DARK';
+  logoBackground?: 'NONE' | 'DARK' | 'LIGHT';
 }
 
 function isOptionalString(value: unknown): value is string | undefined {
@@ -47,7 +49,14 @@ function validatePayload(data: unknown): data is CompanyImportPayload {
     isOptionalString(candidate.postalCode) &&
     isOptionalString(candidate.currency) &&
     isOptionalString(candidate.fiscalYearStart) &&
-    isOptionalString(candidate.logoUrl)
+    isOptionalString(candidate.logoUrl) &&
+    (typeof candidate.logoTone === 'undefined' ||
+      candidate.logoTone === 'LIGHT' ||
+      candidate.logoTone === 'DARK') &&
+    (typeof candidate.logoBackground === 'undefined' ||
+      candidate.logoBackground === 'NONE' ||
+      candidate.logoBackground === 'LIGHT' ||
+      candidate.logoBackground === 'DARK')
   );
 }
 
@@ -82,6 +91,8 @@ export async function POST(request: NextRequest) {
         currency: rawBody.currency?.trim() || undefined,
         fiscalYearStart: rawBody.fiscalYearStart?.trim() || undefined,
         logoUrl: rawBody.logoUrl?.trim() || undefined,
+        logoTone: rawBody.logoTone || 'DARK',
+        logoBackground: rawBody.logoBackground || 'NONE',
       },
     };
 

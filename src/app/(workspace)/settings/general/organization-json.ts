@@ -368,7 +368,6 @@ export function organizationStructureToExportData(
     departments: departments.map((department) => ({
       name: department.name,
       code: department.code || '',
-      description: department.description || undefined,
       branchName: department.branch?.name || undefined,
     })),
   };

@@ -10,6 +10,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { getCurrentUser, logout, AuthUser } from '@/lib/auth-api';
+import { getLocaleDirection, usePreferences } from '@/components/preferences-provider';
 
 import {
   Activity,
@@ -126,8 +127,11 @@ const navigation: NavigationItem[] = [
     icon: Settings,
     href: '/settings',
     sub: [
-      { title: 'پیکربندی عمومی', href: '/settings/general' },
-      { title: 'مدیریت کاربران', href: '/settings/users' },
+      { title: 'عمومی', href: '/settings/general' },
+      { title: 'اطلاعات شرکت', href: '/settings/company' },
+      { title: 'ساختار سازمانی', href: '/settings/organization' },
+      { title: 'نقش‌ها و دسترسی‌ها', href: '/settings/roles' },
+      { title: 'حساب‌های کاربری', href: '/settings/accounts' },
       { title: 'مدیریت پروژه‌ها', href: '/settings/projects' },
     ],
   },
@@ -162,6 +166,8 @@ export function Sidebar({
   onSetProfileActive,
 }: SidebarProps) {
   const pathname = usePathname();
+  const { locale } = usePreferences();
+  const english = locale !== 'fa';
   const router = useRouter();
   const sidebarRef = useRef<HTMLElement>(null);
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -275,12 +281,41 @@ export function Sidebar({
     router.push('/login');
   };
 
-  const activeGroup = navigation.find((item) => item.id === activeTab);
+  const englishLabels: Record<string, string> = {
+    accounting: 'Accounting', crm: 'Customers', hr: 'Human Resources',
+    inventory: 'Inventory', purchases: 'Purchases', reports: 'Reports',
+    sales: 'Sales', settings: 'Settings', tickets: 'Support',
+    '/accounting/ledger': 'General ledger', '/accounting/vouchers': 'Accounting entries',
+    '/accounting/balance-sheet': 'Balance sheet', '/crm/customers': 'Customer list',
+    '/crm/opportunities': 'Sales opportunities', '/crm/follow-ups': 'Follow-ups',
+    '/hr/employees': 'Employee records', '/hr/attendance': 'Attendance',
+    '/hr/payroll': 'Payroll', '/inventory/stock': 'Stock',
+    '/inventory/orders': 'Stock issues', '/inventory/audit': 'Stock audit',
+    '/purchases/orders': 'Purchase orders', '/purchases/suppliers': 'Suppliers',
+    '/reports/financial': 'Financial reports', '/reports/operational': 'Operational reports',
+    '/sales/quotes': 'Quotes', '/sales/invoices': 'Sales invoices',
+    '/sales/reports': 'Sales reports', '/settings/general': 'General',
+    '/settings/company': 'Company information', '/settings/organization': 'Organization structure',
+    '/settings/roles': 'Roles and permissions', '/settings/accounts': 'User accounts',
+    '/settings/projects': 'Project management', '/tickets': 'All tickets',
+    '/tickets/new': 'Create ticket', '/tickets/categories': 'Categories',
+  };
+  const localizedNavigation = english
+    ? navigation.map((item) => ({
+        ...item,
+        title: englishLabels[item.id] || item.title,
+        sub: item.sub?.map((subItem) => ({
+          ...subItem,
+          title: englishLabels[subItem.href] || subItem.title,
+        })),
+      }))
+    : navigation;
+  const activeGroup = localizedNavigation.find((item) => item.id === activeTab);
 
   return (
     <aside
       ref={sidebarRef}
-      dir="rtl"
+      dir={getLocaleDirection(locale)}
       className="
         sticky top-16 z-40
         flex h-[calc(100vh-4rem)]
@@ -300,7 +335,7 @@ export function Sidebar({
         `}
       >
         <div className="flex w-full flex-col gap-1.5 overflow-y-auto no-scrollbar">
-          {navigation.map((item) => {
+          {localizedNavigation.map((item) => {
             const Icon = item.icon;
             const isSelected = !isProfileActive && activeTab === item.id;
 
@@ -312,12 +347,13 @@ export function Sidebar({
                 aria-label={item.title}
                 onClick={() => handleSelectModule(item)}
                 className={`
-                  flex w-full items-center rounded-xl p-2.5 text-right text-sm transition-all duration-200 cursor-pointer
+                  flex w-full items-center rounded-xl p-2.5 text-right transition-all duration-200 cursor-pointer
                   ${
                     isSelected
-                      ? 'bg-blue-600 font-medium text-white shadow-lg shadow-blue-500/20'
-                      : 'text-[var(--foreground)] hover:bg-slate-100/80 dark:hover:bg-slate-800/60'
+                      ? 'bg-[var(--primary)] font-medium text-[var(--primary-foreground)] shadow-lg shadow-[var(--primary)]/20'
+                      : 'text-[var(--foreground)] hover:bg-[var(--primary-soft)] hover:text-[var(--primary)]'
                   }
+                  ${english ? 'text-xs' : 'text-sm'}
                   ${isMainCollapsed ? 'justify-center' : 'justify-start gap-3'}
                 `}
               >
@@ -350,7 +386,7 @@ export function Sidebar({
             >
               <span className="flex items-center gap-2">
                 <User size={16} />
-                مشاهده پروفایل فردی
+                {english ? 'View profile' : 'مشاهده پروفایل فردی'}
               </span>
               <ExternalLink size={14} />
             </Link>
@@ -361,7 +397,7 @@ export function Sidebar({
               className="flex items-center justify-center gap-2 rounded-xl border border-red-200 dark:border-red-900/40 bg-red-50/50 dark:bg-red-950/20 px-3.5 py-2.5 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors cursor-pointer"
             >
               <LogOut size={16} />
-              خروج از حساب کاربری
+              {english ? 'Sign out' : 'خروج از حساب کاربری'}
             </button>
 
             <div className="mt-1 flex flex-col items-center rounded-xl border border-[var(--border)] bg-slate-50/50 dark:bg-slate-900/40 p-4 text-center">
@@ -375,15 +411,15 @@ export function Sidebar({
                 </div>
                 <span
                   className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-[var(--surface)] bg-emerald-500"
-                  title="وضعیت: آنلاین"
+                  title={english ? 'Status: online' : 'وضعیت: آنلاین'}
                 />
               </div>
 
               <p className="text-sm font-bold text-[var(--foreground)]">
-                {user?.name || 'کاربر سیستم'}
+                {user?.name || (english ? 'System user' : 'کاربر سیستم')}
               </p>
               <span className="mt-1 rounded-md bg-blue-100 dark:bg-blue-900/40 px-2 py-0.5 text-[11px] font-medium text-blue-700 dark:text-blue-300">
-                {user?.role || 'کاربر'}
+                {user?.role || (english ? 'User' : 'کاربر')}
               </span>
               <p className="mt-1.5 text-xs text-muted-foreground truncate w-full">
                 {user?.email || ''}
@@ -402,7 +438,7 @@ export function Sidebar({
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-600/10 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
                   {React.createElement(activeGroup.icon, { size: 19 })}
                 </div>
-                <span className="truncate text-sm font-bold text-[var(--foreground)]">
+                <span className={`truncate font-bold text-[var(--foreground)] ${english ? 'text-xs' : 'text-sm'}`}>
                   {activeGroup.title}
                 </span>
               </Link>
@@ -420,18 +456,19 @@ export function Sidebar({
                       key={subItem.href}
                       href={subItem.href}
                       className={`
-                        flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm transition-colors
+                        flex items-center gap-2.5 rounded-lg px-3 py-2.5 transition-colors
                         ${
                           isActive
-                            ? 'bg-blue-600/10 font-semibold text-blue-600 dark:bg-blue-600/20 dark:text-blue-400'
-                            : 'text-[var(--foreground)] hover:bg-slate-200/60 dark:hover:bg-slate-800'
+                            ? 'bg-[var(--primary-soft)] font-semibold text-[var(--primary)]'
+                            : 'text-[var(--foreground)] hover:bg-[var(--primary-soft)] hover:text-[var(--primary)]'
                         }
+                        ${english ? 'text-xs' : 'text-sm'}
                       `}
                     >
                       <span
                         className={`h-1.5 w-1.5 shrink-0 rounded-full ${
                           isActive
-                            ? 'bg-blue-600'
+                            ? 'bg-[var(--primary)]'
                             : 'bg-slate-300 dark:bg-slate-700'
                         }`}
                       />
@@ -443,7 +480,7 @@ export function Sidebar({
                 })
               ) : (
                 <p className="px-3 py-2.5 text-sm text-muted-foreground/70">
-                  زیرمنویی برای این بخش تعریف نشده است.
+                  {english ? 'No submenu is available for this section.' : 'زیرمنویی برای این بخش تعریف نشده است.'}
                 </p>
               )}
             </div>
@@ -458,10 +495,10 @@ export function Sidebar({
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-[var(--foreground)] leading-none">
-                    پیشخوان و رویدادها
+                    {english ? 'Dashboard and events' : 'پیشخوان و رویدادها'}
                   </h3>
                   <span className="text-[11px] text-muted-foreground">
-                    وضعیت سیستم و اعلانات
+                    {english ? 'System status and announcements' : 'وضعیت سیستم و اعلانات'}
                   </span>
                 </div>
               </div>
@@ -475,11 +512,11 @@ export function Sidebar({
                 <div className="flex items-center gap-2">
                   <Bell size={15} className="text-amber-500 shrink-0" />
                   <span className="font-medium text-[var(--foreground)]">
-                    تابلو اعلانات
+                    {english ? 'Announcement board' : 'تابلو اعلانات'}
                   </span>
                 </div>
                 <span className="rounded-md bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-amber-600 dark:text-amber-400">
-                  اعلانات
+                  {english ? 'Announcements' : 'اعلانات'}
                 </span>
               </a>
 
@@ -490,12 +527,12 @@ export function Sidebar({
                 <div className="flex items-center gap-2">
                   <Radio size={15} className="text-emerald-500 shrink-0" />
                   <span className="font-medium text-[var(--foreground)]">
-                    وضعیت سرویس‌ها
+                    {english ? 'Service status' : 'وضعیت سرویس‌ها'}
                   </span>
                 </div>
                 <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  برقرار
+                  {english ? 'Online' : 'برقرار'}
                 </span>
               </a>
 
@@ -506,7 +543,7 @@ export function Sidebar({
                 <div className="flex items-center gap-2">
                   <CheckCircle2 size={15} className="text-blue-500 shrink-0" />
                   <span className="font-medium text-[var(--foreground)]">
-                    خلاصه فعالیت‌ها
+                    {english ? 'Activity summary' : 'خلاصه فعالیت‌ها'}
                   </span>
                 </div>
               </a>

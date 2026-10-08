@@ -8,6 +8,7 @@
 import React, { useEffect, useState } from 'react';
 import { Sidebar } from './sidebar';
 import { TopHeader } from './top-header';
+import { getCustomAccentStyle, getLocaleDirection, isCustomAccentColor, usePreferences } from '@/components/preferences-provider';
 
 const SIDEBAR_COLLAPSED_KEY = 'erp-sidebar-collapsed';
 const SIDEBAR_LOCKED_KEY = 'erp-sidebar-locked';
@@ -18,6 +19,8 @@ interface AppShellProps {
 }
 
 export function AppShell({ children }: AppShellProps) {
+  const { locale, accentColor } = usePreferences();
+  const direction = getLocaleDirection(locale);
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [isSidebarLocked, setIsSidebarLocked] = useState(false);
   const [isSidebarStateLoaded, setIsSidebarStateLoaded] = useState(false);
@@ -121,8 +124,10 @@ export function AppShell({ children }: AppShellProps) {
 
   return (
     <div
-      dir="rtl"
-      className="flex h-screen min-h-0 flex-col overflow-hidden bg-[color:var(--background)] text-[color:var(--foreground)] transition-colors duration-200"
+      dir={direction}
+      data-accent={isCustomAccentColor(accentColor) ? 'custom' : accentColor}
+      style={getCustomAccentStyle(accentColor)}
+      className="erp-app-shell flex h-screen min-h-0 flex-col overflow-hidden bg-[color:var(--background)] text-[color:var(--foreground)] transition-colors duration-200"
     >
       <TopHeader
         isCollapsed={isCollapsed}
@@ -146,10 +151,10 @@ export function AppShell({ children }: AppShellProps) {
         />
 
         <main
-          dir="ltr"
+          dir={direction === 'rtl' ? 'ltr' : 'rtl'}
           className="erp-scrollbar min-h-0 min-w-0 flex-1 bg-[color:var(--background)]"
         >
-          <div dir="rtl" className="min-h-full w-full p-6 text-right">
+          <div dir={direction} className="min-h-full w-full p-6 text-right">
             {children}
           </div>
         </main>

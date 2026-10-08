@@ -36,10 +36,25 @@ export type LeaveRequestStatus =
   | "REJECTED"
   | "CANCELLED";
 
+export type UserStatus =
+  | "INVITED"
+  | "ACTIVE"
+  | "DISABLED"
+  | "ARCHIVED";
+
+/**
+ * نوع نقش قابل انتساب به عضو سازمان.
+ */
+export interface HrRole {
+  id: string;
+  name?: string | null;
+  key?: string | null;
+  description?: string | null;
+  scope?: "SYSTEM" | "ORGANIZATION" | string;
+}
+
 /**
  * نوع ساده برای relationهای شعبه و دپارتمان.
- * به دلیل تفاوت احتمالی نام فیلد نمایشی در backend،
- * name / title / code همگی optional در نظر گرفته شده‌اند.
  */
 export interface HrOrganizationRelation {
   id: string;
@@ -57,6 +72,8 @@ export interface HrUserRelation {
   firstName?: string | null;
   lastName?: string | null;
   email?: string | null;
+  phone?: string | null;
+  status?: UserStatus | null;
 }
 
 /**
@@ -190,12 +207,20 @@ export interface LeaveRequestListQuery {
 /**
  * payload ایجاد کارمند:
  * POST /human-resources/employees
+ *
+ * اگر createAccount برابر true باشد، username و password
+ * برای ایجاد حساب کاربری هم‌زمان استفاده می‌شوند.
  */
 export interface CreateEmployeePayload {
   employeeCode: string;
   firstName: string;
   lastName: string;
   hiredAt: string;
+
+  createAccount?: boolean;
+  username?: string;
+  password?: string;
+  roleIds?: string[];
 
   userId?: string;
   branchId?: string;
@@ -213,6 +238,41 @@ export interface CreateEmployeePayload {
   address?: string;
   emergencyPhone?: string;
   notes?: string;
+}
+
+/**
+ * نوع کمکی برای فرم ایجاد کارمند.
+ *
+ * در فرم، مقادیر فیلدها معمولاً به‌صورت رشته دریافت می‌شوند؛
+ * هنگام ارسال باید به CreateEmployeePayload تبدیل شوند.
+ */
+export interface CreateEmployeeFormValues {
+  employeeCode: string;
+  firstName: string;
+  lastName: string;
+  hiredAt: string;
+
+  createAccount: boolean;
+  username: string;
+  password: string;
+  roleIds: string[];
+
+  userId: string;
+  branchId: string;
+  departmentId: string;
+
+  nationalId: string;
+  phone: string;
+  email: string;
+  jobTitle: string;
+
+  employmentType: EmploymentType;
+  status: EmployeeStatus;
+
+  birthDate: string;
+  address: string;
+  emergencyPhone: string;
+  notes: string;
 }
 
 /**

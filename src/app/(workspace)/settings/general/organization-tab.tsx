@@ -27,7 +27,6 @@ import {
   RefreshCw,
   Trash2,
   Upload,
-  User,
   X,
 } from 'lucide-react';
 
@@ -37,6 +36,7 @@ import {
   type DepartmentItem,
 } from '@/lib/settings-api';
 import { getCurrentOrganizationId } from '@/lib/auth-api';
+import { DepartmentOverviewPanel } from './department-overview-panel';
 import {
   organizationStructureImportSample,
   organizationStructureToApiPayload,
@@ -57,7 +57,6 @@ interface DepartmentFormState {
   name: string;
   code: string;
   branchId: string;
-  managerName: string;
 }
 
 type DepartmentWithDisplayFields = DepartmentItem & {
@@ -77,7 +76,6 @@ const INITIAL_DEPARTMENT_FORM: DepartmentFormState = {
   name: '',
   code: '',
   branchId: '',
-  managerName: '',
 };
 
 export function OrganizationTab() {
@@ -85,9 +83,13 @@ export function OrganizationTab() {
   const [departments, setDepartments] = useState<
     DepartmentWithDisplayFields[]
   >([]);
+  const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState<string | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const [canManage, setCanManage] = useState(false);
+  const canEditStructure = isEditing && canManage;
 
   const [isBranchModalOpen, setIsBranchModalOpen] = useState(false);
   const [isDepartmentModalOpen, setIsDepartmentModalOpen] = useState(false);
@@ -163,10 +165,17 @@ export function OrganizationTab() {
     setIsLoading(true);
 
     try {
-      const [branchesResult, departmentsResult] = await Promise.all([
+      const [branchesResult, departmentsResult, access] = await Promise.all([
         settingsApi.getBranches(organizationId),
         settingsApi.getDepartments(organizationId),
+        settingsApi.getOrganizationAccess(organizationId),
       ]);
+
+      if (!access.canView) {
+        throw new Error('مجوز مشاهده ساختار سازمانی را ندارید.');
+      }
+      setCanManage(access.canEdit);
+      if (!access.canEdit) setIsEditing(false);
 
       setBranches(Array.isArray(branchesResult) ? branchesResult : []);
 
@@ -246,7 +255,10 @@ export function OrganizationTab() {
   };
 
   const openDepartmentModal = () => {
-    setDepartmentForm({ ...INITIAL_DEPARTMENT_FORM });
+    setDepartmentForm({
+      ...INITIAL_DEPARTMENT_FORM,
+      branchId: selectedBranchId || '',
+    });
     setDepartmentFormErrors({});
     setIsDepartmentModalOpen(true);
   };
@@ -350,6 +362,7 @@ export function OrganizationTab() {
       await settingsApi.deleteBranch(branch.id);
 
       setBranches((current) => current.filter((item) => item.id !== branch.id));
+      setSelectedBranchId((current) => current === branch.id ? null : current);
 
       showToast('success', 'شعبه با موفقیت حذف شد.');
 
@@ -412,10 +425,6 @@ export function OrganizationTab() {
         name: departmentForm.name.trim(),
         code: departmentForm.code.trim(),
         branchId: departmentForm.branchId || undefined,
-        managerName: departmentForm.managerName.trim() || undefined,
-        description: departmentForm.managerName.trim()
-          ? `مدیر: ${departmentForm.managerName.trim()}`
-          : undefined,
       });
 
       setIsDepartmentModalOpen(false);
@@ -456,6 +465,9 @@ export function OrganizationTab() {
 
     try {
       await settingsApi.deleteDepartment(department.id);
+      setSelectedDepartmentId((current) =>
+        current === department.id ? null : current,
+      );
 
       setDepartments((current) =>
         current.filter((item) => item.id !== department.id),
@@ -571,6 +583,13 @@ export function OrganizationTab() {
     }
   };
 
+  const selectedBranch = branches.find(
+    (branch) => branch.id === selectedBranchId,
+  );
+  const visibleDepartments = selectedBranchId
+    ? departments.filter((department) => department.branchId === selectedBranchId)
+    : departments;
+
   return (
     <section className="space-y-6">
       {toast && (
@@ -604,12 +623,17 @@ export function OrganizationTab() {
             </h2>
             <span
               className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                isEditing
+                canEditStructure
                   ? 'border border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400'
                   : 'border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
               }`}
             >
-              {isEditing ? (
+              {!canManage ? (
+                <>
+                  <Eye size={12} />
+                  فقط خواندنی
+                </>
+              ) : isEditing ? (
                 <>
                   <Edit3 size={12} />
                   حالت ویرایش
@@ -642,7 +666,7 @@ export function OrganizationTab() {
           <button
             type="button"
             onClick={() => quickFileInputRef.current?.click()}
-            disabled={isImporting}
+            disabled={!canManage || isImporting}
             className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs font-semibold text-[var(--foreground)] transition hover:bg-slate-100 disabled:opacity-50 dark:hover:bg-slate-800"
           >
             {isImporting ? (
@@ -676,7 +700,7 @@ export function OrganizationTab() {
 
           <div className="mx-1 hidden h-5 w-px bg-[var(--border)] sm:block" />
 
-          {!isEditing ? (
+          {canManage && (!isEditing ? (
             <button
               type="button"
               onClick={() => setIsEditing(true)}
@@ -694,7 +718,7 @@ export function OrganizationTab() {
               <Eye size={14} />
               پایان ویرایش
             </button>
-          )}
+          ))}
         </div>
       </div>
 
@@ -711,7 +735,7 @@ export function OrganizationTab() {
             </span>
           </div>
 
-          {isEditing && (
+          {canEditStructure && (
             <button
               type="button"
               onClick={openBranchModal}
@@ -745,9 +769,22 @@ export function OrganizationTab() {
                     <div className="flex flex-wrap items-center gap-2">
                       <Building size={16} className="text-blue-600" />
 
-                      <span className="text-sm font-bold text-[var(--foreground)]">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSelectedBranchId((current) =>
+                            current === branch.id ? null : branch.id,
+                          )
+                        }
+                        aria-pressed={selectedBranchId === branch.id}
+                        className={`text-sm font-bold underline-offset-4 hover:text-blue-600 hover:underline ${
+                          selectedBranchId === branch.id
+                            ? 'text-blue-600 underline'
+                            : 'text-[var(--foreground)]'
+                        }`}
+                      >
                         {branch.name}
-                      </span>
+                      </button>
 
                       <span className="rounded-md bg-slate-100 px-2 py-0.5 font-mono text-[10px] text-slate-600 dark:bg-slate-800 dark:text-slate-400">
                         {branch.code}
@@ -785,7 +822,7 @@ export function OrganizationTab() {
                     )}
                   </div>
 
-                  {isEditing && (
+                  {canEditStructure && (
                     <button
                       type="button"
                       disabled={Boolean(deletingBranchId) || isSavingBranch}
@@ -816,20 +853,36 @@ export function OrganizationTab() {
               دپارتمان‌ها و واحدها
             </h3>
             <span className="rounded-md bg-slate-100 px-2 py-0.5 font-mono text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-400">
-              {departments.length}
+              {visibleDepartments.length}
             </span>
+            {selectedBranch && (
+              <span className="rounded-md bg-blue-100 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+                شعبه: {selectedBranch.name}
+              </span>
+            )}
           </div>
 
-          {isEditing && (
-            <button
-              type="button"
-              onClick={openDepartmentModal}
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700"
-            >
-              <Plus size={14} />
-              افزودن دپارتمان
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {selectedBranch && (
+              <button
+                type="button"
+                onClick={() => setSelectedBranchId(null)}
+                className="rounded-lg px-2.5 py-1.5 text-xs text-muted-foreground hover:bg-muted"
+              >
+                نمایش همه
+              </button>
+            )}
+            {canEditStructure && (
+              <button
+                type="button"
+                onClick={openDepartmentModal}
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+              >
+                <Plus size={14} />
+                افزودن دپارتمان
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
@@ -837,12 +890,14 @@ export function OrganizationTab() {
             <div className="flex items-center justify-center py-12">
               <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
             </div>
-          ) : departments.length === 0 ? (
+          ) : visibleDepartments.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <Layers className="h-12 w-12 text-gray-300 dark:text-gray-600" />
 
               <p className="mt-4 text-base font-medium text-gray-900 dark:text-gray-100">
-                هیچ دپارتمانی تعریف نشده است
+                {selectedBranch
+                  ? `برای ${selectedBranch.name} دپارتمانی ثبت نشده است`
+                  : 'هیچ دپارتمانی تعریف نشده است'}
               </p>
 
               <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -857,15 +912,15 @@ export function OrganizationTab() {
                     <th className="px-6 py-4">نام دپارتمان</th>
                     <th className="px-6 py-4">کد</th>
                     <th className="px-6 py-4">شعبه</th>
-                    <th className="px-6 py-4">مدیر / توضیحات</th>
-                    {isEditing && (
+                    <th className="px-6 py-4">اعضا و تیم‌ها</th>
+                    {canEditStructure && (
                       <th className="px-6 py-4 text-left">عملیات</th>
                     )}
                   </tr>
                 </thead>
 
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
-                  {departments.map((department) => (
+                  {visibleDepartments.map((department) => (
                     <tr
                       key={department.id}
                       className="transition hover:bg-gray-50/50 dark:hover:bg-gray-800/30"
@@ -873,7 +928,13 @@ export function OrganizationTab() {
                       <td className="whitespace-nowrap px-6 py-4 font-medium text-gray-900 dark:text-gray-100">
                         <div className="flex items-center gap-2">
                           <Layers className="h-4 w-4 text-emerald-500" />
-                          {department.name}
+                          <button
+                            type="button"
+                            onClick={() => setSelectedDepartmentId(department.id)}
+                            className="font-semibold text-emerald-700 underline-offset-4 hover:underline dark:text-emerald-300"
+                          >
+                            {department.name}
+                          </button>
                         </div>
                       </td>
 
@@ -897,21 +958,16 @@ export function OrganizationTab() {
                       </td>
 
                       <td className="whitespace-nowrap px-6 py-4 text-gray-600 dark:text-gray-300">
-                        {department.managerName ||
-                        department.description ? (
-                          <div className="flex items-center gap-1.5">
-                            <User className="h-3.5 w-3.5 text-gray-400" />
-                            <span>
-                              {department.managerName ||
-                                department.description}
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="text-gray-400">—</span>
-                        )}
+                        <button
+                          type="button"
+                          onClick={() => setSelectedDepartmentId(department.id)}
+                          className="rounded-lg border border-border px-2.5 py-1.5 text-xs text-foreground hover:bg-muted"
+                        >
+                          مشاهده جزئیات
+                        </button>
                       </td>
 
-                      {isEditing && (
+                      {canEditStructure && (
                         <td className="whitespace-nowrap px-6 py-4 text-left">
                           <button
                             type="button"
@@ -936,6 +992,15 @@ export function OrganizationTab() {
           )}
         </div>
       </div>
+
+      {selectedDepartmentId && (
+        <DepartmentOverviewPanel
+          key={selectedDepartmentId}
+          departmentId={selectedDepartmentId}
+          canEdit={canEditStructure}
+          onClose={() => setSelectedDepartmentId(null)}
+        />
+      )}
 
       {/* Branch Modal */}
       {isBranchModalOpen && (
@@ -1238,28 +1303,6 @@ export function OrganizationTab() {
                     </option>
                   ))}
                 </select>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="department-manager"
-                  className="text-xs font-medium"
-                >
-                  نام مدیر یا سرپرست
-                </label>
-
-                <input
-                  id="department-manager"
-                  value={departmentForm.managerName}
-                  onChange={(event) =>
-                    setDepartmentForm((current) => ({
-                      ...current,
-                      managerName: event.target.value,
-                    }))
-                  }
-                  className="mt-1 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
-                  placeholder="مثلاً سارا محمدی"
-                />
               </div>
 
               <div className="flex justify-end gap-2 border-t border-[var(--border)] pt-4">

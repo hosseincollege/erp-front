@@ -1,6 +1,6 @@
 /**
  * @file src/components/layout/public-header.tsx
- * @description هدر صفحات عمومی سامانه با پنجره راهنمای بزرگ و خوانا برای ثبت‌نام
+ * @description هدر عمومی سامانه همراه با مدال راهنمای ثبت‌نام و اشاره به نسخه دمو
  */
 
 'use client';
@@ -107,7 +107,6 @@ export function PublicHeader() {
         const data = await fetchSetupStatus();
         setHasUsers(data.hasUsers);
       } catch (error) {
-        // در صورت عدم دسترسی به بک‌اند، برای امنیت پیش‌فرض را کاربر موجود در نظر می‌گیریم
         setHasUsers(true);
       }
     };
@@ -123,7 +122,6 @@ export function PublicHeader() {
     };
   }, []);
 
-  // بستن پنجره با دکمه Esc
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && showDisabledNotice) {
@@ -153,7 +151,7 @@ export function PublicHeader() {
         className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-xl"
       >
         <div className="mx-auto grid h-20 w-full max-w-7xl grid-cols-[1fr_auto_1fr] items-center px-4 sm:px-8">
-          {/* بخش راست: اکشن‌های ورود و ثبت‌نام */}
+          {/* سمت راست: ورود و ثبت‌نام */}
           <nav className="flex items-center justify-start gap-2.5">
             <Link
               href="/login"
@@ -170,25 +168,23 @@ export function PublicHeader() {
               />
             )}
 
-            {/* در حالت نصب اولیه */}
             {hasUsers === false && (
               <Link
                 href="/register"
                 className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3.5 py-2 text-xs sm:text-sm font-bold text-emerald-600 dark:text-emerald-400 transition-all hover:bg-emerald-500/20 active:scale-95 animate-pulse"
-                title="سامانه آماده راه‌اندازی است، مالک اولیه را ثبت کنید"
+                title="سامانه آماده راه‌اندازی است، اولین مالک را تعریف کنید"
               >
-                <Sparkles size={16} className="text-emerald-500" />
+                <Sparkles size={16} />
                 <span>ثبت‌نام اولیه</span>
               </Link>
             )}
 
-            {/* در حالت سامانه مستقر شده */}
             {hasUsers === true && (
               <button
                 type="button"
                 onClick={() => setShowDisabledNotice(true)}
                 className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-border bg-muted/50 px-3.5 py-2 text-xs sm:text-sm font-medium text-muted-foreground transition-all hover:bg-muted hover:text-foreground active:scale-95 cursor-pointer"
-                title="ثبت‌نام مستقیم غیرفعال است (راهنما)"
+                title="راهنمای ثبت‌نام"
               >
                 <UserPlus size={16} className="opacity-70" />
                 <span>ثبت‌نام</span>
@@ -196,7 +192,7 @@ export function PublicHeader() {
             )}
           </nav>
 
-          {/* بخش میانی: برندینگ */}
+          {/* وسط: لوگو و نام سامانه */}
           <Link
             href="/"
             className="group flex items-center gap-2.5 rounded-2xl p-1.5 transition-opacity hover:opacity-90"
@@ -216,7 +212,7 @@ export function PublicHeader() {
             </div>
           </Link>
 
-          {/* بخش چپ: تغییر پوسته */}
+          {/* سمت چپ: تغییر پوسته */}
           <div className="flex items-center justify-end">
             <button
               type="button"
@@ -230,7 +226,7 @@ export function PublicHeader() {
         </div>
       </header>
 
-      {/* پنجره مدال راهنما (بزرگ‌تر و خواناتر) */}
+      {/* مدال راهنمای ثبت‌نام */}
       {showDisabledNotice && (
         <div
           dir="rtl"
@@ -240,69 +236,63 @@ export function PublicHeader() {
           onClick={() => setShowDisabledNotice(false)}
         >
           <div
-            className="relative w-full max-w-xl rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-2xl transition-all"
+            className="relative w-full max-w-lg rounded-3xl border border-border bg-card p-6 sm:p-7 shadow-2xl transition-all"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* دکمه بستن پنجره */}
+            {/* دکمه بستن */}
             <button
               type="button"
               onClick={() => setShowDisabledNotice(false)}
-              className="absolute left-5 top-5 rounded-xl p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="absolute left-4 top-4 rounded-xl p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               aria-label="بستن پنجره"
             >
-              <X size={22} />
+              <X size={20} />
             </button>
 
-            {/* هدر مدال: آیکون بزرگ‌تر و عنوان چشم‌نواز */}
-            <div className="flex items-center gap-4">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-500 shadow-inner">
-                <ShieldAlert size={28} />
+            {/* هدر مدال */}
+            <div className="flex items-center gap-3.5">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-500">
+                <ShieldAlert size={24} />
               </div>
               <div>
-                <h3 className="text-lg sm:text-xl font-black text-foreground">
-                  ثبت‌نام عمومی در سامانه غیرفعال است
+                <h3 className="text-base sm:text-lg font-black text-foreground">
+                  ثبت‌نام مستقیم غیرفعال است
                 </h3>
-                <p className="mt-1 text-xs sm:text-sm font-medium text-muted-foreground">
-                  سیاست امنیتی و دسترسی‌های یکپارچه سازمانی
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  مدیریت دسترسی‌های سامانه ERP Pro
                 </p>
               </div>
             </div>
 
-            {/* باکس متن توضیحات با سایز فونت بزرگ‌تر و خوانا */}
-            <div className="mt-6 space-y-3 rounded-2xl bg-muted/50 p-5 text-sm sm:text-base leading-8 text-foreground/90 border border-border/60">
+            {/* توضیحات به سبک قبلی ولی شسته، رفته و خلاصه */}
+            <div className="mt-5 space-y-3 text-xs sm:text-sm leading-6 text-foreground/85">
               <p>
-                در بستر سازمانی ERP Pro، قابلیت ثبت‌نام مستقیم صرفاً جهت ایجاد{' '}
-                <strong className="text-primary font-bold">
-                  اولین حساب مالک و مدیر ارشد سیستم
-                </strong>{' '}
-                در گام نخست راه‌اندازی فعال بوده است.
+                امکان ثبت‌نام مستقیم صرفاً جهت راه‌اندازی اولیه و ساخت نخستین مدیر ارشد فعال بوده است.
               </p>
-              <p className="text-muted-foreground">
-                کلیه حساب‌های کاربری، پرسنلی و دسترسی‌ها باید توسط{' '}
-                <strong className="text-foreground">مدیر سیستم</strong> از بخش{' '}
-                «تنظیمات و مدیریت کاربران» در داخل سامانه تعریف و صادر گردند.
+              <p>
+                در حال حاضر افزودن کاربران جدید و تخصیص نقش‌ها فقط توسط مدیر سامانه و از طریق بخش مدیریت کاربران انجام می‌شود. جهت دریافت دسترسی، با مدیر سامانه در ارتباط باشید.
               </p>
-              <div className="pt-1 text-xs sm:text-sm font-semibold text-amber-600 dark:text-amber-400">
-                • در صورت نیاز به حساب کاربری، لطفاً با مدیر سامانه در مجموعه خود تماس بگیرید.
-              </div>
+              <p className="text-xs text-muted-foreground pt-1 border-t border-border/60">
+                💡 <span className="font-semibold text-foreground/90">تست آزمایشی:</span> در صفحه ورود امکان ورود بصورت دمو قرار داده شده است.
+              </p>
             </div>
 
-            {/* دکمه‌های پایین مدال */}
-            <div className="mt-6 flex flex-wrap items-center justify-end gap-3">
+            {/* دکمه‌ها */}
+            <div className="mt-6 flex items-center justify-end gap-2.5">
               <button
                 type="button"
                 onClick={() => setShowDisabledNotice(false)}
-                className="h-11 rounded-xl border border-border px-5 text-sm font-bold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground active:scale-95"
+                className="h-10 rounded-xl border border-border px-4 text-xs sm:text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               >
                 متوجه شدم
               </button>
               <Link
                 href="/login"
                 onClick={() => setShowDisabledNotice(false)}
-                className="inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-6 text-sm font-bold text-primary-foreground shadow-md shadow-primary/20 transition-all hover:opacity-95 active:scale-95"
+                className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-5 text-xs sm:text-sm font-bold text-primary-foreground shadow-md shadow-primary/20 transition-all hover:opacity-95 active:scale-95"
               >
                 <LogIn size={16} />
-                <span>ورود به سامانه</span>
+                <span>رفتن به صفحه ورود</span>
               </Link>
             </div>
           </div>

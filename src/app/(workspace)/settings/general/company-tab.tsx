@@ -5,6 +5,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import {
   AlertCircle,
   Building2,
@@ -26,7 +27,13 @@ import {
 
 import { getCurrentOrganizationId } from '@/lib/auth-api';
 import { getAccessToken } from '@/lib/api-client';
-import { settingsApi, type CompanySettings } from '@/lib/settings-api';
+import { usePreferences } from '@/components/preferences-provider';
+import { uiMessage } from '@/lib/ui-messages';
+import {
+  resolveOrganizationLogoUrl,
+  settingsApi,
+  type CompanySettings,
+} from '@/lib/settings-api';
 
 import {
   companyImportSample,
@@ -63,6 +70,8 @@ function downloadJsonFile(fileName: string, data: unknown) {
 }
 
 export function CompanyTab() {
+  const { locale } = usePreferences();
+  const message = (key: Parameters<typeof uiMessage>[1]) => uiMessage(locale, key);
   const [data, setData] = useState<CompanySettings>({
     name: '',
     slug: '',
@@ -79,6 +88,8 @@ export function CompanyTab() {
     currency: 'IRR',
     fiscalYearStart: '01-01',
     logoUrl: '',
+    logoTone: 'DARK',
+    logoBackground: 'NONE',
     status: 'ACTIVE',
   });
 
@@ -87,6 +98,8 @@ export function CompanyTab() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [orgId, setOrgId] = useState<string | null>(null);
+  const [canEdit, setCanEdit] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
 
   // استیت‌های فرآیند اعتبارسنجی و ثبت مرحله‌ای فایل جیسون
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
@@ -103,6 +116,7 @@ export function CompanyTab() {
   } | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const logoInputRef = useRef<HTMLInputElement | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const showToast = (type: 'success' | 'error', text: string) => {
@@ -132,9 +146,15 @@ export function CompanyTab() {
       const resolvedOrgId = getCurrentOrganizationId();
       setOrgId(resolvedOrgId);
 
-      const serverData = await settingsApi.getOrganization(
-        resolvedOrgId || undefined,
-      );
+      if (!resolvedOrgId) {
+        throw new Error('سازمان فعال در نشست کاربر پیدا نشد.');
+      }
+
+      const [serverData, access] = await Promise.all([
+        settingsApi.getOrganization(resolvedOrgId),
+        settingsApi.getOrganizationAccess(resolvedOrgId),
+      ]);
+      setCanEdit(access.canEdit);
 
       if (serverData) {
         const formatted: CompanySettings = {
@@ -154,6 +174,8 @@ export function CompanyTab() {
           currency: serverData.currency || 'IRR',
           fiscalYearStart: serverData.fiscalYearStart || '01-01',
           logoUrl: serverData.logoUrl || '',
+          logoTone: serverData.logoTone || 'DARK',
+          logoBackground: serverData.logoBackground || 'NONE',
           status: serverData.status || 'ACTIVE',
         };
 
@@ -196,6 +218,36 @@ export function CompanyTab() {
     setIsEditing(false);
   };
 
+  const handleLogoUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    if (!orgId) {
+      showToast('error', 'شناسه سازمان برای بارگذاری لوگو در دسترس نیست.');
+      return;
+    }
+
+    setUploadingLogo(true);
+    try {
+      const uploaded = await settingsApi.uploadOrganizationLogo(orgId, file);
+      const updatedData = { ...data, logoUrl: uploaded.logoUrl };
+      setData(updatedData);
+      setFormData((current) => ({ ...current, logoUrl: uploaded.logoUrl }));
+      window.dispatchEvent(new Event('organization-branding-changed'));
+      showToast('success', 'لوگو بارگذاری و ذخیره شد.');
+    } catch (error) {
+      showToast(
+        'error',
+        error instanceof Error ? error.message : 'بارگذاری لوگو ناموفق بود.',
+      );
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
@@ -229,7 +281,7 @@ export function CompanyTab() {
         postalCode: formData.postalCode?.trim() || undefined,
         currency: formData.currency || 'IRR',
         fiscalYearStart: formData.fiscalYearStart || '01-01',
-        logoUrl: formData.logoUrl?.trim() || undefined,
+        logoUrl: formData.logoUrl?.trim() ?? '',
         status: formData.status || 'ACTIVE',
       };
 
@@ -258,6 +310,7 @@ export function CompanyTab() {
       }
 
       setIsEditing(false);
+      window.dispatchEvent(new Event('organization-branding-changed'));
       showToast('success', 'اطلاعات شرکت با موفقیت ذخیره شد.');
     } catch (error) {
       const status = (error as { status?: number })?.status;
@@ -320,7 +373,9 @@ export function CompanyTab() {
       setValidatedData(null);
       const message =
         error instanceof Error
-          ? error.message
+          ? error.message === 'INVALID_LOGO_BACKGROUND'
+            ? uiMessage(locale, 'invalidLogoBackground')
+            : error.message
           : 'ساختار فایل JSON معتبر نیست یا فیلدهای مورد نیاز یافت نشدند.';
       setJsonValidationMessage({
         type: 'error',
@@ -435,8 +490,8 @@ export function CompanyTab() {
         </div>
       )}
 
-      {/* بخش ۱: دریافت قالب، بارگذاری، اعتبارسنجی و ثبت فایل JSON */}
-      <div className="rounded-2xl border border-border/70 bg-card p-5 shadow-sm">
+      {/* بخش ۱: دریافت قالب و ورود اطلاعات؛ فقط برای کاربران دارای مجوز ویرایش */}
+      {canEdit && <div className="rounded-2xl border border-border/70 bg-card p-5 shadow-sm">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border/60 pb-4">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -531,7 +586,7 @@ export function CompanyTab() {
             )}
           </div>
         )}
-      </div>
+      </div>}
 
       {/* بخش ۲: فرم و اطلاعات هویتی و ثبتی شرکت */}
       <div className="rounded-2xl border border-border/70 bg-card p-6 shadow-sm">
@@ -552,6 +607,7 @@ export function CompanyTab() {
 
           {/* دکمه‌های کنترل وضعیت ویرایش */}
           {!isEditing ? (
+            canEdit ? (
             <button
               type="button"
               onClick={() => {
@@ -563,6 +619,11 @@ export function CompanyTab() {
               <Edit3 className="h-3.5 w-3.5" />
               ویرایش اطلاعات
             </button>
+            ) : (
+              <span className="rounded-lg border border-border px-3 py-2 text-xs text-muted-foreground">
+                دسترسی فقط مشاهده
+              </span>
+            )
           ) : (
             <div className="flex items-center gap-2">
               <button
@@ -693,7 +754,21 @@ export function CompanyTab() {
 
                 <div>
                   <span className="block text-xs font-semibold text-muted-foreground">آدرس نشان/لوگو (URL)</span>
-                  <span className="mt-1.5 block truncate font-mono text-xs text-muted-foreground dir-ltr text-right">{data.logoUrl || '—'}</span>
+                  <span className="mt-2 flex items-center gap-2">
+                    {data.logoUrl ? (
+                      <Image
+                        src={resolveOrganizationLogoUrl(data.logoUrl) || ''}
+                        alt={`لوگوی ${data.name}`}
+                        width={40}
+                        height={40}
+                        unoptimized
+                        className="h-10 w-10 rounded-lg border border-border object-contain"
+                      />
+                    ) : null}
+                    <span className="block truncate font-mono text-xs text-muted-foreground dir-ltr text-right">
+                      {data.logoUrl || '—'}
+                    </span>
+                  </span>
                 </div>
 
                 <div className="sm:col-span-2 lg:col-span-3 flex items-start gap-3">
@@ -754,9 +829,9 @@ export function CompanyTab() {
                     name="slug"
                     type="text"
                     dir="ltr"
+                    readOnly
                     value={formData.slug || ''}
-                    onChange={handleChange}
-                    placeholder="novin-tech"
+                    placeholder="پس از ثبت سازمان تعیین می‌شود"
                     className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
                   />
                 </div>
@@ -952,6 +1027,55 @@ export function CompanyTab() {
                     placeholder="https://example.com/logo.png"
                     className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
                   />
+                  <div className="mt-3 flex flex-wrap items-center gap-3">
+                    <input
+                      ref={logoInputRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      className="hidden"
+                      onChange={handleLogoUpload}
+                    />
+                    <button
+                      type="button"
+                      disabled={uploadingLogo}
+                      onClick={() => logoInputRef.current?.click()}
+                      className="rounded-lg border border-border px-3 py-2 text-xs font-semibold text-foreground transition hover:bg-muted disabled:opacity-50"
+                    >
+                      {uploadingLogo ? 'در حال بارگذاری...' : 'انتخاب فایل لوگو'}
+                    </button>
+                    <span className="text-xs text-muted-foreground">
+                      PNG، JPG یا WebP؛ حداکثر ۵ مگابایت. بارگذاری فایل روی بک‌اند محلی انجام می‌شود.
+                    </span>
+                  </div>
+                  <div className="mt-4 max-w-sm">
+                    <label htmlFor="logoBackground" className="mb-1.5 block text-xs font-semibold text-muted-foreground">
+                      {message('logoBackgroundTitle')}
+                    </label>
+                    <select
+                      id="logoBackground"
+                      name="logoBackground"
+                      value={formData.logoBackground || 'NONE'}
+                      onChange={handleChange}
+                      className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    >
+                      <option value="NONE">{message('backgroundNone')}</option>
+                      <option value="DARK">{message('backgroundDark')}</option>
+                      <option value="LIGHT">{message('backgroundWhite')}</option>
+                    </select>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {message('logoBackgroundHint')}
+                    </p>
+                  </div>
+                  {formData.logoUrl ? (
+                    <Image
+                      src={resolveOrganizationLogoUrl(formData.logoUrl) || ''}
+                      alt={`پیش‌نمایش لوگوی ${formData.name || 'شرکت'}`}
+                      width={56}
+                      height={56}
+                      unoptimized
+                      className={`mt-2 h-14 w-14 rounded-lg border object-contain ${formData.logoBackground === 'DARK' ? 'border-zinc-700 bg-zinc-900' : formData.logoBackground === 'LIGHT' ? 'border-zinc-200 bg-white' : 'border-transparent bg-transparent'}`}
+                    />
+                  ) : null}
                 </div>
 
                 <div className="md:col-span-2 lg:col-span-3">

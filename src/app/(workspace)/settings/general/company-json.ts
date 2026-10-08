@@ -21,6 +21,8 @@ export type CompanyImportData = {
   currency?: string;
   fiscalYearStart?: string;
   logoUrl?: string;
+  logoTone?: 'LIGHT' | 'DARK';
+  logoBackground?: 'NONE' | 'DARK' | 'LIGHT';
 };
 
 /**
@@ -41,6 +43,8 @@ export const companyImportSample: CompanyImportData = {
   currency: "IRR",
   fiscalYearStart: "1405-01-01",
   logoUrl: "",
+  logoTone: 'DARK',
+  logoBackground: 'NONE',
 };
 
 /**
@@ -83,6 +87,16 @@ export function parseCompanyImportData(rawData: unknown): CompanyImportData {
   }
 
   const website = getOptionalString("website");
+  const logoTone = getOptionalString("logoTone");
+  const logoBackground = getOptionalString("logoBackground");
+
+  if (logoTone && logoTone !== 'LIGHT' && logoTone !== 'DARK') {
+    throw new Error("فیلد «logoTone» باید LIGHT یا DARK باشد.");
+  }
+
+  if (logoBackground && !['NONE', 'DARK', 'LIGHT'].includes(logoBackground)) {
+    throw new Error('INVALID_LOGO_BACKGROUND');
+  }
 
   if (website) {
     try {
@@ -109,6 +123,8 @@ export function parseCompanyImportData(rawData: unknown): CompanyImportData {
     currency: getOptionalString("currency"),
     fiscalYearStart: getOptionalString("fiscalYearStart"),
     logoUrl: getOptionalString("logoUrl"),
+    logoTone: (logoTone as 'LIGHT' | 'DARK' | undefined) || 'DARK',
+    logoBackground: (logoBackground as 'NONE' | 'DARK' | 'LIGHT' | undefined) || 'NONE',
   };
 }
 
@@ -134,5 +150,7 @@ export function companyToExportData(
     currency: company.currency?.trim() || "IRR",
     fiscalYearStart: company.fiscalYearStart?.trim() || undefined,
     logoUrl: company.logoUrl?.trim() || undefined,
+    logoTone: company.logoTone || 'DARK',
+    logoBackground: company.logoBackground || 'NONE',
   };
 }
