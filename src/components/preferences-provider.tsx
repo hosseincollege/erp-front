@@ -6,35 +6,41 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useState,
   useSyncExternalStore,
   type CSSProperties,
   type ReactNode,
 } from 'react';
-import {
-  getLocaleDirection,
-  supportedLocales,
-  type Locale,
-} from '@/lib/languages/types';
+import { getLocaleDirection, supportedLocales, type Locale } from '@/lib/languages';
 
 export {
   getLocaleDirection,
   localeOptions,
   supportedLocales,
-} from '@/lib/languages/types';
-export type { Locale } from '@/lib/languages/types';
+} from '@/lib/languages';
+export type { Locale } from '@/lib/languages';
 
 export type AccentColor = 'blue' | 'green' | 'red' | 'amber' | 'violet' | `#${string}`;
+export type ContrastLevel = 'soft' | 'balanced' | 'strong';
+export type ContrastPreferences = { light: ContrastLevel; dark: ContrastLevel };
 
 type PreferencesContextValue = {
   locale: Locale;
   accentColor: AccentColor;
+  contrastPreferences: ContrastPreferences;
+  contrastPreview: ContrastPreferences | null;
+  previewContrastPreferences: (preferences: ContrastPreferences | null) => void;
   setLocale: (locale: Locale) => void;
   setAccentColor: (color: AccentColor) => void;
+  setContrastPreferences: (preferences: ContrastPreferences) => void;
   previewAccentColor: (color: AccentColor) => void;
 };
 
 const LOCALE_KEY = 'erp-locale';
 const ACCENT_KEY = 'erp-accent-color';
+const CONTRAST_KEY = 'erp-shell-contrast';
+const DEFAULT_CONTRAST = { light: 'balanced', dark: 'balanced' } as const satisfies ContrastPreferences;
+const DEFAULT_CONTRAST_SNAPSHOT = JSON.stringify(DEFAULT_CONTRAST);
 const accentStyleProperties = [
   '--primary', '--primary-hover', '--primary-soft', '--primary-foreground', '--ring', '--sidebar-active',
 ] as const;
@@ -52,6 +58,30 @@ function subscribePreferences(callback: () => void) {
 
 function isLocale(value: string | null): value is Locale {
   return supportedLocales.some((locale) => locale === value);
+}
+
+function isContrastLevel(value: unknown): value is ContrastLevel {
+  return value === 'soft' || value === 'balanced' || value === 'strong';
+}
+
+function parseContrastPreferences(value: string): ContrastPreferences {
+  try {
+    const parsed = JSON.parse(value) as Partial<ContrastPreferences>;
+    return {
+      light: isContrastLevel(parsed.light) ? parsed.light : DEFAULT_CONTRAST.light,
+      dark: isContrastLevel(parsed.dark) ? parsed.dark : DEFAULT_CONTRAST.dark,
+    };
+  } catch {
+    return { ...DEFAULT_CONTRAST };
+  }
+}
+
+function readContrastSnapshot(): string {
+  try {
+    return window.localStorage.getItem(CONTRAST_KEY) ?? DEFAULT_CONTRAST_SNAPSHOT;
+  } catch {
+    return DEFAULT_CONTRAST_SNAPSHOT;
+  }
 }
 
 function isAccentColor(value: string | null): value is AccentColor {
@@ -131,6 +161,16 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     },
     (): AccentColor => 'blue',
   );
+  const contrastSnapshot = useSyncExternalStore(
+    subscribePreferences,
+    readContrastSnapshot,
+    () => DEFAULT_CONTRAST_SNAPSHOT,
+  );
+  const contrastPreferences = useMemo(
+    () => parseContrastPreferences(contrastSnapshot),
+    [contrastSnapshot],
+  );
+  const [contrastPreview, setContrastPreview] = useState<ContrastPreferences | null>(null);
 
   useEffect(() => {
     applyLocale(locale);
@@ -149,13 +189,42 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     window.dispatchEvent(new Event('erp-preferences-changed'));
   }, []);
 
+  const setContrastPreferences = useCallback((nextPreferences: ContrastPreferences) => {
+    window.localStorage.setItem(CONTRAST_KEY, JSON.stringify(nextPreferences));
+    window.dispatchEvent(new Event('erp-preferences-changed'));
+  }, []);
+
+  const previewContrastPreferences = useCallback((nextPreferences: ContrastPreferences | null) => {
+    setContrastPreview(nextPreferences);
+  }, []);
+
   const previewAccentColor = useCallback((previewColor: AccentColor) => {
     applyAccentColor(previewColor);
   }, []);
 
   const value = useMemo(
-    () => ({ locale, accentColor, setLocale, setAccentColor, previewAccentColor }),
-    [locale, accentColor, setLocale, setAccentColor, previewAccentColor],
+    () => ({
+      locale,
+      accentColor,
+      contrastPreferences,
+      contrastPreview,
+      previewContrastPreferences,
+      setLocale,
+      setAccentColor,
+      setContrastPreferences,
+      previewAccentColor,
+    }),
+    [
+      locale,
+      accentColor,
+      contrastPreferences,
+      contrastPreview,
+      previewContrastPreferences,
+      setLocale,
+      setAccentColor,
+      setContrastPreferences,
+      previewAccentColor,
+    ],
   );
 
   return (

@@ -133,6 +133,130 @@ html.dark {
     0 10px 24px rgba(0, 0, 0, 0.2);
 }
 
+/* نرم‌تر کردن کنتراست فقط در پوستهٔ احراز هویت‌شده */
+.erp-app-shell {
+  --background: #f1f3f5;
+  --foreground: #3f4b5c;
+  --surface: #f8f9fb;
+  --surface-elevated: #f5f6f8;
+  --surface-muted: #eceff3;
+  --surface-hover: #e6eaf0;
+  --card: #f8f9fb;
+  --card-foreground: #3f4b5c;
+  --muted-foreground: #687486;
+  --border: #dce1e8;
+  --border-strong: #cbd2dc;
+  --input: #d6dde7;
+  --sidebar: #f8f9fb;
+  --sidebar-elevated: #f1f3f5;
+  --sidebar-foreground: #3f4b5c;
+  --sidebar-muted: #687486;
+  --sidebar-border: #dce1e8;
+}
+
+.dark .erp-app-shell,
+html.dark .erp-app-shell {
+  --background: #141923;
+  --foreground: #c0c8d4;
+  --surface: #1a202c;
+  --surface-elevated: #202735;
+  --surface-muted: #222a38;
+  --surface-hover: #2a3444;
+  --card: #1a202c;
+  --card-foreground: #c0c8d4;
+  --muted-foreground: #9ca6b5;
+  --border: #2b3545;
+  --border-strong: #3b475a;
+  --input: #303b4d;
+  --sidebar: #1a202c;
+  --sidebar-elevated: #202735;
+  --sidebar-foreground: #c0c8d4;
+  --sidebar-muted: #9ca6b5;
+  --sidebar-border: #2b3545;
+}
+
+.erp-app-shell[data-light-contrast="soft"] {
+  --background: #e9edf1;
+  --foreground: #596575;
+  --surface: #f0f2f5;
+  --surface-elevated: #e9edf1;
+  --surface-muted: #e2e6eb;
+  --surface-hover: #dce2e9;
+  --card: #f0f2f5;
+  --card-foreground: #596575;
+  --muted-foreground: #737e8d;
+  --border: #d2d9e1;
+  --border-strong: #c2cbd6;
+  --input: #cbd3dd;
+  --sidebar: #f0f2f5;
+  --sidebar-elevated: #e9edf1;
+  --sidebar-foreground: #596575;
+  --sidebar-muted: #737e8d;
+  --sidebar-border: #d2d9e1;
+}
+
+.erp-app-shell[data-light-contrast="strong"] {
+  --background: #f5f6f8;
+  --foreground: #263244;
+  --surface: #ffffff;
+  --surface-elevated: #ffffff;
+  --surface-muted: #edf0f4;
+  --surface-hover: #e6eaf0;
+  --card: #ffffff;
+  --card-foreground: #263244;
+  --muted-foreground: #5f6b7b;
+  --border: #d4dbe4;
+  --border-strong: #bcc6d3;
+  --input: #cbd4df;
+  --sidebar: #ffffff;
+  --sidebar-elevated: #f5f6f8;
+  --sidebar-foreground: #263244;
+  --sidebar-muted: #5f6b7b;
+  --sidebar-border: #d4dbe4;
+}
+
+.dark .erp-app-shell[data-dark-contrast="soft"],
+html.dark .erp-app-shell[data-dark-contrast="soft"] {
+  --background: #202630;
+  --foreground: #adb6c2;
+  --surface: #252c37;
+  --surface-elevated: #2b3340;
+  --surface-muted: #2e3744;
+  --surface-hover: #384250;
+  --card: #252c37;
+  --card-foreground: #adb6c2;
+  --muted-foreground: #a0aab8;
+  --border: #3a4452;
+  --border-strong: #465160;
+  --input: #3b4655;
+  --sidebar: #252c37;
+  --sidebar-elevated: #2b3340;
+  --sidebar-foreground: #adb6c2;
+  --sidebar-muted: #a0aab8;
+  --sidebar-border: #3a4452;
+}
+
+.dark .erp-app-shell[data-dark-contrast="strong"],
+html.dark .erp-app-shell[data-dark-contrast="strong"] {
+  --background: #0d121b;
+  --foreground: #e0e5ec;
+  --surface: #121a26;
+  --surface-elevated: #182131;
+  --surface-muted: #192433;
+  --surface-hover: #202e40;
+  --card: #121a26;
+  --card-foreground: #e0e5ec;
+  --muted-foreground: #aeb8c7;
+  --border: #273448;
+  --border-strong: #37475d;
+  --input: #2a384c;
+  --sidebar: #121a26;
+  --sidebar-elevated: #182131;
+  --sidebar-foreground: #e0e5ec;
+  --sidebar-muted: #aeb8c7;
+  --sidebar-border: #273448;
+}
+
 .erp-app-shell[data-accent="green"] {
   --primary: #16a34a;
   --primary-hover: #15803d;

@@ -382,7 +382,7 @@ export function Sidebar({
             <Link
               href="/profile"
               onClick={() => onSetProfileActive?.(true)}
-              className="flex items-center justify-between rounded-xl bg-blue-600 px-3.5 py-2.5 text-xs font-semibold text-white shadow-md shadow-blue-500/20 hover:bg-blue-700 transition-colors"
+              className="flex items-center justify-between rounded-xl bg-[var(--primary)] px-3.5 py-2.5 text-xs font-semibold text-[var(--primary-foreground)] shadow-md shadow-[var(--primary)]/20 transition-colors hover:bg-[var(--primary-hover)]"
             >
               <span className="flex items-center gap-2">
                 <User size={16} />
@@ -402,7 +402,7 @@ export function Sidebar({
 
             <div className="mt-1 flex flex-col items-center rounded-xl border border-[var(--border)] bg-slate-50/50 dark:bg-slate-900/40 p-4 text-center">
               <div className="relative mb-3">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 font-bold text-white shadow-md text-xl">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--primary)] font-bold text-[var(--primary-foreground)] shadow-md text-xl">
                   {user?.name ? (
                     user.name.charAt(0).toUpperCase()
                   ) : (
@@ -418,7 +418,7 @@ export function Sidebar({
               <p className="text-sm font-bold text-[var(--foreground)]">
                 {user?.name || (english ? 'System user' : 'کاربر سیستم')}
               </p>
-              <span className="mt-1 rounded-md bg-blue-100 dark:bg-blue-900/40 px-2 py-0.5 text-[11px] font-medium text-blue-700 dark:text-blue-300">
+              <span className="mt-1 rounded-md bg-[var(--primary-soft)] px-2 py-0.5 text-[11px] font-medium text-[var(--primary)]">
                 {user?.role || (english ? 'User' : 'کاربر')}
               </span>
               <p className="mt-1.5 text-xs text-muted-foreground truncate w-full">
@@ -435,7 +435,7 @@ export function Sidebar({
                 title={activeGroup.title}
                 className="flex items-center gap-2.5 rounded-lg transition-opacity hover:opacity-80"
               >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-600/10 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--primary-soft)] text-[var(--primary)]">
                   {React.createElement(activeGroup.icon, { size: 19 })}
                 </div>
                 <span className={`truncate font-bold text-[var(--foreground)] ${english ? 'text-xs' : 'text-sm'}`}>
@@ -490,7 +490,7 @@ export function Sidebar({
           <>
             <div className="mb-4 border-b border-[var(--border)] pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-600/10 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--primary-soft)] text-[var(--primary)]">
                   <Activity size={18} />
                 </div>
                 <div>
@@ -541,7 +541,7 @@ export function Sidebar({
                 className="flex items-center justify-between rounded-xl border border-[var(--border)]/50 bg-slate-50/50 p-2.5 text-xs transition-colors hover:bg-slate-100 dark:bg-slate-900/30 dark:hover:bg-slate-800/60"
               >
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 size={15} className="text-blue-500 shrink-0" />
+                  <CheckCircle2 size={15} className="shrink-0 text-[var(--primary)]" />
                   <span className="font-medium text-[var(--foreground)]">
                     {english ? 'Activity summary' : 'خلاصه فعالیت‌ها'}
                   </span>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { isHexColor, localeOptions, usePreferences, type AccentColor, type Locale } from '@/components/preferences-provider';
+import { isHexColor, localeOptions, usePreferences, type AccentColor, type ContrastLevel, type ContrastPreferences, type Locale } from '@/components/preferences-provider';
 import { uiMessage } from '@/lib/ui-messages';
 import { useTheme } from '@/components/theme-provider';
 
@@ -18,11 +18,35 @@ const accentOptions: Array<{
   { id: 'violet', hex: '#8b5cf6', message: 'purple' },
 ];
 
+const contrastModes = [
+  { id: 'light', message: 'lightContrast' },
+  { id: 'dark', message: 'darkContrast' },
+] as const;
+
+const contrastOptions: Array<{
+  id: ContrastLevel;
+  message: 'contrastSoft' | 'contrastBalanced' | 'contrastStrong';
+}> = [
+  { id: 'soft', message: 'contrastSoft' },
+  { id: 'balanced', message: 'contrastBalanced' },
+  { id: 'strong', message: 'contrastStrong' },
+];
+
 export function GeneralSettingsTab() {
-  const { locale, setLocale, accentColor, setAccentColor, previewAccentColor } = usePreferences();
+  const {
+    locale,
+    setLocale,
+    accentColor,
+    setAccentColor,
+    previewAccentColor,
+    contrastPreferences,
+    previewContrastPreferences,
+    setContrastPreferences,
+  } = usePreferences();
   const { resolvedTheme } = useTheme();
   const [draftLocale, setDraftLocale] = useState<Locale>(locale);
   const [draftAccent, setDraftAccent] = useState<AccentColor>(accentColor);
+  const [draftContrast, setDraftContrast] = useState<ContrastPreferences>(contrastPreferences);
   const message = (key: Parameters<typeof uiMessage>[1]) => uiMessage(locale, key);
   const previewHex = isHexColor(draftAccent)
     ? draftAccent
@@ -35,6 +59,15 @@ export function GeneralSettingsTab() {
     previewAccentColor(draftAccent);
     return () => previewAccentColor(accentColor);
   }, [accentColor, draftAccent, previewAccentColor]);
+
+  useEffect(() => {
+    previewContrastPreferences(draftContrast);
+    return () => previewContrastPreferences(null);
+  }, [draftContrast, previewContrastPreferences]);
+
+  useEffect(() => {
+    setDraftContrast(contrastPreferences);
+  }, [contrastPreferences]);
 
   return (
     <div className="space-y-6" dir={localeOptions.find((option) => option.id === locale)?.direction}>
@@ -105,6 +138,43 @@ export function GeneralSettingsTab() {
       </section>
 
       <section className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+        <div className="mb-5">
+          <h2 className="text-base font-bold text-foreground">
+            {message('contrastTitle')}
+          </h2>
+          <p className="mt-1 text-xs leading-6 text-muted-foreground">
+            {message('contrastDescription')}
+          </p>
+        </div>
+
+        <div className="grid gap-5 md:grid-cols-2">
+          {contrastModes.map((mode) => (
+            <div key={mode.id}>
+              <h3 className="mb-2 text-sm font-semibold text-foreground">
+                {message(mode.message)}
+              </h3>
+              <div className="flex flex-wrap gap-2" role="group" aria-label={message(mode.message)}>
+                {contrastOptions.map((option) => {
+                  const selected = draftContrast[mode.id] === option.id;
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      aria-pressed={selected}
+                      onClick={() => setDraftContrast((current) => ({ ...current, [mode.id]: option.id }))}
+                      className={`rounded-xl border px-3.5 py-2 text-sm font-semibold transition-colors ${selected ? 'border-primary bg-primary-soft text-primary ring-2 ring-primary/20' : 'border-border bg-background text-foreground hover:border-primary/50'}`}
+                    >
+                      {message(option.message)}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
         <div className="max-w-xl">
           <h2 className="text-base font-bold text-foreground">
             {message('languageTitle')}
@@ -134,7 +204,12 @@ export function GeneralSettingsTab() {
       <div className="flex justify-end">
         <button
           type="button"
-          onClick={() => { setAccentColor(draftAccent); setLocale(draftLocale); }}
+          onClick={() => {
+            setAccentColor(draftAccent);
+            setLocale(draftLocale);
+            setContrastPreferences(draftContrast);
+            previewContrastPreferences(null);
+          }}
           className="rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-sm transition hover:bg-primary-hover"
         >
           {message('saveChanges')}

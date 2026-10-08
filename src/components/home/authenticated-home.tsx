@@ -167,7 +167,7 @@ export function AuthenticatedHome() {
       <section className="overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5">
         <div className="flex flex-col gap-3 border-b border-border/60 pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--primary-soft)] text-[var(--primary)]">
               <Megaphone size={20} />
             </div>
             <div>
@@ -181,7 +181,7 @@ export function AuthenticatedHome() {
           </div>
 
           <div className="flex w-fit items-center gap-1.5 rounded-xl bg-muted/60 px-3 py-1.5 text-xs text-muted-foreground">
-            <Bell size={14} className="text-blue-500" />
+            <Bell size={14} className="text-[var(--primary)]" />
             <span>{MOCK_ANNOUNCEMENTS.length} اطلاعیه فعال</span>
           </div>
         </div>
@@ -229,7 +229,7 @@ export function AuthenticatedHome() {
               key={item.id}
               className={`overflow-hidden rounded-2xl border bg-card transition-all duration-200 ${
                 item.isPinned
-                  ? 'border-blue-500/30 shadow-sm'
+                  ? 'border-[var(--primary)]/30 shadow-sm'
                   : 'border-border shadow-xs'
               }`}
             >
@@ -241,7 +241,7 @@ export function AuthenticatedHome() {
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5">
                     {item.isPinned ? (
-                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-500/10 text-blue-500">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--primary-soft)] text-[var(--primary)]">
                         <Pin size={14} className="rotate-45" />
                       </div>
                     ) : (

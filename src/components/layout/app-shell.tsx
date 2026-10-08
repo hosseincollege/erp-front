@@ -19,7 +19,8 @@ interface AppShellProps {
 }
 
 export function AppShell({ children }: AppShellProps) {
-  const { locale, accentColor } = usePreferences();
+  const { locale, accentColor, contrastPreferences, contrastPreview } = usePreferences();
+  const activeContrast = contrastPreview ?? contrastPreferences;
   const direction = getLocaleDirection(locale);
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [isSidebarLocked, setIsSidebarLocked] = useState(false);
@@ -126,6 +127,8 @@ export function AppShell({ children }: AppShellProps) {
     <div
       dir={direction}
       data-accent={isCustomAccentColor(accentColor) ? 'custom' : accentColor}
+      data-light-contrast={activeContrast.light}
+      data-dark-contrast={activeContrast.dark}
       style={getCustomAccentStyle(accentColor)}
       className="erp-app-shell flex h-screen min-h-0 flex-col overflow-hidden bg-[color:var(--background)] text-[color:var(--foreground)] transition-colors duration-200"
     >

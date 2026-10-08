@@ -374,7 +374,7 @@ export function CompanyTab() {
       const message =
         error instanceof Error
           ? error.message === 'INVALID_LOGO_BACKGROUND'
-            ? uiMessage(locale, 'invalidLogoBackground')
+            ? uiMessage(locale, 'invalidLogoShadow')
             : error.message
           : 'ساختار فایل JSON معتبر نیست یا فیلدهای مورد نیاز یافت نشدند.';
       setJsonValidationMessage({
@@ -1049,7 +1049,7 @@ export function CompanyTab() {
                   </div>
                   <div className="mt-4 max-w-sm">
                     <label htmlFor="logoBackground" className="mb-1.5 block text-xs font-semibold text-muted-foreground">
-                      {message('logoBackgroundTitle')}
+                      {message('logoShadowTitle')}
                     </label>
                     <select
                       id="logoBackground"
@@ -1058,12 +1058,12 @@ export function CompanyTab() {
                       onChange={handleChange}
                       className="w-full rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
                     >
-                      <option value="NONE">{message('backgroundNone')}</option>
-                      <option value="DARK">{message('backgroundDark')}</option>
-                      <option value="LIGHT">{message('backgroundWhite')}</option>
+                      <option value="NONE">{message('shadowNone')}</option>
+                      <option value="DARK">{message('shadowDark')}</option>
+                      <option value="LIGHT">{message('shadowLight')}</option>
                     </select>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {message('logoBackgroundHint')}
+                      {message('logoShadowHint')}
                     </p>
                   </div>
                   {formData.logoUrl ? (
@@ -1073,7 +1073,7 @@ export function CompanyTab() {
                       width={56}
                       height={56}
                       unoptimized
-                      className={`mt-2 h-14 w-14 rounded-lg border object-contain ${formData.logoBackground === 'DARK' ? 'border-zinc-700 bg-zinc-900' : formData.logoBackground === 'LIGHT' ? 'border-zinc-200 bg-white' : 'border-transparent bg-transparent'}`}
+                      className={`mt-2 h-14 w-14 rounded-lg object-contain ${formData.logoBackground === 'DARK' ? 'drop-shadow-[0_0_5px_rgba(0,0,0,0.9)]' : formData.logoBackground === 'LIGHT' ? 'drop-shadow-[0_0_5px_rgba(255,255,255,0.95)]' : 'drop-shadow-none'}`}
                     />
                   ) : null}
                 </div>

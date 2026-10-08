@@ -189,13 +189,13 @@ export function TopHeader({
   const navigateModeTitle = navigateOnClick
     ? message('navigateOn')
     : message('navigateOff');
-  const logoBackground = organizationBranding?.logoBackground ?? 'NONE';
-  const logoBackgroundClassName =
-    logoBackground === 'DARK'
-      ? 'border-zinc-700 bg-zinc-900'
-      : logoBackground === 'LIGHT'
-        ? 'border-zinc-200 bg-white'
-        : 'border-transparent bg-transparent';
+  const logoShadow = organizationBranding?.logoBackground ?? 'NONE';
+  const logoShadowClassName =
+    logoShadow === 'DARK'
+      ? 'drop-shadow-[0_0_5px_rgba(0,0,0,0.9)]'
+      : logoShadow === 'LIGHT'
+        ? 'drop-shadow-[0_0_5px_rgba(255,255,255,0.95)]'
+        : 'drop-shadow-none';
 
   return (
     <header
@@ -365,9 +365,9 @@ export function TopHeader({
           <div
             className={`
               flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden
-              rounded-xl border p-0.5
-              shadow-sm transition-shadow duration-150
-              ${logoBackgroundClassName}
+              rounded-xl
+              transition-[filter] duration-150
+              ${logoShadowClassName}
             `}
           >
             {organizationBranding?.logoUrl ? (
