@@ -1,11 +1,12 @@
 'use client';
 
+import { getCalendarLocale } from '@/lib/calendar';
 import { useCallback, useEffect, useState } from 'react';
 import { Activity, Megaphone, Pin, Radio, RefreshCw } from 'lucide-react';
 import { usePreferences, getLocaleDirection } from '@/components/preferences-provider';
 import { uiMessage } from '@/lib/ui-messages';
-import { notificationsApi, notifyNotificationsChanged, type Announcement } from '@/lib/notifications-api';
-import { systemApi, type ActivityItem, type SystemStatus } from '@/lib/system-api';
+import { notificationsApi, notifyNotificationsChanged, type Announcement } from '@/lib/api/shared/notifications-api';
+import { systemApi, type ActivityItem, type SystemStatus } from '@/lib/api/shared/system-api';
 
 export function DashboardLiveSections() {
   const { locale } = usePreferences();
@@ -35,7 +36,7 @@ export function DashboardLiveSections() {
       try { await notificationsApi.markRead(item.notificationId); notifyNotificationsChanged(); await load(); } catch { /* Dashboard remains readable if marking read fails. */ }
     }
   };
-  const localDate = (value: string) => new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
+  const localDate = (value: string) => new Intl.DateTimeFormat(getCalendarLocale(locale), { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
   const categoryKey = (value: string) => ({ general: 'announcementCategoryGeneral', operations: 'announcementCategoryOperations', finance: 'announcementCategoryFinance', hr: 'announcementCategoryHr', technical: 'announcementCategoryTechnical' } as const)[value as 'general' | 'operations' | 'finance' | 'hr' | 'technical'] ?? 'announcementCategoryGeneral';
 
   return <div dir={getLocaleDirection(locale)} className="space-y-4">

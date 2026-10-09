@@ -127,9 +127,9 @@ const initialReports: ReportItem[] = [
   },
 ];
 
-export default function ReportsPage() {
+export default function ReportsPage({ initialCategory = "ALL" }: { initialCategory?: ReportCategory }) {
   const [reports] = useState<ReportItem[]>(initialReports);
-  const [selectedCategory, setSelectedCategory] = useState<ReportCategory>("ALL");
+  const [selectedCategory, setSelectedCategory] = useState<ReportCategory>(initialCategory);
   const [selectedPeriod, setSelectedPeriod] = useState<ReportPeriod>("THIS_MONTH");
   const [searchQuery, setSearchQuery] = useState("");
 

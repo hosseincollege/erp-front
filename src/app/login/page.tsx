@@ -7,7 +7,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { login } from '@/lib/auth-api';
+import { login } from '@/lib/api/shared/auth-api';
 import { PublicHeader } from '@/components/layout/public-header';
 
 export default function LoginPage() {

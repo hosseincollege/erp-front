@@ -1,5 +1,6 @@
 'use client';
 
+import { getCalendarLocale } from '@/lib/calendar';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState, type MouseEvent } from 'react';
@@ -12,7 +13,7 @@ import {
   notifyNotificationsChanged,
   notificationsApi,
   type AppNotification,
-} from '@/lib/notifications-api';
+} from '@/lib/api/shared/notifications-api';
 import { uiMessage } from '@/lib/ui-messages';
 
 export function NotificationsOverview() {
@@ -102,7 +103,7 @@ export function NotificationsOverview() {
                   {item.body && <span className="mt-0.5 block line-clamp-1 text-xs text-muted-foreground">{getLocalizedNotificationText(item.body, locale)}</span>}
                 </span>
                 <time className="shrink-0 text-[11px] text-muted-foreground" dateTime={item.createdAt}>
-                  {new Intl.DateTimeFormat(locale, { dateStyle: 'short' }).format(new Date(item.createdAt))}
+                  {new Intl.DateTimeFormat(getCalendarLocale(locale), { dateStyle: 'short' }).format(new Date(item.createdAt))}
                 </time>
               </Link>
             </li>

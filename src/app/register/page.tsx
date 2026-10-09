@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 
 import { apiClient } from '@/lib/api-client';
-import { register } from '@/lib/auth-api';
+import { register } from '@/lib/api/shared/auth-api';
 
 interface SetupStatusResponse {
   hasUsers: boolean;

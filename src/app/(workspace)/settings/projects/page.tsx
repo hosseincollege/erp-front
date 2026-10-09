@@ -1,12 +1,13 @@
 'use client';
 
+import { getCalendarLocale } from '@/lib/calendar';
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { Archive, CheckCircle2, CircleDashed, Download, FileJson2, FolderKanban, LoaderCircle, Pencil, Plus, Search, Ticket, Trash2, Upload, Users, X } from 'lucide-react';
 import { getLocaleDirection, usePreferences } from '@/components/preferences-provider';
 import { ApiError } from '@/lib/api-client';
 import { uiMessage } from '@/lib/ui-messages';
-import { projectsApi, type ProjectDraft, type ProjectImportRecord, type ProjectItem, type ProjectStatus } from '@/lib/projects-api';
-import { parseProjectsImportData, PROJECTS_IMPORT_SAMPLE, projectsToExportData } from '@/lib/projects-json';
+import { projectsApi, type ProjectDraft, type ProjectImportRecord, type ProjectItem, type ProjectStatus } from '@/lib/api/shared/projects-api';
+import { parseProjectsImportData, PROJECTS_IMPORT_SAMPLE, projectsToExportData } from './projects-json';
 import type { UiMessage } from '@/lib/languages/types';
 
 const EMPTY_FORM: ProjectDraft = { code: '', name: '', description: '', status: 'ACTIVE' };
@@ -183,7 +184,7 @@ export default function ProjectsSettingsPage() {
               <td className="px-4 py-3"><code dir="ltr" className="rounded-md bg-muted px-2 py-1 font-mono text-xs font-semibold text-primary">{project.code}</code></td>
               <td className="max-w-xs px-4 py-3"><p className="truncate font-semibold text-foreground">{project.name}</p>{project.description && <p className="mt-1 truncate text-xs text-muted-foreground">{project.description}</p>}</td>
               <td className="px-4 py-3"><span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${statusStyle(project.status)}`}>{t(statusLabel(project.status))}</span></td>
-              <td className="px-4 py-3 text-xs text-muted-foreground">{new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(project.updatedAt))}</td>
+              <td className="px-4 py-3 text-xs text-muted-foreground">{new Intl.DateTimeFormat(getCalendarLocale(locale), { dateStyle: 'medium' }).format(new Date(project.updatedAt))}</td>
               <td className="px-4 py-3"><span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground"><Ticket size={13}/>{new Intl.NumberFormat(locale).format(project._count?.tickets ?? 0)}<Users size={13} className="ms-2"/>{new Intl.NumberFormat(locale).format(project._count?.members ?? 0)}</span></td>
               <td className="px-4 py-3"><div className="flex justify-end gap-1"><button type="button" onClick={() => openEditForm(project)} aria-label={`${t('projectsEdit')} ${project.name}`} title={t('projectsEdit')} className="rounded-lg p-2 text-muted-foreground transition hover:bg-primary/10 hover:text-primary"><Pencil size={15}/></button><button type="button" onClick={() => void removeProject(project)} aria-label={`${t('projectsDelete')} ${project.name}`} title={t('projectsDelete')} className="rounded-lg p-2 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"><Trash2 size={15}/></button></div></td>
             </tr>)}</tbody>

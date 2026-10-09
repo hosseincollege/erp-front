@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { isHexColor, localeOptions, usePreferences, type AccentColor, type ContrastLevel, type ContrastPreferences, type Locale } from '@/components/preferences-provider';
+import { isHexColor, localeOptions, usePreferences, type AccentColor, type CalendarSystem, type ContrastLevel, type ContrastPreferences, type Locale } from '@/components/preferences-provider';
 import { uiMessage } from '@/lib/ui-messages';
 import { useTheme } from '@/components/theme-provider';
 
@@ -38,6 +38,7 @@ export function GeneralSettingsContent() {
     accentColor,
     previewAccentColor,
     contrastPreferences,
+    calendar,
     previewContrastPreferences,
     savePreferences,
   } = usePreferences();
@@ -45,6 +46,7 @@ export function GeneralSettingsContent() {
   const [draftLocale, setDraftLocale] = useState<Locale>(locale);
   const [draftAccent, setDraftAccent] = useState<AccentColor>(accentColor);
   const [draftContrast, setDraftContrast] = useState<ContrastPreferences>(contrastPreferences);
+  const [draftCalendar, setDraftCalendar] = useState<CalendarSystem>(calendar);
   const [saveError, setSaveError] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const message = (key: Parameters<typeof uiMessage>[1]) => uiMessage(locale, key);
@@ -68,6 +70,12 @@ export function GeneralSettingsContent() {
   useEffect(() => {
     setDraftContrast(contrastPreferences);
   }, [contrastPreferences]);
+
+  useEffect(() => setDraftCalendar(calendar), [calendar]);
+  useEffect(() => {
+    document.documentElement.dataset.calendar = draftCalendar;
+    return () => { document.documentElement.dataset.calendar = calendar; };
+  }, [calendar, draftCalendar]);
 
   return (
     <div className="space-y-6" dir={localeOptions.find((option) => option.id === locale)?.direction}>
@@ -134,6 +142,18 @@ export function GeneralSettingsContent() {
             <span className="h-4 w-4 rounded-full border border-black/10" style={{ backgroundColor: previewHex }} />
             {previewHex.toUpperCase()}
           </span>
+        </div>
+      </section>
+      <section className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+        <div className="max-w-xl">
+          <h2 className="text-base font-bold text-foreground">{message('calendarTitle')}</h2>
+          <p className="mt-1 text-xs leading-6 text-muted-foreground">{message('calendarDescription')}</p>
+          <label htmlFor="display-calendar" className="mb-1.5 mt-4 block text-xs font-semibold text-muted-foreground">{message('calendarLabel')}</label>
+          <select id="display-calendar" value={draftCalendar} onChange={(event) => setDraftCalendar(event.target.value as CalendarSystem)} className="w-full max-w-sm rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20">
+            <option value="persian">{message('calendarPersian')}</option>
+            <option value="islamic">{message('calendarIslamic')}</option>
+            <option value="gregorian">{message('calendarGregorian')}</option>
+          </select>
         </div>
       </section>
 
@@ -213,6 +233,7 @@ export function GeneralSettingsContent() {
                 locale: draftLocale,
                 accentColor: draftAccent,
                 contrastPreferences: draftContrast,
+                calendar: draftCalendar,
               });
               previewContrastPreferences(null);
             } catch {

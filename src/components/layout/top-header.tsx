@@ -12,20 +12,23 @@ import {
   getCurrentOrganizationId,
   getCurrentUser,
   AuthUser,
-} from '@/lib/auth-api';
+} from '@/lib/api/shared/auth-api';
 import {
   resolveOrganizationLogoUrl,
   settingsApi,
   type OrganizationBranding,
-} from '@/lib/settings-api';
+} from '@/lib/api/settings/settings-api';
 
 import {
   ArrowLeftRight,
   Bell,
+  CircleHelp,
   ChevronLeft,
+  History,
   Lock,
   Monitor,
   Moon,
+  Search,
   ShieldCheck,
   Sun,
   Unlock,
@@ -35,7 +38,7 @@ import { useTheme } from '@/components/theme-provider';
 import { getLocaleDirection, usePreferences } from '@/components/preferences-provider';
 import { uiMessage } from '@/lib/ui-messages';
 import { isAuthenticated } from '@/lib/api-client';
-import { notificationsApi } from '@/lib/notifications-api';
+import { notificationsApi } from '@/lib/api/shared/notifications-api';
 
 interface TopHeaderProps {
   isCollapsed?: boolean;
@@ -339,6 +342,24 @@ export function TopHeader({
           )}
         </Link>
 
+        <Link
+          href="/dashboard#activity-summary"
+          aria-label={message('dashboardActivityTitle')}
+          title={message('dashboardActivityTitle')}
+          className="order-6 flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border)] text-[var(--foreground)]"
+        >
+          <History size={18} />
+        </Link>
+
+        <Link
+          href="/support"
+          aria-label={message('sidebarSupport')}
+          title={message('sidebarSupport')}
+          className="order-7 flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border)] text-[var(--foreground)]"
+        >
+          <CircleHelp size={18} />
+        </Link>
+
         {/* ۳. بخش کپسول حساب کاربری */}
         <button
           id="user-profile-header-btn"
@@ -353,9 +374,10 @@ export function TopHeader({
             transition-all
             ${
               isProfileActive
-                ? 'border-2 border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)] shadow-sm'
+                ? 'border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]'
                 : 'border-[var(--border)] text-[var(--foreground)]'
             }
+            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]/40
           `}
         >
           {/* آواتار کاربر */}
@@ -404,7 +426,7 @@ export function TopHeader({
           href="/dashboard"
           aria-label={message('dashboard')}
           dir="ltr"
-          className="group relative flex h-12 w-12 origin-center items-center justify-center rounded-xl transition-transform duration-150 hover:scale-[1.04] active:scale-[0.96]"
+          className="relative flex h-12 w-12 items-center justify-center rounded-xl"
         >
           <span
             className="absolute right-[calc(100%+0.0625rem)] top-1/2 w-max max-w-[min(24vw,15rem)] -translate-y-1/2 truncate text-left font-black tracking-tight text-[var(--foreground)]"
@@ -417,7 +439,6 @@ export function TopHeader({
             className={`
               flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden
               rounded-xl
-              transition-[filter] duration-150
               ${logoShadowClassName}
             `}
           >
@@ -447,6 +468,23 @@ export function TopHeader({
           </span>
         </Link>
       </div>
+
+      <label
+        dir={direction}
+        className="absolute end-5 top-1/2 z-10 flex w-36 -translate-y-1/2 items-center sm:w-44 md:w-52"
+      >
+        <Search
+          size={16}
+          aria-hidden="true"
+          className="pointer-events-none absolute start-3 text-[var(--muted-foreground)]"
+        />
+        <input
+          type="search"
+          aria-label={message('headerSearch')}
+          placeholder={message('headerSearch')}
+          className="h-9 w-full rounded-xl border border-[var(--border)] bg-transparent ps-9 pe-3 text-sm text-[var(--foreground)] outline-none transition-colors duration-150 placeholder:text-[var(--muted-foreground)] focus:border-[var(--primary)]"
+        />
+      </label>
     </header>
   );
 }

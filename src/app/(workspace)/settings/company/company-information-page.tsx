@@ -25,15 +25,14 @@ import {
   X,
 } from 'lucide-react';
 
-import { getCurrentOrganizationId } from '@/lib/auth-api';
-import { getAccessToken } from '@/lib/api-client';
+import { getCurrentOrganizationId } from '@/lib/api/shared/auth-api';
 import { usePreferences } from '@/components/preferences-provider';
 import { uiMessage } from '@/lib/ui-messages';
 import {
   resolveOrganizationLogoUrl,
   settingsApi,
   type CompanySettings,
-} from '@/lib/settings-api';
+} from '@/lib/api/settings/settings-api';
 
 import {
   companyImportSample,
@@ -398,38 +397,12 @@ export function CompanyInformationPage() {
     setImporting(true);
 
     try {
-      const token = getAccessToken();
-
-      if (!token) {
-        throw new Error('توکن ورود یافت نشد. لطفاً دوباره وارد حساب کاربری شوید.');
-      }
-
-      const response = await fetch('/api/settings/import/company', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(validatedData),
+      if (!orgId) throw new Error('سازمان فعال در نشست کاربر پیدا نشد.');
+      await settingsApi.importOrganization(orgId, {
+        organization: validatedData,
+        branches: [],
+        departments: [],
       });
-
-      const responseBody: unknown = await response.json().catch(() => null);
-
-      if (!response.ok) {
-        const message =
-          responseBody &&
-          typeof responseBody === 'object' &&
-          'message' in responseBody &&
-          typeof responseBody.message === 'string'
-            ? responseBody.message
-            : response.status === 401
-            ? 'دسترسی غیرمجاز است. لطفاً دوباره وارد شوید.'
-            : response.status === 403
-            ? 'شما مجوز انجام این عملیات را ندارید.'
-            : 'ورود اطلاعات شرکت با خطا مواجه شد.';
-
-        throw new Error(message);
-      }
 
       await fetchCompanyData();
       handleCancelJsonImport();

@@ -24,13 +24,16 @@ import {
 import {
   accountingApi,
   ApiClientError,
-} from "@/lib/accounting-api";
+} from "@/lib/api/accounting/accounting-api";
 
 import type {
   AccountingLineItem,
   AccountingPriority,
   CreateInvoicePayload,
 } from "@/types/accounting";
+import { getLocaleDirection, usePreferences } from "@/components/preferences-provider";
+import { uiMessage } from "@/lib/ui-messages";
+import { useAccountingAccess } from "../accounting-access-context";
 
 type InvoiceFormItem = {
   localId: string;
@@ -103,6 +106,8 @@ const inputClass =
   "h-11 w-full rounded-xl border border-border bg-background px-3.5 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20";
 
 export default function NewAccountingInvoicePage() {
+  const { locale } = usePreferences();
+  const { canManage } = useAccountingAccess();
   const router = useRouter();
 
   const [form, setForm] = useState<FormValues>(INITIAL_FORM);
@@ -258,7 +263,7 @@ export default function NewAccountingInvoicePage() {
       if (createdInvoice?.id) {
         router.push(`/accounting/${createdInvoice.id}`);
       } else {
-        router.push("/accounting");
+        router.push("/accounting/invoices");
       }
     } catch (submitError) {
       setError(getErrorMessage(submitError));
@@ -281,9 +286,13 @@ export default function NewAccountingInvoicePage() {
     updateItem(localId, field, value);
   }
 
+  if (!canManage) {
+    return <main dir={getLocaleDirection(locale)} role="alert" className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">{uiMessage(locale, 'accountingManageDenied')}</main>;
+  }
+
   return (
     <main
-      dir="rtl"
+      dir={getLocaleDirection(locale)}
       className="w-full min-w-0 space-y-6 bg-background px-0 py-4 text-foreground md:py-6"
     >
       {/* هدر تمام‌عرض */}
@@ -291,7 +300,7 @@ export default function NewAccountingInvoicePage() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <Link
-              href="/accounting"
+              href="/accounting/invoices"
               className="mb-3 inline-flex items-center gap-2 text-sm text-muted-foreground transition hover:text-primary"
             >
               <ArrowRight size={16} />
@@ -681,7 +690,7 @@ export default function NewAccountingInvoicePage() {
         {/* دکمه‌های عملیاتی */}
         <div className="flex w-full flex-col-reverse gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm sm:flex-row sm:justify-end">
           <Link
-            href="/accounting"
+            href="/accounting/invoices"
             className="inline-flex items-center justify-center rounded-xl border border-border bg-background px-5 py-3 text-sm font-medium text-foreground transition hover:bg-accent"
           >
             انصراف

@@ -9,6 +9,7 @@ Your job is to think proactively, plan features, write robust modular code, and 
 
 ### Preserve the application shell
 - Keep the existing `AppShell`, `TopHeader`, sidebar structure, module navigation, and page frame intact unless the user explicitly asks for a specific structural change.
+- Treat each module's main destination (`href`) as its landing/overview page. Keep its submenu focused on distinct workflows and resources; never duplicate that landing page as an "Overview" submenu item. Put useful overview content on the module landing page itself, and keep submenu entries separate only when they represent genuinely distinct tasks. Apply this rule consistently across every module.
 - Improve settings and module page contents within the current shell; global preferences must be additive and preserve responsive behavior.
 - Persian and RTL remain the default. Apply English/LTR only when the user selects English.
 

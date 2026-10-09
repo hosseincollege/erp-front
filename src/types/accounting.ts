@@ -198,3 +198,8 @@ export interface AccountingDashboardSummary {
   paid: number;
   overdue: number;
 }
+
+export interface AccountingAccess {
+  canView: boolean;
+  canManage: boolean;
+}

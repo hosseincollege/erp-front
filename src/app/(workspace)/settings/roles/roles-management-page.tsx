@@ -17,12 +17,12 @@ import {
   Users,
 } from 'lucide-react';
 
-import { getCurrentOrganizationId } from '@/lib/auth-api';
+import { getCurrentOrganizationId } from '@/lib/api/shared/auth-api';
 import {
   getRoles,
   saveRoles,
   type RoleItem,
-} from '@/lib/settings-api';
+} from '@/lib/api/settings/settings-api';
 import { usePreferences, getLocaleDirection } from '@/components/preferences-provider';
 import { uiMessage } from '@/lib/ui-messages';
 import type { UiMessage } from '@/lib/languages/types';

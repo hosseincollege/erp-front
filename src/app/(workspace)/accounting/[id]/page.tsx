@@ -25,6 +25,7 @@
 
 "use client";
 
+import { getCalendarLocale } from '@/lib/calendar';
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
@@ -47,7 +48,7 @@ import {
 import {
   accountingApi,
   ApiClientError,
-} from "@/lib/accounting-api";
+} from "@/lib/api/accounting/accounting-api";
 
 import type {
   AccountingDetail,
@@ -56,6 +57,8 @@ import type {
   AccountingPriority,
   PaymentMethod,
 } from "@/types/accounting";
+import { getLocaleDirection, usePreferences } from "@/components/preferences-provider";
+import { useAccountingAccess } from "../accounting-access-context";
 
 const STATUS_OPTIONS: Array<{
   value: AccountingDocumentStatus;
@@ -115,7 +118,7 @@ function formatDate(value?: string | null): string {
     return "—";
   }
 
-  return new Intl.DateTimeFormat("fa-IR", {
+  return new Intl.DateTimeFormat(getCalendarLocale("fa-IR"), {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(date);
@@ -229,6 +232,8 @@ function getPaymentMethodLabel(
 }
 
 export default function AccountingInvoiceDetailPage() {
+  const { locale } = usePreferences();
+  const { canManage } = useAccountingAccess();
   const params = useParams<{ id: string }>();
 
   const invoiceId = Array.isArray(params.id)
@@ -500,7 +505,7 @@ export default function AccountingInvoiceDetailPage() {
   if (isLoading) {
     return (
       <main
-        dir="rtl"
+        dir={getLocaleDirection(locale)}
         className="flex min-h-full items-center justify-center bg-[var(--background)] p-6 text-[var(--foreground)]"
       >
         <div className="flex flex-col items-center gap-3 text-[var(--muted-foreground)]">
@@ -520,7 +525,7 @@ export default function AccountingInvoiceDetailPage() {
   if (error || !invoice) {
     return (
       <main
-        dir="rtl"
+        dir={getLocaleDirection(locale)}
         className="flex min-h-full items-center justify-center bg-[var(--background)] p-6 text-[var(--foreground)]"
       >
         <div className="surface-card max-w-md rounded-2xl p-8 text-center">
@@ -547,7 +552,7 @@ export default function AccountingInvoiceDetailPage() {
             </button>
 
             <Link
-              href="/accounting"
+              href="/accounting/invoices"
               className="rounded-xl border border-[var(--border)] bg-[var(--surface-elevated)] px-4 py-2.5 text-sm font-medium text-[var(--foreground)] transition hover:bg-[var(--surface-hover)]"
             >
               بازگشت
@@ -560,14 +565,14 @@ export default function AccountingInvoiceDetailPage() {
 
   return (
     <main
-      dir="rtl"
+      dir={getLocaleDirection(locale)}
       className="min-h-full space-y-6 bg-[var(--background)] p-4 text-[var(--foreground)] md:p-6"
     >
       <section className="surface-card rounded-2xl p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <Link
-              href="/accounting"
+              href="/accounting/invoices"
               className="mb-3 inline-flex items-center gap-2 text-sm text-[var(--muted-foreground)] transition hover:text-[var(--primary)]"
             >
               <ArrowRight size={16} />
@@ -903,7 +908,7 @@ export default function AccountingInvoiceDetailPage() {
           </section>
         </div>
 
-        <aside className="space-y-6">
+        {canManage && <aside className="space-y-6">
           <section className="surface-card rounded-2xl p-5">
             <h2 className="mb-4 text-lg font-bold text-[var(--foreground)]">
               عملیات وضعیت
@@ -1110,7 +1115,7 @@ export default function AccountingInvoiceDetailPage() {
               {actionError}
             </div>
           )}
-        </aside>
+        </aside>}
       </section>
 
       <section className="surface-card rounded-2xl p-5">

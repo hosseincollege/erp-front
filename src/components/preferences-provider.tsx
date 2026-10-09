@@ -12,7 +12,7 @@ import {
   type ReactNode,
 } from 'react';
 import { getLocaleDirection, supportedLocales, type Locale } from '@/lib/languages';
-import { preferencesApi, type SaveUserPreferences } from '@/lib/preferences-api';
+import { preferencesApi, type SaveUserPreferences } from '@/lib/api/shared/preferences-api';
 import { getAccessToken } from '@/lib/api-client';
 
 export {
@@ -25,11 +25,13 @@ export type { Locale } from '@/lib/languages';
 export type AccentColor = 'blue' | 'green' | 'red' | 'amber' | 'violet' | `#${string}`;
 export type ContrastLevel = 'soft' | 'balanced' | 'strong';
 export type ContrastPreferences = { light: ContrastLevel; dark: ContrastLevel };
+export type CalendarSystem = 'persian' | 'islamic' | 'gregorian';
 
 type PreferencesContextValue = {
   locale: Locale;
   accentColor: AccentColor;
   contrastPreferences: ContrastPreferences;
+  calendar: CalendarSystem;
   contrastPreview: ContrastPreferences | null;
   previewContrastPreferences: (preferences: ContrastPreferences | null) => void;
   previewAccentColor: (color: AccentColor) => void;
@@ -39,6 +41,7 @@ type PreferencesContextValue = {
 const LOCALE_KEY = 'erp-locale';
 const ACCENT_KEY = 'erp-accent-color';
 const CONTRAST_KEY = 'erp-shell-contrast';
+const CALENDAR_KEY = 'erp-calendar';
 const DEFAULT_CONTRAST = { light: 'balanced', dark: 'balanced' } as const satisfies ContrastPreferences;
 const DEFAULT_CONTRAST_SNAPSHOT = JSON.stringify(DEFAULT_CONTRAST);
 const accentStyleProperties = [
@@ -131,6 +134,10 @@ function applyLocale(locale: Locale) {
   root.dataset.locale = locale;
 }
 
+function applyCalendar(calendar: CalendarSystem) {
+  document.documentElement.dataset.calendar = calendar;
+}
+
 function applyAccentColor(color: AccentColor) {
   document.documentElement.dataset.accent = color;
   const shell = document.querySelector<HTMLElement>('.erp-app-shell');
@@ -166,6 +173,14 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     readContrastSnapshot,
     () => DEFAULT_CONTRAST_SNAPSHOT,
   );
+  const calendar = useSyncExternalStore<CalendarSystem>(
+    subscribePreferences,
+    () => {
+      const saved = window.localStorage.getItem(CALENDAR_KEY);
+      return saved === 'islamic' || saved === 'gregorian' || saved === 'persian' ? saved : 'persian';
+    },
+    (): CalendarSystem => 'persian',
+  );
   const contrastPreferences = useMemo(
     () => parseContrastPreferences(contrastSnapshot),
     [contrastSnapshot],
@@ -174,8 +189,9 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     applyLocale(locale);
+    applyCalendar(calendar);
     applyAccentColor(accentColor);
-  }, [locale, accentColor]);
+  }, [locale, accentColor, calendar]);
 
   const loadUserPreferences = useCallback(async () => {
     if (!getAccessToken()) return;
@@ -187,6 +203,8 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
         light: saved.lightContrast,
         dark: saved.darkContrast,
       }));
+      window.localStorage.setItem(CALENDAR_KEY, saved.calendar);
+      applyCalendar(saved.calendar);
       window.dispatchEvent(new Event('erp-preferences-changed'));
     } catch (error) {
       console.error('Could not load user preferences:', error);
@@ -198,6 +216,8 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       window.localStorage.removeItem(LOCALE_KEY);
       window.localStorage.removeItem(ACCENT_KEY);
       window.localStorage.removeItem(CONTRAST_KEY);
+      window.localStorage.removeItem(CALENDAR_KEY);
+      applyCalendar('persian');
       window.dispatchEvent(new Event('erp-preferences-changed'));
     };
     const handleAuthStorageChange = (event: StorageEvent) => {
@@ -232,6 +252,8 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       light: saved.lightContrast,
       dark: saved.darkContrast,
     }));
+    window.localStorage.setItem(CALENDAR_KEY, saved.calendar);
+    applyCalendar(saved.calendar);
     window.dispatchEvent(new Event('erp-preferences-changed'));
   }, []);
 
@@ -240,6 +262,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       locale,
       accentColor,
       contrastPreferences,
+      calendar,
       contrastPreview,
       previewContrastPreferences,
       previewAccentColor,
@@ -249,6 +272,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       locale,
       accentColor,
       contrastPreferences,
+      calendar,
       contrastPreview,
       previewContrastPreferences,
       previewAccentColor,

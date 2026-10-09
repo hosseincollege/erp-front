@@ -20,10 +20,10 @@ import Link from 'next/link';
 import { getLocaleDirection, usePreferences } from '@/components/preferences-provider';
 import { uiMessage } from '@/lib/ui-messages';
 
-import { getCurrentOrganizationId } from '@/lib/auth-api';
-import { settingsApi, type UserItem } from '@/lib/settings-api';
+import { getCurrentOrganizationId } from '@/lib/api/shared/auth-api';
+import { settingsApi, type UserItem } from '@/lib/api/settings/settings-api';
 
-import { UserFormModal, type UserFormData } from './components/user-form-modal';
+import { UserFormModal, type UserFormData } from './user-form-modal';
 import { parseUsersToItems, usersImportSample } from './users-json';
 
 const emptyFormData: UserFormData = {

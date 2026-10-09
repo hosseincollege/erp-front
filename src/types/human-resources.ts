@@ -162,6 +162,35 @@ export interface LeaveRequest {
   statusHistory?: LeaveRequestStatusHistory[];
 }
 
+export interface BusinessTripRequest {
+  id: string;
+  organizationId: string;
+  employeeId: string;
+  reviewedById?: string | null;
+  destination: string;
+  purpose: string;
+  startAt: string;
+  endAt: string;
+  estimatedCost?: string | number | null;
+  currency: string;
+  status: LeaveRequestStatus;
+  reviewerNote?: string | null;
+  reviewedAt?: string | null;
+  cancelledAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  employee?: Pick<Employee, "id" | "employeeCode" | "firstName" | "lastName">;
+}
+
+export interface CreateBusinessTripRequestPayload {
+  destination: string;
+  purpose: string;
+  startAt: string;
+  endAt: string;
+  estimatedCost?: number;
+  currency?: string;
+}
+
 /**
  * خروجی endpoint:
  * GET /human-resources/dashboard

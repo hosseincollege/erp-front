@@ -35,8 +35,8 @@ import {
   settingsApi,
   type BranchItem,
   type DepartmentItem,
-} from '@/lib/settings-api';
-import { getCurrentOrganizationId } from '@/lib/auth-api';
+} from '@/lib/api/settings/settings-api';
+import { getCurrentOrganizationId } from '@/lib/api/shared/auth-api';
 import { DepartmentOverviewPanel } from './department-overview-panel';
 import {
   organizationStructureImportSample,
@@ -526,9 +526,9 @@ export function OrganizationStructurePage() {
     const importedData = parseOrganizationStructureImportData(rawData);
     const payload = organizationStructureToApiPayload(importedData);
 
-    await settingsApi.importOrganizationStructure({
-      ...payload,
-      organizationId,
+    await settingsApi.importOrganization(organizationId, {
+      branches: payload.branches,
+      departments: payload.departments,
     });
 
     await loadOrganizationStructure();

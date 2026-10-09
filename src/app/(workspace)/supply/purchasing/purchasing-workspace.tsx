@@ -1,6 +1,6 @@
 /**
  * مسیر فایل:
- * src/app/(workspace)/purchases/page.tsx
+ * src/app/(workspace)/supply/purchasing/purchasing-workspace.tsx
  *
  * هدف:
  * داشبورد بهینه‌شده مدیریت تدارکات و زنجیره تأمین بدون هدر سنگین مقدماتی:
@@ -12,7 +12,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { DemoJsonToolbar, useDemoDataset } from "@/lib/demo-json-toolbar";
+import { DemoJsonToolbar, useDemoDataset } from "@/components/demo-json-toolbar";
 import {
   ShoppingCart,
   Truck,

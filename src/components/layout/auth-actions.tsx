@@ -11,7 +11,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, LogOut, UserCircle2 } from 'lucide-react';
-import { logout } from '@/lib/auth-api';
+import { logout } from '@/lib/api/shared/auth-api';
 
 type AuthActionsProps = {
   userName?: string | null;

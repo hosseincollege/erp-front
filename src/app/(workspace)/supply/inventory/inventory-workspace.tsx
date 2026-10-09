@@ -1,6 +1,6 @@
 /**
  * مسیر فایل:
- * src/app/(workspace)/inventory/page.tsx
+ * src/app/(workspace)/supply/inventory/inventory-workspace.tsx
  *
  * هدف:
  * داشبورد جامع مدیریت انبار و موجودی کالا هماهنگ با طراحی مینیمال و یکپارچه:
@@ -11,6 +11,7 @@
 
 "use client";
 
+import { getCalendarLocale } from '@/lib/calendar';
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Package,
@@ -28,8 +29,8 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 
-import { inventoryApi } from "@/lib/inventory-api";
-import { DemoJsonToolbar } from "@/lib/demo-json-toolbar";
+import { inventoryApi } from "@/lib/api/supply/inventory-api";
+import { DemoJsonToolbar } from "@/components/demo-json-toolbar";
 import { usePreferences } from "@/components/preferences-provider";
 import { uiMessage } from "@/lib/ui-messages";
 import type {
@@ -74,7 +75,7 @@ function formatDate(value?: string | null) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "—";
 
-  return new Intl.DateTimeFormat("fa-IR", {
+  return new Intl.DateTimeFormat(getCalendarLocale("fa-IR"), {
     year: "numeric",
     month: "short",
     day: "numeric",

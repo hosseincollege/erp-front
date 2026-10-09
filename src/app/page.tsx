@@ -12,7 +12,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { PublicLanding } from '@/components/home/public-landing';
-import { isUserAuthenticated } from '@/lib/auth-api';
+import { isUserAuthenticated } from '@/lib/api/shared/auth-api';
 
 export default function HomePage() {
   const router = useRouter();

@@ -11,7 +11,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 
 import { AppShell } from '@/components/layout/app-shell'
-import { getCurrentUser, isUserAuthenticated } from '@/lib/auth-api'
+import { getCurrentUser, isUserAuthenticated } from '@/lib/api/shared/auth-api'
 
 type WorkspaceLayoutProps = {
   children: React.ReactNode

@@ -9,13 +9,15 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { getCurrentUser, logout, AuthUser } from '@/lib/auth-api';
+import { getCurrentUser, logout, AuthUser } from '@/lib/api/shared/auth-api';
 import { getLocaleDirection, usePreferences } from '@/components/preferences-provider';
 import { uiMessage } from '@/lib/ui-messages';
 import type { UiMessage } from '@/lib/languages/types';
-import { projectsApi, type SupportProjectItem } from '@/lib/projects-api';
-import { humanResourcesApi } from '@/lib/human-resources-api';
+import { projectsApi, type SupportProjectItem } from '@/lib/api/shared/projects-api';
+import { humanResourcesApi } from '@/lib/api/hr/human-resources-api';
 import type { HrAccess } from '@/types/human-resources';
+import { accountingApi } from '@/lib/api/accounting/accounting-api';
+import type { AccountingAccess } from '@/types/accounting';
 
 import {
   Activity,
@@ -56,31 +58,33 @@ const navigation: NavigationItem[] = [
     icon: Calculator,
     href: '/accounting',
     sub: [
-      { titleKey: 'sidebarLedger', href: '/accounting/ledger' },
-      { titleKey: 'sidebarAccountingEntries', href: '/accounting/vouchers' },
-      { titleKey: 'sidebarBalanceSheet', href: '/accounting/balance-sheet' },
+      { titleKey: 'accountingChartOfAccounts', href: '/accounting/accounts' },
+      { titleKey: 'accountingEntriesLedger', href: '/accounting/vouchers' },
+      { titleKey: 'accountingInvoices', href: '/accounting/invoices' },
+      { titleKey: 'accountingReceiptsPayments', href: '/accounting/payments' },
+      { titleKey: 'sidebarFinancialReports', href: '/accounting/reports' },
     ],
   },
   {
-    id: 'commercial',
+    id: 'commerce',
     titleKey: 'sidebarCommercial',
     icon: UsersRound,
-    href: '/commercial',
+    href: '/commerce',
     sub: [
-      { titleKey: 'sidebarCustomers', href: '/commercial/customers' },
-      { titleKey: 'sidebarSales', href: '/commercial/sales' },
+      { titleKey: 'sidebarCustomers', href: '/commerce/customers' },
+      { titleKey: 'sidebarSales', href: '/commerce/sales' },
     ],
   },
   {
-    id: 'hr',
+    id: 'human-resources',
     titleKey: 'sidebarHumanResources',
     icon: BriefcaseBusiness,
-    href: '/hr',
+    href: '/human-resources',
     sub: [
-      { titleKey: 'sidebarEmployeeRecords', href: '/hr/employees' },
-      { titleKey: 'sidebarAttendance', href: '/hr/attendance' },
-      { titleKey: 'sidebarLeaveRequests', href: '/hr/leaves' },
-      { titleKey: 'sidebarPayroll', href: '/hr/payroll' },
+      { titleKey: 'sidebarEmployeeRecords', href: '/human-resources/employees' },
+      { titleKey: 'sidebarAttendance', href: '/human-resources/attendance' },
+      { titleKey: 'sidebarLeaveRequests', href: '/human-resources/leaves' },
+      { titleKey: 'sidebarPayroll', href: '/human-resources/payroll' },
     ],
   },
   {
@@ -100,7 +104,9 @@ const navigation: NavigationItem[] = [
     href: '/reports',
     sub: [
       { titleKey: 'sidebarFinancialReports', href: '/reports/financial' },
-      { titleKey: 'sidebarOperationalReports', href: '/reports/operational' },
+      { titleKey: 'sidebarSalesReports', href: '/reports/sales' },
+      { titleKey: 'sidebarHrReports', href: '/reports/hr' },
+      { titleKey: 'sidebarInventoryReports', href: '/reports/inventory' },
     ],
   },
   {
@@ -116,13 +122,14 @@ const navigation: NavigationItem[] = [
       { titleKey: 'sidebarRolesPermissions', href: '/settings/roles' },
       { titleKey: 'sidebarUserAccounts', href: '/settings/accounts' },
       { titleKey: 'sidebarProjectManagement', href: '/settings/projects' },
+      { titleKey: 'sidebarDatabase', href: '/settings/database' },
     ],
   },
   {
-    id: 'tickets',
+    id: 'support',
     titleKey: 'sidebarSupport',
     icon: Ticket,
-    href: '/tickets',
+    href: '/support',
     sub: [],
   },
 ];
@@ -153,6 +160,7 @@ export function Sidebar({
   const [user, setUser] = useState<AuthUser | null>(null);
   const [supportProjects, setSupportProjects] = useState<SupportProjectItem[]>([]);
   const [hrAccess, setHrAccess] = useState<HrAccess | null>(null);
+  const [accountingAccess, setAccountingAccess] = useState<AccountingAccess | null>(null);
 
   const isProfileRoute = pathname === '/profile' || pathname.startsWith('/profile/');
   const isHomeRoute = pathname === '/' || pathname === '/dashboard' || pathname.startsWith('/dashboard/');
@@ -165,6 +173,7 @@ export function Sidebar({
       if (!currentUser) {
         setSupportProjects([]);
         setHrAccess(null);
+        setAccountingAccess(null);
         return;
       }
       projectsApi.getSupportProjects()
@@ -173,6 +182,9 @@ export function Sidebar({
       humanResourcesApi.getAccess()
         .then((access) => { if (requestId === supportProjectsRequest.current) setHrAccess(access); })
         .catch(() => { if (requestId === supportProjectsRequest.current) setHrAccess(null); });
+      accountingApi.getAccess()
+        .then((access) => { if (requestId === supportProjectsRequest.current) setAccountingAccess(access); })
+        .catch(() => { if (requestId === supportProjectsRequest.current) setAccountingAccess(null); });
     };
     refreshUser();
     window.addEventListener('auth:logout', refreshUser);
@@ -281,18 +293,19 @@ export function Sidebar({
   };
 
   const localizedNavigation = navigation
-    .filter((item) => item.id !== 'hr' || Boolean(hrAccess?.canViewEmployees || hrAccess?.canViewLeaves || hrAccess?.canViewAttendance || hrAccess?.canViewPayroll || hrAccess?.canRequestLeave || hrAccess?.employeeId))
+    .filter((item) => item.id !== 'accounting' || Boolean(accountingAccess?.canView))
+    .filter((item) => item.id !== 'human-resources' || Boolean(hrAccess?.canViewEmployees || hrAccess?.canViewLeaves || hrAccess?.canViewAttendance || hrAccess?.canViewPayroll || hrAccess?.canRequestLeave || hrAccess?.employeeId))
     .map((item) => ({
     ...item,
     title: message(item.titleKey),
-    sub: item.id === 'tickets'
-      ? supportProjects.map((project) => ({ title: project.name, href: `/tickets/projects/${encodeURIComponent(project.id)}` }))
-      : item.id === 'hr'
-        ? item.sub?.filter((subItem) => subItem.href === '/hr/employees'
+    sub: item.id === 'support'
+      ? supportProjects.map((project) => ({ title: project.name, href: `/support/projects/${encodeURIComponent(project.id)}` }))
+      : item.id === 'human-resources'
+        ? item.sub?.filter((subItem) => subItem.href === '/human-resources/employees'
           ? Boolean(hrAccess?.canViewEmployees || hrAccess?.employeeId)
-          : subItem.href === '/hr/leaves'
+          : subItem.href === '/human-resources/leaves'
             ? Boolean(hrAccess?.canViewLeaves || hrAccess?.canRequestLeave)
-            : subItem.href === '/hr/attendance'
+            : subItem.href === '/human-resources/attendance'
               ? Boolean(hrAccess?.canViewAttendance || hrAccess?.employeeId)
               : Boolean(hrAccess?.canViewPayroll || hrAccess?.employeeId))
           .map((subItem) => ({ ...subItem, title: subItem.titleKey ? message(subItem.titleKey) : subItem.title }))
@@ -472,7 +485,7 @@ export function Sidebar({
                 })
               ) : (
                 <p className="px-3 py-2.5 text-sm text-muted-foreground/70">
-                  {activeGroup.id === 'tickets' ? message('supportNoProjects') : message('sidebarNoSubmenu')}
+                  {activeGroup.id === 'support' ? message('supportNoProjects') : message('sidebarNoSubmenu')}
                 </p>
               )}
             </div>
