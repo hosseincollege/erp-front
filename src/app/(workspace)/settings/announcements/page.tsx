@@ -1,0 +1,87 @@
+'use client';
+
+import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { Archive, Megaphone, Pin, Send } from 'lucide-react';
+import { getLocaleDirection, localeOptions, usePreferences, type Locale } from '@/components/preferences-provider';
+import { notificationsApi, type Announcement } from '@/lib/notifications-api';
+import { uiMessage } from '@/lib/ui-messages';
+
+export default function AnnouncementsSettingsPage() {
+  const { locale } = usePreferences();
+  const t = (key: Parameters<typeof uiMessage>[1]) => uiMessage(locale, key);
+  const [canManage, setCanManage] = useState(false);
+  const [items, setItems] = useState<Announcement[]>([]);
+  const [title, setTitle] = useState('');
+  const [summary, setSummary] = useState('');
+  const [body, setBody] = useState('');
+  const [contentLocale, setContentLocale] = useState(locale);
+  const [isPinned, setIsPinned] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(false);
+
+  const load = useCallback(async () => {
+    setError(false);
+    try {
+      const [access, announcements] = await Promise.all([
+        notificationsApi.getAnnouncementAccess(),
+        notificationsApi.getAnnouncements(),
+      ]);
+      setCanManage(access.canManage);
+      setItems(announcements);
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { void load(); }, [load]);
+
+  const publish = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!title.trim() || !body.trim() || saving) return;
+    setSaving(true);
+    setError(false);
+    try {
+      await notificationsApi.createAnnouncement({
+        title: title.trim(), summary: summary.trim(), body: body.trim(),
+        locale: contentLocale, isPinned,
+      });
+      setTitle(''); setSummary(''); setBody(''); setIsPinned(false);
+      await load();
+    } catch {
+      setError(true);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const archive = async (item: Announcement) => {
+    if (!window.confirm(t('announcementArchiveConfirm'))) return;
+    try {
+      await notificationsApi.archiveAnnouncement(item.id);
+      setItems((current) => current.filter((entry) => entry.id !== item.id));
+    } catch { setError(true); }
+  };
+
+  return <main dir={getLocaleDirection(locale)} className="mx-auto max-w-5xl space-y-5">
+    <header className="flex items-center gap-3 rounded-2xl border border-border bg-card p-5">
+      <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary"><Megaphone size={21}/></span>
+      <div><h1 className="text-lg font-bold">{t('announcementManagementTitle')}</h1><p className="mt-1 text-sm text-muted-foreground">{t('announcementManagementDescription')}</p></div>
+    </header>
+    {error && <div role="alert" className="flex items-center justify-between rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"><span>{t('announcementLoadFailed')}</span><button onClick={() => void load()} className="font-semibold underline">{t('announcementRetry')}</button></div>}
+    {canManage ? <form onSubmit={publish} className="space-y-4 rounded-2xl border border-border bg-card p-5">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <label className="space-y-1.5 text-sm"><span>{t('announcementTitleLabel')}</span><input required maxLength={180} value={title} onChange={(e) => setTitle(e.target.value)} className="w-full rounded-xl border border-border bg-background px-3 py-2.5" /></label>
+        <label className="space-y-1.5 text-sm"><span>{t('languageLabel')}</span><select value={contentLocale} onChange={(e) => setContentLocale(e.target.value as Locale)} className="w-full rounded-xl border border-border bg-background px-3 py-2.5">{localeOptions.map((option) => <option key={option.id} value={option.id}>{option.name}</option>)}</select></label>
+      </div>
+      <label className="block space-y-1.5 text-sm"><span>{t('announcementSummaryLabel')}</span><input maxLength={300} value={summary} onChange={(e) => setSummary(e.target.value)} className="w-full rounded-xl border border-border bg-background px-3 py-2.5" /></label>
+      <label className="block space-y-1.5 text-sm"><span>{t('announcementBodyLabel')}</span><textarea required rows={5} value={body} onChange={(e) => setBody(e.target.value)} className="w-full rounded-xl border border-border bg-background px-3 py-2.5" /></label>
+      <div className="flex flex-wrap items-center justify-between gap-3"><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={isPinned} onChange={(e) => setIsPinned(e.target.checked)} /><Pin size={15}/>{t('announcementPinned')}</label><button disabled={saving} className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-60"><Send size={15}/>{saving ? t('announcementPublishing') : t('announcementPublish')}</button></div>
+    </form> : <p className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm text-muted-foreground">{t('announcementPermissionNotice')}</p>}
+    <section className="space-y-3">
+      {loading ? <p className="p-5 text-center text-sm text-muted-foreground">{t('notificationsLoading')}</p> : items.length === 0 ? <p className="rounded-xl border border-border bg-card p-5 text-sm text-muted-foreground">{t('announcementEmpty')}</p> : items.map((item) => <article key={item.id} className="flex items-start justify-between gap-4 rounded-2xl border border-border bg-card p-4"><div className="min-w-0"><h2 className="font-semibold">{item.title} {item.isPinned && <Pin size={14} className="inline text-primary"/>}</h2>{item.summary && <p className="mt-1 text-sm text-muted-foreground">{item.summary}</p>}<p className="mt-2 whitespace-pre-wrap text-sm leading-6">{item.body}</p></div>{canManage && <button type="button" onClick={() => void archive(item)} title={t('announcementArchive')} aria-label={t('announcementArchive')} className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-destructive"><Archive size={17}/></button>}</article>)}
+    </section>
+  </main>;
+}

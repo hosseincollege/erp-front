@@ -1,4 +1,4 @@
-// Frontend — src/app/(workspace)/settings/general/company-tab.tsx
+// صفحه اطلاعات و تنظیمات شرکت.
 // رابط کاربری اطلاعات شرکت: حالت نمایش/ویرایش به همراه اکشن‌های سریع JSON در هدر.
 // اصلاح‌شده: اتصال توکن احراز هویت معتبر از api-client و مدیریت خطاهای ۴۰۱، ۴۰۳ و اعتبارسنجی سازمان.
 
@@ -69,7 +69,7 @@ function downloadJsonFile(fileName: string, data: unknown) {
   URL.revokeObjectURL(objectUrl);
 }
 
-export function CompanyTab() {
+export function CompanyInformationPage() {
   const { locale } = usePreferences();
   const message = (key: Parameters<typeof uiMessage>[1]) => uiMessage(locale, key);
   const [data, setData] = useState<CompanySettings>({

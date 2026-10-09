@@ -1,5 +1,5 @@
-import { OrganizationTab } from '../general/organization-tab';
+import { OrganizationStructurePage } from './organization-structure-page';
 
 export default function OrganizationSettingsPage() {
-  return <div dir="rtl" className="w-full"><OrganizationTab /></div>;
+  return <div className="w-full"><OrganizationStructurePage /></div>;
 }

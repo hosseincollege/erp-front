@@ -11,6 +11,14 @@ import type {
 } from '@/types/inventory';
 
 export const inventoryApi = {
+  createProduct: async (input: { sku: string; name: string; unit: string; description?: string }): Promise<InventoryProduct> => {
+    return apiClient.post<InventoryProduct, typeof input>('/inventory/products', input);
+  },
+
+  createWarehouse: async (input: { code: string; name: string; branchId?: string }): Promise<InventoryWarehouse> => {
+    return apiClient.post<InventoryWarehouse, typeof input>('/inventory/warehouses', input);
+  },
+
   getSummary: async (): Promise<InventorySummary> => {
     return apiClient.get<InventorySummary>(
       '/inventory/summary',

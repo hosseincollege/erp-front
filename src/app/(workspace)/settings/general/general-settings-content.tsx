@@ -32,21 +32,21 @@ const contrastOptions: Array<{
   { id: 'strong', message: 'contrastStrong' },
 ];
 
-export function GeneralSettingsTab() {
+export function GeneralSettingsContent() {
   const {
     locale,
-    setLocale,
     accentColor,
-    setAccentColor,
     previewAccentColor,
     contrastPreferences,
     previewContrastPreferences,
-    setContrastPreferences,
+    savePreferences,
   } = usePreferences();
   const { resolvedTheme } = useTheme();
   const [draftLocale, setDraftLocale] = useState<Locale>(locale);
   const [draftAccent, setDraftAccent] = useState<AccentColor>(accentColor);
   const [draftContrast, setDraftContrast] = useState<ContrastPreferences>(contrastPreferences);
+  const [saveError, setSaveError] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const message = (key: Parameters<typeof uiMessage>[1]) => uiMessage(locale, key);
   const previewHex = isHexColor(draftAccent)
     ? draftAccent
@@ -204,17 +204,29 @@ export function GeneralSettingsTab() {
       <div className="flex justify-end">
         <button
           type="button"
-          onClick={() => {
-            setAccentColor(draftAccent);
-            setLocale(draftLocale);
-            setContrastPreferences(draftContrast);
-            previewContrastPreferences(null);
+          disabled={isSaving}
+          onClick={async () => {
+            setIsSaving(true);
+            setSaveError(false);
+            try {
+              await savePreferences({
+                locale: draftLocale,
+                accentColor: draftAccent,
+                contrastPreferences: draftContrast,
+              });
+              previewContrastPreferences(null);
+            } catch {
+              setSaveError(true);
+            } finally {
+              setIsSaving(false);
+            }
           }}
           className="rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-sm transition hover:bg-primary-hover"
         >
-          {message('saveChanges')}
+          {isSaving ? message('preferencesSaving') : message('saveChanges')}
         </button>
       </div>
+      {saveError && <p role="alert" className="text-sm text-red-600">{message('preferencesSaveFailed')}</p>}
     </div>
   );
 }

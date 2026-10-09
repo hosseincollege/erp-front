@@ -34,6 +34,8 @@ import {
 import { useTheme } from '@/components/theme-provider';
 import { getLocaleDirection, usePreferences } from '@/components/preferences-provider';
 import { uiMessage } from '@/lib/ui-messages';
+import { isAuthenticated } from '@/lib/api-client';
+import { notificationsApi } from '@/lib/notifications-api';
 
 interface TopHeaderProps {
   isCollapsed?: boolean;
@@ -59,10 +61,54 @@ export function TopHeader({
   const [user, setUser] = useState<AuthUser | null>(null);
   const [organizationBranding, setOrganizationBranding] =
     useState<OrganizationBranding | null>(null);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const { theme, setTheme } = useTheme();
   const { locale } = usePreferences();
+  const direction = getLocaleDirection(locale);
   const english = locale !== 'fa';
   const message = (key: Parameters<typeof uiMessage>[1]) => uiMessage(locale, key);
+
+  useEffect(() => {
+    let isCurrent = true;
+
+    const refreshUnreadCount = () => {
+      if (!isAuthenticated()) {
+        setUnreadNotificationCount(0);
+        return;
+      }
+      void notificationsApi
+        .getSummary()
+        .then((summary) => {
+          if (isCurrent) setUnreadNotificationCount(summary.unreadCount);
+        })
+        .catch(() => {
+          if (isCurrent) setUnreadNotificationCount(0);
+        });
+    };
+
+    refreshUnreadCount();
+    const refreshOnFocus = () => {
+      if (document.visibilityState === 'visible') refreshUnreadCount();
+    };
+    const refreshTimer = window.setInterval(refreshUnreadCount, 60_000);
+    window.addEventListener('notifications-updated', refreshUnreadCount);
+    window.addEventListener('auth:login', refreshUnreadCount);
+    window.addEventListener('auth:logout', refreshUnreadCount);
+    window.addEventListener('storage', refreshUnreadCount);
+    window.addEventListener('focus', refreshOnFocus);
+    document.addEventListener('visibilitychange', refreshOnFocus);
+
+    return () => {
+      isCurrent = false;
+      window.clearInterval(refreshTimer);
+      window.removeEventListener('notifications-updated', refreshUnreadCount);
+      window.removeEventListener('auth:login', refreshUnreadCount);
+      window.removeEventListener('auth:logout', refreshUnreadCount);
+      window.removeEventListener('storage', refreshUnreadCount);
+      window.removeEventListener('focus', refreshOnFocus);
+      document.removeEventListener('visibilitychange', refreshOnFocus);
+    };
+  }, []);
 
   /*
    * دریافت اطلاعات کاربر و اعمال تم ذخیره‌شده
@@ -199,7 +245,7 @@ export function TopHeader({
 
   return (
     <header
-      dir={getLocaleDirection(locale)}
+      dir={direction}
       className="
         sticky top-0 z-50 relative flex h-16
         items-center border-b border-[var(--border)]
@@ -209,9 +255,9 @@ export function TopHeader({
     >
       {/* کنترل‌های سایدبار، زنگوله و تم، سپس کپسول حساب کاربری */}
       <div
-        dir="rtl"
+        dir={direction}
         className="
-          absolute right-5 top-1/2 z-10
+          absolute start-5 top-1/2 z-10
           flex -translate-y-1/2
           items-center gap-2
         "
@@ -279,14 +325,19 @@ export function TopHeader({
           {themeIcon}
         </button>
 
-        <button
-          type="button"
+        <Link
+          href="/notifications"
           aria-label={message('notifications')}
+          title={message('notificationsTitle')}
           className="order-5 relative flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border)] text-[var(--foreground)] transition-all duration-200 hover:bg-slate-100 dark:hover:bg-slate-800/80"
         >
           <Bell size={18} />
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-full border-2 border-[var(--surface)] bg-red-500" />
-        </button>
+          {unreadNotificationCount > 0 && (
+            <span className="absolute -end-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold leading-none text-white ring-2 ring-[var(--surface)]">
+              {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+            </span>
+          )}
+        </Link>
 
         {/* ۳. بخش کپسول حساب کاربری */}
         <button
@@ -298,7 +349,7 @@ export function TopHeader({
             order-3 flex cursor-pointer select-none
             items-center gap-2.5
             rounded-2xl border
-            p-1.5 pl-4 pr-1.5
+            p-1.5 pe-4 ps-1.5
             transition-all
             ${
               isProfileActive
@@ -325,7 +376,7 @@ export function TopHeader({
           </div>
 
           {/* نام و نقش */}
-          <div className="pointer-events-none text-right">
+          <div className="pointer-events-none text-start">
             <p className="text-xs font-bold leading-tight">
               {user?.name || message('admin')}
             </p>

@@ -1,5 +1,5 @@
-import { UsersTab } from '../users/users-tab';
+import { UserAccountsPage } from './user-accounts-page';
 
 export default function AccountsSettingsPage() {
-  return <div dir="rtl" className="w-full"><UsersTab /></div>;
+  return <div dir="rtl" className="w-full"><UserAccountsPage /></div>;
 }

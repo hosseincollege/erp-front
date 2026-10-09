@@ -1,4 +1,4 @@
-// File: src/app/(workspace)/settings/general/organization-tab.tsx
+// صفحه مدیریت ساختار سازمانی.
 // Frontend - Next.js
 // مدیریت یکپارچه ساختار سازمانی: شعب، دپارتمان‌ها، خروجی و درون‌ریزی JSON.
 
@@ -12,6 +12,7 @@ import {
   type ChangeEvent,
   type FormEvent,
 } from 'react';
+import Link from 'next/link';
 import {
   Building,
   Building2,
@@ -78,7 +79,7 @@ const INITIAL_DEPARTMENT_FORM: DepartmentFormState = {
   branchId: '',
 };
 
-export function OrganizationTab() {
+export function OrganizationStructurePage() {
   const [branches, setBranches] = useState<BranchItem[]>([]);
   const [departments, setDepartments] = useState<
     DepartmentWithDisplayFields[]
@@ -184,8 +185,20 @@ export function OrganizationTab() {
           ? (departmentsResult as DepartmentWithDisplayFields[])
           : [],
       );
+
+      if (window.location.hash.startsWith('#branch-')) {
+        const branchId = decodeURIComponent(window.location.hash.slice('#branch-'.length));
+        if (branchesResult.some((branch) => branch.id === branchId)) {
+          setSelectedBranchId(branchId);
+        }
+      } else if (window.location.hash.startsWith('#department-')) {
+        const departmentId = decodeURIComponent(window.location.hash.slice('#department-'.length));
+        if (departmentsResult.some((department) => department.id === departmentId)) {
+          setSelectedDepartmentId(departmentId);
+        }
+      }
     } catch (error) {
-      console.error('Failed to load organization structure:', error);
+      console.error('Failed to load Organization structure:', error);
 
       showToast(
         'error',
@@ -226,14 +239,14 @@ export function OrganizationTab() {
     }
 
     const exportData = organizationStructureToExportData(branches, departments);
-    downloadJsonFile(exportData, 'organization-structure.json');
+    downloadJsonFile(exportData, 'Organization-structure.json');
     showToast('success', 'فایل ساختار سازمانی با موفقیت دانلود شد.');
   };
 
   const handleDownloadImportSample = () => {
     downloadJsonFile(
       organizationStructureImportSample,
-      'organization-structure-sample.json',
+      'Organization-structure-sample.json',
     );
     showToast('success', 'فایل نمونه ساختار سازمانی دانلود شد.');
   };
@@ -543,7 +556,7 @@ export function OrganizationTab() {
 
       showToast('success', 'ساختار سازمانی با موفقیت درون‌ریزی شد.');
     } catch (error) {
-      console.error('Failed to import organization structure:', error);
+      console.error('Failed to import Organization structure:', error);
 
       setImportErrors([
         error instanceof Error
@@ -763,20 +776,20 @@ export function OrganizationTab() {
               return (
                 <article
                   key={branch.id}
+                  id={`branch-${branch.id}`}
                   className="flex items-center justify-between gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-sm"
                 >
                   <div className="min-w-0 space-y-2">
                     <div className="flex flex-wrap items-center gap-2">
                       <Building size={16} className="text-blue-600" />
 
-                      <button
-                        type="button"
+                      <Link
+                        href={`/settings/organization#branch-${encodeURIComponent(branch.id)}`}
                         onClick={() =>
                           setSelectedBranchId((current) =>
                             current === branch.id ? null : branch.id,
                           )
                         }
-                        aria-pressed={selectedBranchId === branch.id}
                         className={`text-sm font-bold underline-offset-4 hover:text-blue-600 hover:underline ${
                           selectedBranchId === branch.id
                             ? 'text-blue-600 underline'
@@ -784,7 +797,7 @@ export function OrganizationTab() {
                         }`}
                       >
                         {branch.name}
-                      </button>
+                      </Link>
 
                       <span className="rounded-md bg-slate-100 px-2 py-0.5 font-mono text-[10px] text-slate-600 dark:bg-slate-800 dark:text-slate-400">
                         {branch.code}
@@ -923,18 +936,19 @@ export function OrganizationTab() {
                   {visibleDepartments.map((department) => (
                     <tr
                       key={department.id}
+                      id={`department-${department.id}`}
                       className="transition hover:bg-gray-50/50 dark:hover:bg-gray-800/30"
                     >
                       <td className="whitespace-nowrap px-6 py-4 font-medium text-gray-900 dark:text-gray-100">
                         <div className="flex items-center gap-2">
                           <Layers className="h-4 w-4 text-emerald-500" />
-                          <button
-                            type="button"
+                          <Link
+                            href={`/settings/organization#department-${encodeURIComponent(department.id)}`}
                             onClick={() => setSelectedDepartmentId(department.id)}
                             className="font-semibold text-emerald-700 underline-offset-4 hover:underline dark:text-emerald-300"
                           >
                             {department.name}
-                          </button>
+                          </Link>
                         </div>
                       </td>
 
@@ -1333,14 +1347,14 @@ export function OrganizationTab() {
         <div
           role="dialog"
           aria-modal="true"
-          aria-labelledby="organization-import-modal-title"
+          aria-labelledby="Organization-import-modal-title"
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
         >
           <div className="w-full max-w-lg rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-2xl">
             <div className="mb-5 flex items-start justify-between gap-4 border-b border-[var(--border)] pb-4">
               <div>
                 <h3
-                  id="organization-import-modal-title"
+                  id="Organization-import-modal-title"
                   className="text-base font-bold text-[var(--foreground)]"
                 >
                   درون‌ریزی ساختار سازمانی

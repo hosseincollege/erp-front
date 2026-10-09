@@ -8,10 +8,14 @@ import {
   EmploymentType,
 } from "@/types/human-resources";
 import { employeeStatusLabels, employmentTypeLabels } from "./hr-utils";
+import { usePreferences } from "@/components/preferences-provider";
+import { uiMessage } from "@/lib/ui-messages";
+import type { HrReferenceData } from "@/types/human-resources";
 
 interface EmployeeFormModalProps {
   isOpen: boolean;
   isSaving: boolean;
+  referenceData: HrReferenceData | null;
   onClose: () => void;
   onSave: (payload: CreateEmployeePayload) => Promise<void>;
 }
@@ -29,6 +33,8 @@ export interface EmployeeFormData {
   status: EmployeeStatus;
   departmentId: string;
   branchId: string;
+  managerId: string;
+  userId: string;
   birthDate: string;
   address: string;
   emergencyPhone: string;
@@ -48,6 +54,8 @@ const initialFormData: EmployeeFormData = {
   status: "ACTIVE",
   departmentId: "",
   branchId: "",
+  managerId: "",
+  userId: "",
   birthDate: "",
   address: "",
   emergencyPhone: "",
@@ -57,9 +65,11 @@ const initialFormData: EmployeeFormData = {
 export function EmployeeFormModal({
   isOpen,
   isSaving,
+  referenceData,
   onClose,
   onSave,
 }: EmployeeFormModalProps) {
+  const { locale } = usePreferences();
   const [formData, setFormData] = useState<EmployeeFormData>(initialFormData);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -111,6 +121,8 @@ export function EmployeeFormModal({
       email: formData.email.trim() || undefined,
       departmentId: formData.departmentId.trim() || undefined,
       branchId: formData.branchId.trim() || undefined,
+      managerId: formData.managerId.trim() || undefined,
+      userId: formData.userId.trim() || undefined,
       birthDate: formData.birthDate
         ? new Date(formData.birthDate).toISOString()
         : undefined,
@@ -272,6 +284,37 @@ export function EmployeeFormModal({
                 ))}
               </select>
             </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <label className="block space-y-1.5 text-xs font-semibold text-foreground">
+              <span>{uiMessage(locale, "hrBranch")}</span>
+              <select name="branchId" value={formData.branchId} onChange={handleChange} className="w-full rounded-lg border border-border bg-background px-3 py-2.5">
+                <option value="">{uiMessage(locale, "hrNoBranch")}</option>
+                {referenceData?.branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name} · {branch.code}</option>)}
+              </select>
+            </label>
+            <label className="block space-y-1.5 text-xs font-semibold text-foreground">
+              <span>{uiMessage(locale, "hrDepartment")}</span>
+              <select name="departmentId" value={formData.departmentId} onChange={handleChange} className="w-full rounded-lg border border-border bg-background px-3 py-2.5">
+                <option value="">{uiMessage(locale, "hrNoDepartment")}</option>
+                {referenceData?.departments.filter((department) => !formData.branchId || !department.branchId || department.branchId === formData.branchId).map((department) => <option key={department.id} value={department.id}>{department.name} · {department.code}</option>)}
+              </select>
+            </label>
+            <label className="block space-y-1.5 text-xs font-semibold text-foreground">
+              <span>{uiMessage(locale, "hrManager")}</span>
+              <select name="managerId" value={formData.managerId} onChange={handleChange} className="w-full rounded-lg border border-border bg-background px-3 py-2.5">
+                <option value="">{uiMessage(locale, "hrNoManager")}</option>
+                {referenceData?.managers.map((manager) => <option key={manager.id} value={manager.id}>{manager.firstName} {manager.lastName} · {manager.employeeCode}</option>)}
+              </select>
+            </label>
+            <label className="block space-y-1.5 text-xs font-semibold text-foreground">
+              <span>{uiMessage(locale, "hrLinkAccount")}</span>
+              <select name="userId" value={formData.userId} onChange={handleChange} className="w-full rounded-lg border border-border bg-background px-3 py-2.5">
+                <option value="">{uiMessage(locale, "hrNoLinkedAccount")}</option>
+                {referenceData?.availableUsers.map((account) => <option key={account.id} value={account.id}>{account.firstName} {account.lastName} · @{account.username}</option>)}
+              </select>
+            </label>
           </div>
 
           {/* تماس و مشخصات هویتی */}

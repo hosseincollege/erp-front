@@ -199,6 +199,7 @@ export interface RoleItem {
   description?: string;
   userCount: number;
   permissions: string[];
+  isSystemRole?: boolean;
 }
 
 /*

@@ -39,7 +39,7 @@ export function SettingsTabs({ items }: SettingsTabsProps) {
               className={[
                 'relative flex min-h-11 shrink-0 items-center gap-2.5 rounded-t-lg border-b-2 px-4 py-2 text-sm font-medium transition-all duration-200',
                 isActive
-                  ? 'border-blue-500 bg-blue-500/10 text-white shadow-sm ring-1 ring-blue-500/20'
+                  ? 'border-primary bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20'
                   : 'border-transparent text-muted-foreground hover:border-border/60 hover:bg-accent/40 hover:text-foreground',
               ].join(' ')}
             >
@@ -47,7 +47,7 @@ export function SettingsTabs({ items }: SettingsTabsProps) {
                 className={[
                   'flex h-7 w-7 items-center justify-center rounded-md transition-colors',
                   isActive
-                    ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/30'
+                    ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/30'
                     : 'bg-muted/60 text-muted-foreground',
                 ].join(' ')}
               >

@@ -30,6 +30,8 @@ import {
 } from 'lucide-react';
 
 import { ticketApi } from '@/lib/ticket-api';
+import { usePreferences } from '@/components/preferences-provider';
+import { uiMessage } from '@/lib/ui-messages';
 
 type TicketPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
 type TicketStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED';
@@ -71,6 +73,7 @@ type TicketDetailsRecord = {
   creatorId?: string | null;
   createdAt: string;
   updatedAt?: string | null;
+  project?: { id: string; name: string; code: string } | null;
 };
 
 function formatDateTime(value?: string | null) {
@@ -185,6 +188,7 @@ function getCreatorName(ticket: TicketDetailsRecord) {
 
 export default function TicketDetailsPage() {
   const params = useParams<{ id: string }>();
+  const { locale } = usePreferences();
 
   const ticketId = Array.isArray(params.id) ? params.id[0] : params.id;
 
@@ -238,6 +242,7 @@ export default function TicketDetailsPage() {
           creatorId: result.creatorId,
           createdAt: result.createdAt,
           updatedAt: result.updatedAt,
+          project: result.project ?? null,
         };
 
         setTicket(record);
@@ -378,6 +383,16 @@ export default function TicketDetailsPage() {
             </div>
 
             <div>
+              {ticket.project && (
+                <Link
+                  href={`/tickets/projects/${encodeURIComponent(ticket.project.id)}`}
+                  className="mb-2 inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--primary)] hover:underline"
+                >
+                  {uiMessage(locale, 'supportProjectLabel')}
+                  <span>{ticket.project.name}</span>
+                  <span dir="ltr" className="font-mono text-[10px]">({ticket.project.code})</span>
+                </Link>
+              )}
               <div className="mb-2 flex flex-wrap items-center gap-2">
                 <span
                   className="

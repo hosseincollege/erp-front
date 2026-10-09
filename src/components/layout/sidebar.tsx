@@ -11,12 +11,16 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { getCurrentUser, logout, AuthUser } from '@/lib/auth-api';
 import { getLocaleDirection, usePreferences } from '@/components/preferences-provider';
+import { uiMessage } from '@/lib/ui-messages';
+import type { UiMessage } from '@/lib/languages/types';
+import { projectsApi, type SupportProjectItem } from '@/lib/projects-api';
+import { humanResourcesApi } from '@/lib/human-resources-api';
+import type { HrAccess } from '@/types/human-resources';
 
 import {
   Activity,
   BarChart3,
   Bell,
-  Boxes,
   BriefcaseBusiness,
   Calculator,
   CheckCircle2,
@@ -25,126 +29,101 @@ import {
   Package,
   Radio,
   Settings,
-  ShoppingCart,
   Ticket,
   User,
   UsersRound,
 } from 'lucide-react';
 
 type NavigationSubItem = {
-  title: string;
+  titleKey?: UiMessage;
+  title?: string;
   href: string;
 };
 
 type NavigationItem = {
   id: string;
-  title: string;
+  titleKey: UiMessage;
   icon: React.ElementType;
   href: string;
   sub?: NavigationSubItem[];
 };
 
-// لیست ۹ ماژول اصلی سیستم
+// فهرست ماژول‌های اصلی سیستم
 const navigation: NavigationItem[] = [
   {
     id: 'accounting',
-    title: 'حسابداری',
+    titleKey: 'sidebarAccounting',
     icon: Calculator,
     href: '/accounting',
     sub: [
-      { title: 'دفتر کل', href: '/accounting/ledger' },
-      { title: 'اسناد حسابداری', href: '/accounting/vouchers' },
-      { title: 'ترازنامه', href: '/accounting/balance-sheet' },
+      { titleKey: 'sidebarLedger', href: '/accounting/ledger' },
+      { titleKey: 'sidebarAccountingEntries', href: '/accounting/vouchers' },
+      { titleKey: 'sidebarBalanceSheet', href: '/accounting/balance-sheet' },
     ],
   },
   {
-    id: 'crm',
-    title: 'مشتریان',
+    id: 'commercial',
+    titleKey: 'sidebarCommercial',
     icon: UsersRound,
-    href: '/crm',
+    href: '/commercial',
     sub: [
-      { title: 'لیست مشتریان', href: '/crm/customers' },
-      { title: 'فرصت‌های فروش', href: '/crm/opportunities' },
-      { title: 'پیگیری‌ها', href: '/crm/follow-ups' },
+      { titleKey: 'sidebarCustomers', href: '/commercial/customers' },
+      { titleKey: 'sidebarSales', href: '/commercial/sales' },
     ],
   },
   {
     id: 'hr',
-    title: 'منابع انسانی',
+    titleKey: 'sidebarHumanResources',
     icon: BriefcaseBusiness,
     href: '/hr',
     sub: [
-      { title: 'پرونده پرسنلی', href: '/hr/employees' },
-      { title: 'حضور و غیاب', href: '/hr/attendance' },
-      { title: 'حقوق و دستمزد', href: '/hr/payroll' },
+      { titleKey: 'sidebarEmployeeRecords', href: '/hr/employees' },
+      { titleKey: 'sidebarAttendance', href: '/hr/attendance' },
+      { titleKey: 'sidebarLeaveRequests', href: '/hr/leaves' },
+      { titleKey: 'sidebarPayroll', href: '/hr/payroll' },
     ],
   },
   {
-    id: 'inventory',
-    title: 'انبار',
+    id: 'supply-chain',
+    titleKey: 'sidebarSupplyChain',
     icon: Package,
-    href: '/inventory',
+    href: '/supply',
     sub: [
-      { title: 'موجودی کالا', href: '/inventory/stock' },
-      { title: 'حواله انبار', href: '/inventory/orders' },
-      { title: 'انبارگردانی', href: '/inventory/audit' },
-    ],
-  },
-  {
-    id: 'purchases',
-    title: 'خرید',
-    icon: Boxes,
-    href: '/purchases',
-    sub: [
-      { title: 'سفارش خرید', href: '/purchases/orders' },
-      { title: 'تأمین‌کنندگان', href: '/purchases/suppliers' },
+      { titleKey: 'sidebarInventory', href: '/supply/inventory' },
+      { titleKey: 'sidebarPurchases', href: '/supply/purchasing' },
     ],
   },
   {
     id: 'reports',
-    title: 'گزارش‌ها',
+    titleKey: 'sidebarReports',
     icon: BarChart3,
     href: '/reports',
     sub: [
-      { title: 'گزارش مالی', href: '/reports/financial' },
-      { title: 'گزارش عملیاتی', href: '/reports/operational' },
-    ],
-  },
-  {
-    id: 'sales',
-    title: 'فروش',
-    icon: ShoppingCart,
-    href: '/sales',
-    sub: [
-      { title: 'پیش‌فاکتور', href: '/sales/quotes' },
-      { title: 'فاکتورهای فروش', href: '/sales/invoices' },
-      { title: 'گزارش فروش', href: '/sales/reports' },
+      { titleKey: 'sidebarFinancialReports', href: '/reports/financial' },
+      { titleKey: 'sidebarOperationalReports', href: '/reports/operational' },
     ],
   },
   {
     id: 'settings',
-    title: 'تنظیمات',
+    titleKey: 'sidebarSettings',
     icon: Settings,
     href: '/settings',
     sub: [
-      { title: 'عمومی', href: '/settings/general' },
-      { title: 'اطلاعات شرکت', href: '/settings/company' },
-      { title: 'ساختار سازمانی', href: '/settings/organization' },
-      { title: 'نقش‌ها و دسترسی‌ها', href: '/settings/roles' },
-      { title: 'حساب‌های کاربری', href: '/settings/accounts' },
-      { title: 'مدیریت پروژه‌ها', href: '/settings/projects' },
+      { titleKey: 'sidebarGeneral', href: '/settings/general' },
+      { titleKey: 'sidebarAnnouncementManagement', href: '/settings/announcements' },
+      { titleKey: 'sidebarCompanyInformation', href: '/settings/company' },
+      { titleKey: 'sidebarOrganizationStructure', href: '/settings/organization' },
+      { titleKey: 'sidebarRolesPermissions', href: '/settings/roles' },
+      { titleKey: 'sidebarUserAccounts', href: '/settings/accounts' },
+      { titleKey: 'sidebarProjectManagement', href: '/settings/projects' },
     ],
   },
   {
     id: 'tickets',
-    title: 'پشتیبانی',
+    titleKey: 'sidebarSupport',
     icon: Ticket,
     href: '/tickets',
-    sub: [
-      { title: 'همه تیکت‌ها', href: '/tickets' },
-      { title: 'ثبت تیکت', href: '/tickets/new' },
-      { title: 'دسته‌بندی‌ها', href: '/tickets/categories' },
-    ],
+    sub: [],
   },
 ];
 
@@ -167,22 +146,42 @@ export function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const { locale } = usePreferences();
-  const english = locale !== 'fa';
+  const message = (key: UiMessage) => uiMessage(locale, key);
   const router = useRouter();
   const sidebarRef = useRef<HTMLElement>(null);
+  const supportProjectsRequest = useRef(0);
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [supportProjects, setSupportProjects] = useState<SupportProjectItem[]>([]);
+  const [hrAccess, setHrAccess] = useState<HrAccess | null>(null);
 
   const isProfileRoute = pathname === '/profile' || pathname.startsWith('/profile/');
   const isHomeRoute = pathname === '/' || pathname === '/dashboard' || pathname.startsWith('/dashboard/');
 
   useEffect(() => {
-    setUser(getCurrentUser());
-    const handleAuth = () => setUser(getCurrentUser());
-    window.addEventListener('auth:logout', handleAuth);
-    window.addEventListener('storage', handleAuth);
+    const refreshUser = () => {
+      const requestId = ++supportProjectsRequest.current;
+      const currentUser = getCurrentUser();
+      setUser(currentUser);
+      if (!currentUser) {
+        setSupportProjects([]);
+        setHrAccess(null);
+        return;
+      }
+      projectsApi.getSupportProjects()
+        .then((items) => { if (requestId === supportProjectsRequest.current) setSupportProjects(items); })
+        .catch(() => { if (requestId === supportProjectsRequest.current) setSupportProjects([]); });
+      humanResourcesApi.getAccess()
+        .then((access) => { if (requestId === supportProjectsRequest.current) setHrAccess(access); })
+        .catch(() => { if (requestId === supportProjectsRequest.current) setHrAccess(null); });
+    };
+    refreshUser();
+    window.addEventListener('auth:logout', refreshUser);
+    window.addEventListener('auth:login', refreshUser);
+    window.addEventListener('storage', refreshUser);
     return () => {
-      window.removeEventListener('auth:logout', handleAuth);
-      window.removeEventListener('storage', handleAuth);
+      window.removeEventListener('auth:logout', refreshUser);
+      window.removeEventListener('auth:login', refreshUser);
+      window.removeEventListener('storage', refreshUser);
     };
   }, []);
 
@@ -281,36 +280,30 @@ export function Sidebar({
     router.push('/login');
   };
 
-  const englishLabels: Record<string, string> = {
-    accounting: 'Accounting', crm: 'Customers', hr: 'Human Resources',
-    inventory: 'Inventory', purchases: 'Purchases', reports: 'Reports',
-    sales: 'Sales', settings: 'Settings', tickets: 'Support',
-    '/accounting/ledger': 'General ledger', '/accounting/vouchers': 'Accounting entries',
-    '/accounting/balance-sheet': 'Balance sheet', '/crm/customers': 'Customer list',
-    '/crm/opportunities': 'Sales opportunities', '/crm/follow-ups': 'Follow-ups',
-    '/hr/employees': 'Employee records', '/hr/attendance': 'Attendance',
-    '/hr/payroll': 'Payroll', '/inventory/stock': 'Stock',
-    '/inventory/orders': 'Stock issues', '/inventory/audit': 'Stock audit',
-    '/purchases/orders': 'Purchase orders', '/purchases/suppliers': 'Suppliers',
-    '/reports/financial': 'Financial reports', '/reports/operational': 'Operational reports',
-    '/sales/quotes': 'Quotes', '/sales/invoices': 'Sales invoices',
-    '/sales/reports': 'Sales reports', '/settings/general': 'General',
-    '/settings/company': 'Company information', '/settings/organization': 'Organization structure',
-    '/settings/roles': 'Roles and permissions', '/settings/accounts': 'User accounts',
-    '/settings/projects': 'Project management', '/tickets': 'All tickets',
-    '/tickets/new': 'Create ticket', '/tickets/categories': 'Categories',
-  };
-  const localizedNavigation = english
-    ? navigation.map((item) => ({
-        ...item,
-        title: englishLabels[item.id] || item.title,
-        sub: item.sub?.map((subItem) => ({
-          ...subItem,
-          title: englishLabels[subItem.href] || subItem.title,
-        })),
-      }))
-    : navigation;
+  const localizedNavigation = navigation
+    .filter((item) => item.id !== 'hr' || Boolean(hrAccess?.canViewEmployees || hrAccess?.canViewLeaves || hrAccess?.canViewAttendance || hrAccess?.canViewPayroll || hrAccess?.canRequestLeave || hrAccess?.employeeId))
+    .map((item) => ({
+    ...item,
+    title: message(item.titleKey),
+    sub: item.id === 'tickets'
+      ? supportProjects.map((project) => ({ title: project.name, href: `/tickets/projects/${encodeURIComponent(project.id)}` }))
+      : item.id === 'hr'
+        ? item.sub?.filter((subItem) => subItem.href === '/hr/employees'
+          ? Boolean(hrAccess?.canViewEmployees || hrAccess?.employeeId)
+          : subItem.href === '/hr/leaves'
+            ? Boolean(hrAccess?.canViewLeaves || hrAccess?.canRequestLeave)
+            : subItem.href === '/hr/attendance'
+              ? Boolean(hrAccess?.canViewAttendance || hrAccess?.employeeId)
+              : Boolean(hrAccess?.canViewPayroll || hrAccess?.employeeId))
+          .map((subItem) => ({ ...subItem, title: subItem.titleKey ? message(subItem.titleKey) : subItem.title }))
+        : item.sub?.map((subItem) => ({ ...subItem, title: subItem.titleKey ? message(subItem.titleKey) : subItem.title })),
+  }));
   const activeGroup = localizedNavigation.find((item) => item.id === activeTab);
+  const isGroupHome = Boolean(activeGroup && pathname === activeGroup.href);
+  const activeSubItemPath = activeGroup?.sub
+    ?.map((subItem) => subItem.href.split('?')[0])
+    .filter((href) => pathname === href || pathname.startsWith(`${href}/`))
+    .sort((left, right) => right.length - left.length)[0];
 
   return (
     <aside
@@ -327,7 +320,7 @@ export function Sidebar({
       <div
         className={`
           flex flex-col
-          border-l border-[var(--border)]
+          border-e border-[var(--border)]
           bg-[var(--surface)]
           py-3
           transition-all duration-300
@@ -347,13 +340,13 @@ export function Sidebar({
                 aria-label={item.title}
                 onClick={() => handleSelectModule(item)}
                 className={`
-                  flex w-full items-center rounded-xl p-2.5 text-right transition-all duration-200 cursor-pointer
+                  flex w-full items-center rounded-xl p-2.5 text-start transition-all duration-200 cursor-pointer
                   ${
                     isSelected
                       ? 'bg-[var(--primary)] font-medium text-[var(--primary-foreground)] shadow-lg shadow-[var(--primary)]/20'
                       : 'text-[var(--foreground)] hover:bg-[var(--primary-soft)] hover:text-[var(--primary)]'
                   }
-                  ${english ? 'text-xs' : 'text-sm'}
+                  text-sm
                   ${isMainCollapsed ? 'justify-center' : 'justify-start gap-3'}
                 `}
               >
@@ -371,7 +364,7 @@ export function Sidebar({
       <div
         className="
           flex w-50 shrink-0 flex-col
-          border-l border-[var(--border)]
+          border-e border-[var(--border)]
           bg-[var(--surface)]/95
           p-4 shadow-sm backdrop-blur
         "
@@ -386,7 +379,7 @@ export function Sidebar({
             >
               <span className="flex items-center gap-2">
                 <User size={16} />
-                {english ? 'View profile' : 'مشاهده پروفایل فردی'}
+                {message('sidebarViewProfile')}
               </span>
               <ExternalLink size={14} />
             </Link>
@@ -397,7 +390,7 @@ export function Sidebar({
               className="flex items-center justify-center gap-2 rounded-xl border border-red-200 dark:border-red-900/40 bg-red-50/50 dark:bg-red-950/20 px-3.5 py-2.5 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors cursor-pointer"
             >
               <LogOut size={16} />
-              {english ? 'Sign out' : 'خروج از حساب کاربری'}
+              {message('sidebarSignOut')}
             </button>
 
             <div className="mt-1 flex flex-col items-center rounded-xl border border-[var(--border)] bg-slate-50/50 dark:bg-slate-900/40 p-4 text-center">
@@ -410,16 +403,16 @@ export function Sidebar({
                   )}
                 </div>
                 <span
-                  className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-[var(--surface)] bg-emerald-500"
-                  title={english ? 'Status: online' : 'وضعیت: آنلاین'}
+                  className="absolute bottom-0 end-0 h-3.5 w-3.5 rounded-full border-2 border-[var(--surface)] bg-emerald-500"
+                  title={message('sidebarOnlineStatus')}
                 />
               </div>
 
               <p className="text-sm font-bold text-[var(--foreground)]">
-                {user?.name || (english ? 'System user' : 'کاربر سیستم')}
+                {user?.name || message('sidebarSystemUser')}
               </p>
               <span className="mt-1 rounded-md bg-[var(--primary-soft)] px-2 py-0.5 text-[11px] font-medium text-[var(--primary)]">
-                {user?.role || (english ? 'User' : 'کاربر')}
+                {user?.role || message('user')}
               </span>
               <p className="mt-1.5 text-xs text-muted-foreground truncate w-full">
                 {user?.email || ''}
@@ -438,7 +431,7 @@ export function Sidebar({
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--primary-soft)] text-[var(--primary)]">
                   {React.createElement(activeGroup.icon, { size: 19 })}
                 </div>
-                <span className={`truncate font-bold text-[var(--foreground)] ${english ? 'text-xs' : 'text-sm'}`}>
+                <span className={`truncate text-start text-sm font-bold transition-colors ${isGroupHome ? 'text-[var(--primary)]' : 'text-[var(--foreground)]'}`}>
                   {activeGroup.title}
                 </span>
               </Link>
@@ -447,9 +440,7 @@ export function Sidebar({
             <div className="flex flex-col gap-1 overflow-y-auto">
               {activeGroup.sub && activeGroup.sub.length > 0 ? (
                 activeGroup.sub.map((subItem) => {
-                  const isActive =
-                    pathname === subItem.href ||
-                    pathname.startsWith(`${subItem.href}/`);
+                  const isActive = activeSubItemPath === subItem.href.split('?')[0];
 
                   return (
                     <Link
@@ -459,11 +450,12 @@ export function Sidebar({
                         flex items-center gap-2.5 rounded-lg px-3 py-2.5 transition-colors
                         ${
                           isActive
-                            ? 'bg-[var(--primary-soft)] font-semibold text-[var(--primary)]'
+                            ? 'bg-[var(--primary-soft)] font-bold text-[var(--primary)] ring-1 ring-[var(--primary)]/20'
                             : 'text-[var(--foreground)] hover:bg-[var(--primary-soft)] hover:text-[var(--primary)]'
                         }
-                        ${english ? 'text-xs' : 'text-sm'}
+                        text-sm text-start
                       `}
+                      style={isActive ? { color: 'var(--primary)' } : undefined}
                     >
                       <span
                         className={`h-1.5 w-1.5 shrink-0 rounded-full ${
@@ -480,7 +472,7 @@ export function Sidebar({
                 })
               ) : (
                 <p className="px-3 py-2.5 text-sm text-muted-foreground/70">
-                  {english ? 'No submenu is available for this section.' : 'زیرمنویی برای این بخش تعریف نشده است.'}
+                  {activeGroup.id === 'tickets' ? message('supportNoProjects') : message('sidebarNoSubmenu')}
                 </p>
               )}
             </div>
@@ -495,10 +487,10 @@ export function Sidebar({
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-[var(--foreground)] leading-none">
-                    {english ? 'Dashboard and events' : 'پیشخوان و رویدادها'}
+                    {message('sidebarDashboardEvents')}
                   </h3>
                   <span className="text-[11px] text-muted-foreground">
-                    {english ? 'System status and announcements' : 'وضعیت سیستم و اعلانات'}
+                    {message('sidebarSystemAnnouncements')}
                   </span>
                 </div>
               </div>
@@ -512,12 +504,9 @@ export function Sidebar({
                 <div className="flex items-center gap-2">
                   <Bell size={15} className="text-amber-500 shrink-0" />
                   <span className="font-medium text-[var(--foreground)]">
-                    {english ? 'Announcement board' : 'تابلو اعلانات'}
+                    {message('sidebarAnnouncementBoard')}
                   </span>
                 </div>
-                <span className="rounded-md bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-amber-600 dark:text-amber-400">
-                  {english ? 'Announcements' : 'اعلانات'}
-                </span>
               </a>
 
               <a
@@ -527,13 +516,9 @@ export function Sidebar({
                 <div className="flex items-center gap-2">
                   <Radio size={15} className="text-emerald-500 shrink-0" />
                   <span className="font-medium text-[var(--foreground)]">
-                    {english ? 'Service status' : 'وضعیت سرویس‌ها'}
+                    {message('sidebarServiceStatus')}
                   </span>
                 </div>
-                <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  {english ? 'Online' : 'برقرار'}
-                </span>
               </a>
 
               <a
@@ -543,10 +528,17 @@ export function Sidebar({
                 <div className="flex items-center gap-2">
                   <CheckCircle2 size={15} className="shrink-0 text-[var(--primary)]" />
                   <span className="font-medium text-[var(--foreground)]">
-                    {english ? 'Activity summary' : 'خلاصه فعالیت‌ها'}
+                    {message('sidebarActivitySummary')}
                   </span>
                 </div>
               </a>
+              <Link
+                href="/notifications"
+                className="flex items-center gap-2 rounded-xl border border-[var(--border)]/50 bg-slate-50/50 p-2.5 text-xs transition-colors hover:bg-[var(--primary-soft)] dark:bg-slate-900/30"
+              >
+                <Bell size={15} className="shrink-0 text-[var(--primary)]" />
+                <span className="font-medium text-[var(--foreground)]">{message('notificationsTitle')}</span>
+              </Link>
             </div>
           </>
         ) : null}

@@ -19,6 +19,7 @@ type ApiEnvelope<T> = {
 };
 
 export type TicketListQuery = {
+  projectId?: string;
   search?: string;
   status?: TicketStatus | 'ALL';
   priority?: TicketPriority | 'ALL';
@@ -42,6 +43,8 @@ function buildQueryString(query?: TicketListQuery): string {
   }
 
   const params = new URLSearchParams();
+
+  if (query.projectId) params.set('projectId', query.projectId);
 
   if (query.search?.trim()) {
     params.set('search', query.search.trim());
@@ -131,6 +134,7 @@ export async function createTicket(
 
   try {
     const backendPayload: Record<string, unknown> = {
+      projectId: payload.projectId,
       subject,
       description,
       ...(payload.type !== undefined && {

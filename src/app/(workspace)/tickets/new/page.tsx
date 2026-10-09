@@ -9,7 +9,7 @@
 'use client';
 
 import Link from 'next/link';
-import { FormEvent, ReactNode, useState } from 'react';
+import { FormEvent, ReactNode, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   AlertCircle,
@@ -23,6 +23,9 @@ import {
 } from 'lucide-react';
 
 import { createTicket } from '@/lib/ticket-api';
+import { projectsApi, type SupportProjectItem } from '@/lib/projects-api';
+import { usePreferences } from '@/components/preferences-provider';
+import { uiMessage } from '@/lib/ui-messages';
 import type {
   CreateTicketPayload,
   TicketPriority,
@@ -35,6 +38,7 @@ import {
 } from '@/lib/ticket-constants';
 
 type FormState = {
+  projectId: string;
   subject: string;
   description: string;
   priority: TicketPriority;
@@ -45,6 +49,7 @@ type FormState = {
 };
 
 const INITIAL_FORM: FormState = {
+  projectId: '',
   subject: '',
   description: '',
   priority: 'MEDIUM',
@@ -116,6 +121,8 @@ function getCreatedTicketId(value: unknown): string | null {
 
 export default function NewTicketPage() {
   const router = useRouter();
+  const { locale } = usePreferences();
+  const [projects, setProjects] = useState<SupportProjectItem[]>([]);
 
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>(
@@ -124,6 +131,21 @@ export default function NewTicketPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    projectsApi.getSupportProjects().then((available) => {
+      if (!active) return;
+      const creatable = available.filter((project) => project.supportRole !== 'VIEWER');
+      setProjects(creatable);
+      const requestedId = new URLSearchParams(window.location.search).get('projectId');
+      const selected = creatable.find((project) => project.id === requestedId) ?? (creatable.length === 1 ? creatable[0] : null);
+      if (selected) setForm((current) => ({ ...current, projectId: selected.id }));
+    }).catch((error) => {
+      if (active) setSubmitError(error instanceof Error ? error.message : uiMessage(locale, 'supportLoadFailed'));
+    });
+    return () => { active = false; };
+  }, [locale]);
 
   const updateField = <K extends keyof FormState>(
     field: K,
@@ -144,6 +166,8 @@ export default function NewTicketPage() {
 
   const validateForm = () => {
     const nextErrors: Partial<Record<keyof FormState, string>> = {};
+
+    if (!form.projectId) nextErrors.projectId = uiMessage(locale, 'supportProjectSelect');
 
     if (!form.subject.trim()) {
       nextErrors.subject = 'عنوان تیکت الزامی است';
@@ -178,6 +202,7 @@ export default function NewTicketPage() {
 
     try {
       const payload: CreateTicketPayload = {
+        projectId: form.projectId,
         subject: form.subject.trim(),
         description: form.description.trim(),
         type: form.type,
@@ -286,6 +311,17 @@ export default function NewTicketPage() {
               </div>
 
               <div className="space-y-4 p-5">
+                <Field label={uiMessage(locale, 'supportProjectLabel')} required error={errors.projectId}>
+                  <select
+                    required
+                    value={form.projectId}
+                    onChange={(event) => updateField('projectId', event.target.value)}
+                    className={`${inputClass(Boolean(errors.projectId))} cursor-pointer`}
+                  >
+                    <option value="">{uiMessage(locale, 'supportProjectSelect')}</option>
+                    {projects.map((project) => <option key={project.id} value={project.id}>{project.name} ({project.code})</option>)}
+                  </select>
+                </Field>
                 <Field
                   label="عنوان تیکت"
                   required

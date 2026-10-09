@@ -1,5 +1,5 @@
-import { CompanyTab } from '../general/company-tab';
+import { CompanyInformationPage } from './company-information-page';
 
 export default function CompanySettingsPage() {
-  return <div dir="rtl" className="w-full"><CompanyTab /></div>;
+  return <div className="w-full"><CompanyInformationPage /></div>;
 }

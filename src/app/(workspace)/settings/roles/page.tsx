@@ -1,5 +1,5 @@
-import { RolesTab } from '../users/roles-tab';
+import { RolesManagementPage } from './roles-management-page';
 
 export default function RolesSettingsPage() {
-  return <div dir="rtl" className="w-full"><RolesTab /></div>;
+  return <div className="w-full"><RolesManagementPage /></div>;
 }

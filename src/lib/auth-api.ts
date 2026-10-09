@@ -112,6 +112,7 @@ function persistSession(response: AuthResponse, fallbackUser: Partial<AuthUser>)
 
   const user = normalizeUser(response.user, fallbackUser);
   saveUser(user);
+  if (isBrowser()) window.dispatchEvent(new Event('auth:login'));
   return user;
 }
 

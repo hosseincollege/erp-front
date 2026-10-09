@@ -182,6 +182,80 @@ export interface HrDashboardSummary {
   };
 }
 
+export interface HrAccess {
+  canViewOrganization: boolean;
+  canManage: boolean;
+  canViewEmployees: boolean;
+  canManageEmployees: boolean;
+  canViewLeaves: boolean;
+  canManageLeaves: boolean;
+  canReviewLeave: boolean;
+  canViewAttendance: boolean;
+  canManageAttendance: boolean;
+  canViewPayroll: boolean;
+  canManagePayroll: boolean;
+  canRequestLeave: boolean;
+  employeeId: string | null;
+}
+
+export interface HrReferenceData {
+  branches: Array<{ id: string; name: string; code: string }>;
+  departments: Array<{ id: string; name: string; code: string; branchId: string | null }>;
+  managers: Array<{ id: string; employeeCode: string; firstName: string; lastName: string; jobTitle?: string | null }>;
+  employees: Array<{ id: string; employeeCode: string; firstName: string; lastName: string; jobTitle?: string | null }>;
+  availableUsers: Array<{ id: string; username: string; firstName: string; lastName: string; email?: string | null }>;
+}
+
+export type AttendanceStatus = "PRESENT" | "ABSENT" | "LATE" | "REMOTE" | "HALF_DAY";
+export interface AttendanceRecord {
+  id: string;
+  employeeId: string;
+  workDate: string;
+  checkInAt?: string | null;
+  checkOutAt?: string | null;
+  status: AttendanceStatus;
+  note?: string | null;
+  employee: Pick<Employee, "id" | "employeeCode" | "firstName" | "lastName"> & { jobTitle?: string | null; branch?: { id: string; name: string } | null; department?: { id: string; name: string } | null };
+}
+
+export type PayrollStatus = "DRAFT" | "APPROVED" | "PAID";
+export interface PayrollRecord {
+  id: string;
+  employeeId: string;
+  period: string;
+  currency: string;
+  baseSalary: string | number;
+  overtime: string | number;
+  allowances: string | number;
+  deductions: string | number;
+  netAmount: string | number;
+  status: PayrollStatus;
+  note?: string | null;
+  approvedAt?: string | null;
+  paidAt?: string | null;
+  employee: Pick<Employee, "id" | "employeeCode" | "firstName" | "lastName"> & { jobTitle?: string | null; branch?: { name: string } | null; department?: { name: string } | null };
+}
+
+export interface SaveAttendancePayload {
+  employeeId: string;
+  workDate: string;
+  checkInAt?: string;
+  checkOutAt?: string;
+  status?: AttendanceStatus;
+  note?: string;
+}
+
+export interface SavePayrollPayload {
+  employeeId: string;
+  period: string;
+  currency?: string;
+  baseSalary: number;
+  overtime?: number;
+  allowances?: number;
+  deductions?: number;
+  note?: string;
+}
+
 /**
  * پارامترهای فیلتر endpoint:
  * GET /human-resources/employees
@@ -225,6 +299,7 @@ export interface CreateEmployeePayload {
   userId?: string;
   branchId?: string;
   departmentId?: string;
+  managerId?: string;
 
   nationalId?: string;
   phone?: string;
@@ -260,6 +335,7 @@ export interface CreateEmployeeFormValues {
   userId: string;
   branchId: string;
   departmentId: string;
+  managerId: string;
 
   nationalId: string;
   phone: string;
@@ -285,6 +361,7 @@ export interface UpdateEmployeePayload {
   userId?: string | null;
   branchId?: string | null;
   departmentId?: string | null;
+  managerId?: string | null;
 
   firstName?: string;
   lastName?: string;
@@ -314,6 +391,7 @@ export interface CreateLeaveRequestPayload {
   leaveType: LeaveType;
   startAt: string;
   endAt: string;
+  reason?: string;
 }
 
 /**

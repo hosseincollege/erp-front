@@ -3,29 +3,30 @@
 import Link from 'next/link';
 import { Activity, ArrowLeft, Database, FileCode2, Lock, ShieldCheck, Users } from 'lucide-react';
 import { usePreferences } from '@/components/preferences-provider';
+import { getLocaleDirection } from '@/lib/languages';
 
 export function SettingsHomeContent() {
   const { locale } = usePreferences();
   const en = locale === 'en';
   const cards = en
     ? [
-        { title: 'Organization', status: 'Company details', detail: 'Edit basic and financial information', icon: Database, color: 'bg-emerald-500/10 text-emerald-500' },
-        { title: 'Organization structure', status: 'Branches and departments', detail: 'Manage organizational units', icon: Activity, color: 'bg-blue-500/10 text-blue-500' },
-        { title: 'Data import and export', status: 'Import and export', detail: 'Transfer settings with JSON files', icon: FileCode2, color: 'bg-amber-500/10 text-amber-500' },
-        { title: 'Access management', status: 'Users and roles', detail: 'Manage accounts and permissions', icon: Lock, color: 'bg-violet-500/10 text-violet-500' },
+        { title: 'Organization', status: 'Company details', detail: 'Edit basic and financial information', href: '/settings/company', icon: Database, color: 'bg-emerald-500/10 text-emerald-500' },
+        { title: 'Organization structure', status: 'Branches and departments', detail: 'Manage organizational units', href: '/settings/organization', icon: Activity, color: 'bg-blue-500/10 text-blue-500' },
+        { title: 'Data import and export', status: 'Import and export', detail: 'Transfer settings with JSON files', href: '/settings/organization', icon: FileCode2, color: 'bg-amber-500/10 text-amber-500' },
+        { title: 'Access management', status: 'Users and roles', detail: 'Manage accounts and permissions', href: '/settings/accounts', icon: Lock, color: 'bg-violet-500/10 text-violet-500' },
       ]
     : [
-        { title: 'اطلاعات سازمان', status: 'مشخصات شرکت', detail: 'ویرایش اطلاعات پایه و مالی', icon: Database, color: 'bg-emerald-500/10 text-emerald-500' },
-        { title: 'ساختار سازمانی', status: 'شعب و دپارتمان‌ها', detail: 'مدیریت اجزای سازمان', icon: Activity, color: 'bg-blue-500/10 text-blue-500' },
-        { title: 'ورود و خروج اطلاعات', status: 'درون‌ریزی و برون‌بری', detail: 'انتقال تنظیمات با فایل JSON', icon: FileCode2, color: 'bg-amber-500/10 text-amber-500' },
-        { title: 'مدیریت دسترسی', status: 'کاربران و نقش‌ها', detail: 'مدیریت حساب‌ها و مجوزها', icon: Lock, color: 'bg-violet-500/10 text-violet-500' },
+        { title: 'اطلاعات سازمان', status: 'مشخصات شرکت', detail: 'ویرایش اطلاعات پایه و مالی', href: '/settings/company', icon: Database, color: 'bg-emerald-500/10 text-emerald-500' },
+        { title: 'ساختار سازمانی', status: 'شعب و دپارتمان‌ها', detail: 'مدیریت اجزای سازمان', href: '/settings/organization', icon: Activity, color: 'bg-blue-500/10 text-blue-500' },
+        { title: 'ورود و خروج اطلاعات', status: 'درون‌ریزی و برون‌بری', detail: 'انتقال تنظیمات با فایل JSON', href: '/settings/organization', icon: FileCode2, color: 'bg-amber-500/10 text-amber-500' },
+        { title: 'مدیریت دسترسی', status: 'کاربران و نقش‌ها', detail: 'مدیریت حساب‌ها و مجوزها', href: '/settings/accounts', icon: Lock, color: 'bg-violet-500/10 text-violet-500' },
       ];
 
   return (
-    <div dir={en ? 'ltr' : 'rtl'} className="space-y-5">
+    <div dir={getLocaleDirection(locale)} className="space-y-5">
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {cards.map(({ icon: Icon, ...card }) => (
-          <div key={card.title} className="rounded-2xl border border-border bg-card p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md">
+          <Link href={card.href} key={card.title} className="block rounded-2xl border border-border bg-card p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-xs font-medium text-muted-foreground">{card.title}</p>
@@ -34,7 +35,7 @@ export function SettingsHomeContent() {
               </div>
               <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${card.color}`}><Icon size={20} /></div>
             </div>
-          </div>
+          </Link>
         ))}
       </section>
 

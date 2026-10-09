@@ -39,6 +39,7 @@ export type TicketSource =
  * مطابقت داده شده با CreateTicketDto در بک‌اند
  */
 export type CreateTicketPayload = {
+  projectId: string;
   subject: string; // تغییر از title به subject
   description: string;
   type?: TicketType;
@@ -53,6 +54,8 @@ export type CreateTicketPayload = {
  */
 export type Ticket = {
   id: string;
+  projectId?: string | null;
+  project?: { id: string; name: string; code: string } | null;
   ticketNumber: number;
   subject: string;
   description: string;

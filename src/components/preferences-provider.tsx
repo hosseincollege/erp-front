@@ -12,6 +12,8 @@ import {
   type ReactNode,
 } from 'react';
 import { getLocaleDirection, supportedLocales, type Locale } from '@/lib/languages';
+import { preferencesApi, type SaveUserPreferences } from '@/lib/preferences-api';
+import { getAccessToken } from '@/lib/api-client';
 
 export {
   getLocaleDirection,
@@ -30,10 +32,8 @@ type PreferencesContextValue = {
   contrastPreferences: ContrastPreferences;
   contrastPreview: ContrastPreferences | null;
   previewContrastPreferences: (preferences: ContrastPreferences | null) => void;
-  setLocale: (locale: Locale) => void;
-  setAccentColor: (color: AccentColor) => void;
-  setContrastPreferences: (preferences: ContrastPreferences) => void;
   previewAccentColor: (color: AccentColor) => void;
+  savePreferences: (preferences: SaveUserPreferences) => Promise<void>;
 };
 
 const LOCALE_KEY = 'erp-locale';
@@ -177,22 +177,44 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     applyAccentColor(accentColor);
   }, [locale, accentColor]);
 
-  const setLocale = useCallback((nextLocale: Locale) => {
-    applyLocale(nextLocale);
-    window.localStorage.setItem(LOCALE_KEY, nextLocale);
-    window.dispatchEvent(new Event('erp-preferences-changed'));
+  const loadUserPreferences = useCallback(async () => {
+    if (!getAccessToken()) return;
+    try {
+      const saved = await preferencesApi.get();
+      window.localStorage.setItem(LOCALE_KEY, saved.locale);
+      window.localStorage.setItem(ACCENT_KEY, saved.accentColor);
+      window.localStorage.setItem(CONTRAST_KEY, JSON.stringify({
+        light: saved.lightContrast,
+        dark: saved.darkContrast,
+      }));
+      window.dispatchEvent(new Event('erp-preferences-changed'));
+    } catch (error) {
+      console.error('Could not load user preferences:', error);
+    }
   }, []);
 
-  const setAccentColor = useCallback((nextColor: AccentColor) => {
-    applyAccentColor(nextColor);
-    window.localStorage.setItem(ACCENT_KEY, nextColor);
-    window.dispatchEvent(new Event('erp-preferences-changed'));
-  }, []);
-
-  const setContrastPreferences = useCallback((nextPreferences: ContrastPreferences) => {
-    window.localStorage.setItem(CONTRAST_KEY, JSON.stringify(nextPreferences));
-    window.dispatchEvent(new Event('erp-preferences-changed'));
-  }, []);
+  useEffect(() => {
+    const resetPreferences = () => {
+      window.localStorage.removeItem(LOCALE_KEY);
+      window.localStorage.removeItem(ACCENT_KEY);
+      window.localStorage.removeItem(CONTRAST_KEY);
+      window.dispatchEvent(new Event('erp-preferences-changed'));
+    };
+    const handleAuthStorageChange = (event: StorageEvent) => {
+      if (event.key !== 'access_token') return;
+      if (getAccessToken()) void loadUserPreferences();
+      else resetPreferences();
+    };
+    void loadUserPreferences();
+    window.addEventListener('auth:login', loadUserPreferences);
+    window.addEventListener('auth:logout', resetPreferences);
+    window.addEventListener('storage', handleAuthStorageChange);
+    return () => {
+      window.removeEventListener('auth:login', loadUserPreferences);
+      window.removeEventListener('auth:logout', resetPreferences);
+      window.removeEventListener('storage', handleAuthStorageChange);
+    };
+  }, [loadUserPreferences]);
 
   const previewContrastPreferences = useCallback((nextPreferences: ContrastPreferences | null) => {
     setContrastPreview(nextPreferences);
@@ -202,6 +224,17 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     applyAccentColor(previewColor);
   }, []);
 
+  const savePreferences = useCallback(async (preferences: SaveUserPreferences) => {
+    const saved = await preferencesApi.save(preferences);
+    window.localStorage.setItem(LOCALE_KEY, saved.locale);
+    window.localStorage.setItem(ACCENT_KEY, saved.accentColor);
+    window.localStorage.setItem(CONTRAST_KEY, JSON.stringify({
+      light: saved.lightContrast,
+      dark: saved.darkContrast,
+    }));
+    window.dispatchEvent(new Event('erp-preferences-changed'));
+  }, []);
+
   const value = useMemo(
     () => ({
       locale,
@@ -209,10 +242,8 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       contrastPreferences,
       contrastPreview,
       previewContrastPreferences,
-      setLocale,
-      setAccentColor,
-      setContrastPreferences,
       previewAccentColor,
+      savePreferences,
     }),
     [
       locale,
@@ -220,10 +251,8 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       contrastPreferences,
       contrastPreview,
       previewContrastPreferences,
-      setLocale,
-      setAccentColor,
-      setContrastPreferences,
       previewAccentColor,
+      savePreferences,
     ],
   );
 

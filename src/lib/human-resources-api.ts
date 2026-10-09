@@ -16,6 +16,12 @@ import type {
   Employee,
   EmployeeListQuery,
   HrDashboardSummary,
+  HrAccess,
+  HrReferenceData,
+  AttendanceRecord,
+  PayrollRecord,
+  SaveAttendancePayload,
+  SavePayrollPayload,
   LeaveRequest,
   LeaveRequestListQuery,
   UpdateEmployeePayload,
@@ -116,6 +122,35 @@ function buildLeaveRequestQueryString(
 }
 
 export const humanResourcesApi = {
+  async getAttendance(date?: string): Promise<AttendanceRecord[]> {
+    const query = date ? `?date=${encodeURIComponent(date)}` : "";
+    return normalizeResponse<AttendanceRecord[]>(await apiClient.get<unknown>(`/human-resources/attendance${query}`));
+  },
+  async saveAttendance(payload: SaveAttendancePayload): Promise<AttendanceRecord> {
+    return normalizeResponse<AttendanceRecord>(await apiClient.post<unknown>("/human-resources/attendance", payload));
+  },
+  async checkIn(): Promise<AttendanceRecord> {
+    return normalizeResponse<AttendanceRecord>(await apiClient.post<unknown>("/human-resources/attendance/check-in", {}));
+  },
+  async checkOut(): Promise<AttendanceRecord> {
+    return normalizeResponse<AttendanceRecord>(await apiClient.post<unknown>("/human-resources/attendance/check-out", {}));
+  },
+  async getPayroll(period?: string): Promise<PayrollRecord[]> {
+    const query = period ? `?period=${encodeURIComponent(period)}` : "";
+    return normalizeResponse<PayrollRecord[]>(await apiClient.get<unknown>(`/human-resources/payroll${query}`));
+  },
+  async savePayroll(payload: SavePayrollPayload): Promise<PayrollRecord> {
+    return normalizeResponse<PayrollRecord>(await apiClient.post<unknown>("/human-resources/payroll", payload));
+  },
+  async updatePayrollStatus(id: string, status: "APPROVED" | "PAID"): Promise<PayrollRecord> {
+    return normalizeResponse<PayrollRecord>(await apiClient.patch<unknown>(`/human-resources/payroll/${encodeURIComponent(id)}/status`, { status }));
+  },
+  async getReferenceData(): Promise<HrReferenceData> {
+    return normalizeResponse<HrReferenceData>(await apiClient.get<unknown>("/human-resources/options"));
+  },
+  async getAccess(): Promise<HrAccess> {
+    return normalizeResponse<HrAccess>(await apiClient.get<unknown>("/human-resources/access"));
+  },
   /**
    * دریافت آمار داشبورد منابع انسانی.
    * GET /human-resources/dashboard

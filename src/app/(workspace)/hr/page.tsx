@@ -12,6 +12,8 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import {
   AlertCircle,
   Briefcase,
@@ -32,11 +34,14 @@ import {
 import { ApiClientError, humanResourcesApi } from "@/lib/human-resources-api";
 import type {
   CreateEmployeePayload,
+  CreateLeaveRequestPayload,
   Employee,
   EmployeeListQuery,
   EmployeeStatus,
   EmploymentType,
   HrDashboardSummary,
+  HrAccess,
+  HrReferenceData,
   LeaveRequest,
   LeaveRequestListQuery,
   LeaveRequestStatus,
@@ -55,12 +60,26 @@ import {
 import { HrEmployeeStatusBadge, HrLeaveStatusBadge } from "./hr-badges";
 import { EmployeeFormModal } from "./employee-form-modal";
 import { EmployeeImportModal } from "./employee-import-modal";
+import { usePreferences } from "@/components/preferences-provider";
+import { uiMessage } from "@/lib/ui-messages";
 
-type HrTab = "employees" | "leaves";
+type HrTab = "overview" | "employees" | "leaves";
 
 export default function HrPage() {
-  const [activeTab, setActiveTab] = useState<HrTab>("employees");
+  const pathname = usePathname();
+  const router = useRouter();
+  const { locale } = usePreferences();
+  const activeTab: HrTab = pathname === "/hr/leaves"
+    ? "leaves"
+    : pathname === "/hr/employees"
+      ? "employees"
+      : "overview";
+  const setActiveTab = (tab: HrTab) => {
+    router.push(tab === "leaves" ? "/hr/leaves" : tab === "employees" ? "/hr/employees" : "/hr");
+  };
   const [dashboard, setDashboard] = useState<HrDashboardSummary | null>(null);
+  const [access, setAccess] = useState<HrAccess | null>(null);
+  const [referenceData, setReferenceData] = useState<HrReferenceData | null>(null);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
 
@@ -81,6 +100,9 @@ export default function HrPage() {
   const [leaveType, setLeaveType] = useState<LeaveType | "ALL">("ALL");
 
   const [updatingLeaveId, setUpdatingLeaveId] = useState<string | null>(null);
+  const [isLeaveFormOpen, setIsLeaveFormOpen] = useState(false);
+  const [isSavingLeave, setIsSavingLeave] = useState(false);
+  const [newLeave, setNewLeave] = useState({ leaveType: "ANNUAL" as LeaveType, startAt: "", endAt: "", reason: "" });
 
   const employeeQuery = useMemo<EmployeeListQuery>(
     () => ({
@@ -121,7 +143,10 @@ export default function HrPage() {
         if (showRefreshState) setRefreshing(true);
         else setLoading(true);
 
-        await Promise.all([loadDashboard(), loadEmployees(), loadLeaveRequests()]);
+        const [, , , currentAccess] = await Promise.all([
+          loadDashboard(), loadEmployees(), loadLeaveRequests(), humanResourcesApi.getAccess(),
+        ]);
+        setAccess(currentAccess);
       } catch (requestError) {
         if (requestError instanceof ApiClientError) {
           setError(requestError.message);
@@ -140,6 +165,20 @@ export default function HrPage() {
     void loadAllData();
   }, [loadAllData]);
 
+  useEffect(() => {
+    let cancelled = false;
+    if (!access?.canManageEmployees) {
+      setReferenceData(null);
+      return;
+    }
+    humanResourcesApi.getReferenceData()
+      .then((result) => { if (!cancelled) setReferenceData(result); })
+      .catch((requestError) => {
+        if (!cancelled) setError(requestError instanceof Error ? requestError.message : "دریافت فهرست‌های سازمانی ناموفق بود.");
+      });
+    return () => { cancelled = true; };
+  }, [access?.canManageEmployees]);
+
   // ثبت کارمند جدید و بروزرسانی داده‌های صفحه
   const handleCreateEmployee = async (payload: CreateEmployeePayload) => {
     try {
@@ -152,9 +191,33 @@ export default function HrPage() {
     }
   };
 
-  async function updateLeaveStatus(leaveRequestId: string, status: "APPROVED" | "REJECTED") {
-    const actionLabel = status === "APPROVED" ? "تأیید" : "رد";
-    const reviewerNote = window.prompt(`یادداشت ${actionLabel} درخواست مرخصی را وارد کنید (اختیاری):`);
+  const handleCreateLeaveRequest = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!access?.employeeId) return;
+    try {
+      setIsSavingLeave(true);
+      setError(null);
+      const payload: CreateLeaveRequestPayload = {
+        employeeId: access.employeeId,
+        leaveType: newLeave.leaveType,
+        startAt: new Date(newLeave.startAt).toISOString(),
+        endAt: new Date(newLeave.endAt).toISOString(),
+        reason: newLeave.reason.trim() || undefined,
+      };
+      await humanResourcesApi.createLeaveRequest(payload);
+      setIsLeaveFormOpen(false);
+      setNewLeave({ leaveType: "ANNUAL", startAt: "", endAt: "", reason: "" });
+      await Promise.all([loadDashboard(), loadLeaveRequests()]);
+    } catch (requestError) {
+      setError(requestError instanceof ApiClientError ? requestError.message : "ثبت درخواست مرخصی ناموفق بود.");
+    } finally {
+      setIsSavingLeave(false);
+    }
+  };
+
+  async function updateLeaveStatus(leaveRequestId: string, status: "APPROVED" | "REJECTED" | "CANCELLED") {
+    const actionLabel = status === "APPROVED" ? "تأیید" : status === "REJECTED" ? "رد" : "لغو";
+    const reviewerNote = status === "CANCELLED" ? undefined : window.prompt(`یادداشت ${actionLabel} درخواست مرخصی را وارد کنید (اختیاری):`);
     if (reviewerNote === null) return;
 
     try {
@@ -163,7 +226,7 @@ export default function HrPage() {
 
       await humanResourcesApi.updateLeaveRequestStatus(leaveRequestId, {
         status,
-        reviewerNote: reviewerNote.trim() || undefined,
+        reviewerNote: reviewerNote?.trim() || undefined,
       });
 
       await Promise.all([loadDashboard(), loadLeaveRequests()]);
@@ -198,7 +261,7 @@ export default function HrPage() {
       )}
 
       {/* ۱. کارت‌های شاخص‌های کلیدی منابع انسانی (KPIs) */}
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {activeTab === "overview" && <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-2xl border border-border bg-card p-4 shadow-sm transition-all hover:border-blue-500/30">
           <div className="flex items-center justify-between">
             <div>
@@ -250,14 +313,14 @@ export default function HrPage() {
             </div>
           </div>
         </div>
-      </section>
+      </section>}
 
       {/* ۲. بخش تب‌ها و جداول عملیاتی */}
       <section className="space-y-4 rounded-2xl border border-border bg-card p-5 shadow-sm">
         {/* نوار جابجایی تب‌ها و ابزار به‌روزرسانی */}
         <div className="flex flex-col gap-4 border-b border-border pb-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap items-center gap-1.5 rounded-xl bg-muted/60 p-1">
-            <button
+            {(access?.canViewEmployees || access?.employeeId) && <button
               type="button"
               onClick={() => setActiveTab("employees")}
               className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-bold transition-all ${
@@ -268,9 +331,9 @@ export default function HrPage() {
             >
               <Users size={14} />
               <span>فهرست کارکنان ({employees.length})</span>
-            </button>
+            </button>}
 
-            <button
+            {(access?.canViewLeaves || access?.canRequestLeave) && <button
               type="button"
               onClick={() => setActiveTab("leaves")}
               className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-bold transition-all ${
@@ -281,29 +344,40 @@ export default function HrPage() {
             >
               <CalendarClock size={14} />
               <span>درخواست‌های مرخصی ({leaveRequests.length})</span>
-            </button>
+            </button>}
           </div>
 
           <div className="flex items-center gap-2.5">
             {/* دکمه ورود گروهی پرسنل (JSON) */}
-            <button
+            {access?.canManageEmployees && activeTab === "employees" && <button
               type="button"
               onClick={() => setIsImportModalOpen(true)}
               className="inline-flex h-9.5 items-center justify-center gap-1.5 rounded-xl border border-border bg-background px-3 text-xs font-semibold text-foreground transition-all hover:bg-muted active:scale-95"
             >
               <Upload size={14} className="text-muted-foreground" />
               <span>ورود گروهی (JSON)</span>
-            </button>
+            </button>}
 
             {/* دکمه ثبت کارمند جدید */}
-            <button
+            {access?.canManageEmployees && activeTab === "employees" && <button
               type="button"
               onClick={() => setIsCreateModalOpen(true)}
               className="inline-flex h-9.5 items-center justify-center gap-1.5 rounded-xl bg-primary px-3.5 text-xs font-bold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 active:scale-95"
             >
               <Plus size={15} />
               <span>ثبت کارمند جدید</span>
-            </button>
+            </button>}
+
+            {activeTab === "leaves" && access?.canRequestLeave && (
+              <button
+                type="button"
+                onClick={() => setIsLeaveFormOpen((open) => !open)}
+                className="inline-flex h-9.5 items-center justify-center gap-1.5 rounded-xl bg-primary px-3.5 text-xs font-bold text-primary-foreground shadow-sm transition-all hover:bg-primary/90"
+              >
+                <Plus size={15} />
+                <span>{uiMessage(locale, "hrLeaveRequestNew")}</span>
+              </button>
+            )}
 
             {/* دکمه به‌روزرسانی */}
             <button
@@ -320,6 +394,25 @@ export default function HrPage() {
         </div>
 
         {/* تب ۱: فهرست کارکنان */}
+        {activeTab === "overview" && (
+          <div className="grid gap-4 md:grid-cols-2">
+            {(access?.canViewEmployees || access?.employeeId) && (
+            <Link href="/hr/employees" className="group flex min-h-32 items-center justify-between rounded-2xl border border-border bg-background p-5 transition-colors hover:border-primary/50 hover:bg-primary/5">
+              <span className="flex items-center gap-3"><Users className="text-primary" size={22} /><span className="font-bold">{uiMessage(locale, "sidebarEmployeeRecords")}</span></span>
+              <span className="text-sm text-muted-foreground">{dashboard?.employees.total ?? 0}</span>
+            </Link>
+            )}
+            {(access?.canViewLeaves || access?.canRequestLeave) && (
+            <Link href="/hr/leaves" className="group flex min-h-32 items-center justify-between rounded-2xl border border-border bg-background p-5 transition-colors hover:border-primary/50 hover:bg-primary/5">
+              <span className="flex items-center gap-3"><CalendarClock className="text-primary" size={22} /><span className="font-bold">{uiMessage(locale, "sidebarLeaveRequests")}</span></span>
+              <span className="text-sm text-muted-foreground">{dashboard?.leaveRequests.pending ?? 0}</span>
+            </Link>
+            )}
+            {(access?.canViewAttendance || access?.employeeId) && <Link href="/hr/attendance" className="flex min-h-32 items-center gap-3 rounded-2xl border border-border bg-background p-5 transition-colors hover:border-primary/50 hover:bg-primary/5"><Clock className="text-primary" size={22}/><span className="font-bold">{uiMessage(locale, "sidebarAttendance")}</span></Link>}
+            {(access?.canViewPayroll || access?.employeeId) && <Link href="/hr/payroll" className="flex min-h-32 items-center gap-3 rounded-2xl border border-border bg-background p-5 transition-colors hover:border-primary/50 hover:bg-primary/5"><Briefcase className="text-primary" size={22}/><span className="font-bold">{uiMessage(locale, "sidebarPayroll")}</span></Link>}
+          </div>
+        )}
+
         {activeTab === "employees" && (
           <div className="space-y-4">
             {/* فیلترهای بخش پرسنل */}
@@ -474,6 +567,32 @@ export default function HrPage() {
         {/* تب ۲: درخواست‌های مرخصی */}
         {activeTab === "leaves" && (
           <div className="space-y-4">
+            {isLeaveFormOpen && access?.employeeId && (
+              <form onSubmit={(event) => void handleCreateLeaveRequest(event)} className="grid gap-3 rounded-2xl border border-border bg-background p-4 sm:grid-cols-2 lg:grid-cols-5">
+                <label className="space-y-1 text-xs font-semibold">
+                  <span>{uiMessage(locale, "hrLeaveType")}</span>
+                  <select value={newLeave.leaveType} onChange={(event) => setNewLeave((value) => ({ ...value, leaveType: event.target.value as LeaveType }))} className="h-10 w-full rounded-xl border border-border bg-card px-3">
+                    {Object.entries(leaveTypeLabels).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
+                  </select>
+                </label>
+                <label className="space-y-1 text-xs font-semibold">
+                  <span>{uiMessage(locale, "hrLeaveStartAt")}</span>
+                  <input required type="datetime-local" value={newLeave.startAt} onChange={(event) => setNewLeave((value) => ({ ...value, startAt: event.target.value }))} className="h-10 w-full rounded-xl border border-border bg-card px-3" />
+                </label>
+                <label className="space-y-1 text-xs font-semibold">
+                  <span>{uiMessage(locale, "hrLeaveEndAt")}</span>
+                  <input required type="datetime-local" value={newLeave.endAt} onChange={(event) => setNewLeave((value) => ({ ...value, endAt: event.target.value }))} className="h-10 w-full rounded-xl border border-border bg-card px-3" />
+                </label>
+                <label className="space-y-1 text-xs font-semibold lg:col-span-2">
+                  <span>{uiMessage(locale, "hrLeaveReason")}</span>
+                  <input maxLength={2000} value={newLeave.reason} onChange={(event) => setNewLeave((value) => ({ ...value, reason: event.target.value }))} className="h-10 w-full rounded-xl border border-border bg-card px-3" />
+                </label>
+                <div className="flex gap-2 sm:col-span-2 lg:col-span-5">
+                  <button disabled={isSavingLeave} className="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground disabled:opacity-50">{uiMessage(locale, "hrLeaveSubmit")}</button>
+                  <button type="button" onClick={() => setIsLeaveFormOpen(false)} className="rounded-xl border border-border px-4 py-2 text-xs font-semibold">{uiMessage(locale, "hrLeaveCancel")}</button>
+                </div>
+              </form>
+            )}
             {/* فیلترهای مرخصی */}
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="relative">
@@ -596,7 +715,7 @@ export default function HrPage() {
                             </td>
 
                             <td className="px-4 py-4 text-center">
-                              {isPending ? (
+                              {isPending && access?.canReviewLeave ? (
                                 <div className="inline-flex items-center gap-2">
                                   <button
                                     type="button"
@@ -618,6 +737,8 @@ export default function HrPage() {
                                     <span>رد</span>
                                   </button>
                                 </div>
+                              ) : isPending && access?.employeeId === leaveRequest.employeeId ? (
+                                <button type="button" disabled={isUpdating} onClick={() => void updateLeaveStatus(leaveRequest.id, "CANCELLED")} className="rounded-lg border border-border px-2.5 py-1.5 text-xs font-semibold text-muted-foreground hover:bg-muted disabled:opacity-50">{uiMessage(locale, "hrLeaveCancel")}</button>
                               ) : (
                                 <span className="text-xs text-muted-foreground">—</span>
                               )}
@@ -638,6 +759,7 @@ export default function HrPage() {
       <EmployeeFormModal
         isOpen={isCreateModalOpen}
         isSaving={isSavingEmployee}
+        referenceData={referenceData}
         onClose={() => setIsCreateModalOpen(false)}
         onSave={handleCreateEmployee}
       />
