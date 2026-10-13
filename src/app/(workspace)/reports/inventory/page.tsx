@@ -1,5 +1,5 @@
-import ReportsPage from "../page";
+import { redirect } from "next/navigation";
 
-export default function InventoryReportsPage() {
-  return <ReportsPage initialCategory="INVENTORY" />;
+export default function LegacyInventoryReportsPage() {
+  redirect("/business-intelligence/inventory");
 }

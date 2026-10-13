@@ -150,20 +150,20 @@ export function PublicHeader() {
         dir="rtl"
         className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-xl"
       >
-        <div className="mx-auto grid h-20 w-full max-w-7xl grid-cols-[1fr_auto_1fr] items-center px-4 sm:px-8">
+        <div className="mx-auto grid h-16 w-full max-w-7xl grid-cols-[1fr_auto_1fr] items-center gap-2 px-2 sm:h-20 sm:px-8">
           {/* سمت راست: ورود و ثبت‌نام */}
           <nav className="flex items-center justify-start gap-2.5">
             <Link
               href="/login"
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs sm:text-sm font-bold text-primary-foreground shadow-md shadow-primary/20 transition-all hover:opacity-95 hover:shadow-lg active:scale-95"
+              className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-primary px-2.5 py-2 text-xs font-bold text-primary-foreground shadow-md shadow-primary/20 transition-all hover:opacity-95 hover:shadow-lg active:scale-95 sm:h-10 sm:gap-2 sm:px-4 sm:text-sm"
             >
               <LogIn size={16} />
-              <span>ورود</span>
+              <span className="max-sm:sr-only">ورود</span>
             </Link>
 
             {hasUsers === null && (
               <div
-                className="h-10 w-24 animate-pulse rounded-xl bg-muted"
+                className="h-9 w-6 animate-pulse rounded-xl bg-muted sm:h-10 sm:w-24"
                 aria-hidden="true"
               />
             )}
@@ -171,11 +171,11 @@ export function PublicHeader() {
             {hasUsers === false && (
               <Link
                 href="/register"
-                className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3.5 py-2 text-xs sm:text-sm font-bold text-emerald-600 dark:text-emerald-400 transition-all hover:bg-emerald-500/20 active:scale-95 animate-pulse"
+              className="inline-flex h-9 items-center justify-center gap-1 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-2 py-2 text-[11px] font-bold text-emerald-600 transition-all hover:bg-emerald-500/20 active:scale-95 animate-pulse dark:text-emerald-400 sm:h-10 sm:gap-1.5 sm:px-3.5 sm:text-sm"
                 title="سامانه آماده راه‌اندازی است، اولین مالک را تعریف کنید"
               >
                 <Sparkles size={16} />
-                <span>ثبت‌نام اولیه</span>
+                <span className="max-sm:sr-only">ثبت‌نام اولیه</span>
               </Link>
             )}
 
@@ -183,11 +183,11 @@ export function PublicHeader() {
               <button
                 type="button"
                 onClick={() => setShowDisabledNotice(true)}
-                className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-border bg-muted/50 px-3.5 py-2 text-xs sm:text-sm font-medium text-muted-foreground transition-all hover:bg-muted hover:text-foreground active:scale-95 cursor-pointer"
+                className="inline-flex h-9 items-center justify-center gap-1 rounded-xl border border-border bg-muted/50 px-2 py-2 text-[11px] font-medium text-muted-foreground transition-all hover:bg-muted hover:text-foreground active:scale-95 cursor-pointer sm:h-10 sm:gap-1.5 sm:px-3.5 sm:text-sm"
                 title="راهنمای ثبت‌نام"
               >
                 <UserPlus size={16} className="opacity-70" />
-                <span>ثبت‌نام</span>
+                <span className="max-sm:sr-only">ثبت‌نام</span>
               </button>
             )}
           </nav>

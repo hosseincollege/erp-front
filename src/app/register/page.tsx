@@ -330,7 +330,7 @@ export default function RegisterPage() {
 
   return (
     <div
-      className="min-h-screen bg-slate-950 px-4 py-8 text-white"
+      className="min-h-screen bg-slate-950 px-3 py-4 text-white sm:px-4 sm:py-8"
       dir="rtl"
     >
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
@@ -377,7 +377,7 @@ export default function RegisterPage() {
 
         <form
           onSubmit={handleSubmit}
-          className="border border-slate-800 bg-slate-900 p-6"
+          className="border border-slate-800 bg-slate-900 p-4 sm:p-6"
         >
           {error ? (
             <div className="mb-4 flex items-center gap-2 border border-rose-900/60 bg-rose-950/30 px-3 py-2 text-sm text-rose-200">

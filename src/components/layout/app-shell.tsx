@@ -26,6 +26,7 @@ export function AppShell({ children }: AppShellProps) {
   const [isSidebarLocked, setIsSidebarLocked] = useState(false);
   const [isSidebarStateLoaded, setIsSidebarStateLoaded] = useState(false);
   const [isProfileActive, setIsProfileActive] = useState(false);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [navigateOnClick, setNavigateOnClick] = useState(false);
 
   /*
@@ -105,6 +106,24 @@ export function AppShell({ children }: AppShellProps) {
     setIsProfileActive(false);
   };
 
+  useEffect(() => {
+    if (!isMobileNavOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsMobileNavOpen(false);
+    };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [isMobileNavOpen]);
+
+  useEffect(() => {
+    const desktop = window.matchMedia('(min-width: 768px)');
+    const closeOnDesktop = (event: MediaQueryListEvent) => {
+      if (event.matches) setIsMobileNavOpen(false);
+    };
+    desktop.addEventListener('change', closeOnDesktop);
+    return () => desktop.removeEventListener('change', closeOnDesktop);
+  }, []);
+
   const handleToggleSidebarLock = () => {
     setIsSidebarLocked((previousLocked) => {
       const nextLocked = !previousLocked;
@@ -130,14 +149,25 @@ export function AppShell({ children }: AppShellProps) {
     >
       <TopHeader
         isCollapsed={isCollapsed}
+        isMobileMenuOpen={isMobileNavOpen}
         isSidebarLocked={isSidebarLocked}
         navigateOnClick={navigateOnClick}
         onToggleSidebar={handleToggleSidebar}
+        onToggleMobileMenu={() => setIsMobileNavOpen((open) => !open)}
         onToggleSidebarLock={handleToggleSidebarLock}
         onToggleNavigateOnClick={handleToggleNavigateOnClick}
       />
 
       <div className="flex min-h-0 flex-1 items-stretch overflow-hidden">
+        {isMobileNavOpen && (
+          <button
+            type="button"
+            aria-hidden="true"
+            tabIndex={-1}
+            onClick={() => setIsMobileNavOpen(false)}
+            className="fixed inset-x-0 bottom-0 top-16 z-30 bg-black/45 backdrop-blur-[1px] md:hidden"
+          />
+        )}
         <Sidebar
           isMainCollapsed={isCollapsed}
           isLocked={isSidebarLocked}
@@ -145,13 +175,15 @@ export function AppShell({ children }: AppShellProps) {
           navigateOnClick={navigateOnClick}
           onSetProfileActive={setIsProfileActive}
           onCloseSidebar={handleCloseSidebar}
+          isMobileOpen={isMobileNavOpen}
+          onMobileClose={() => setIsMobileNavOpen(false)}
         />
 
         <main
           dir={direction === 'rtl' ? 'ltr' : 'rtl'}
           className="erp-scrollbar min-h-0 min-w-0 flex-1 bg-[color:var(--background)]"
         >
-          <div dir={direction} className="min-h-full w-full p-6 text-right">
+          <div dir={direction} className="min-h-full w-full p-3 text-right sm:p-4 lg:p-6">
             {children}
           </div>
         </main>

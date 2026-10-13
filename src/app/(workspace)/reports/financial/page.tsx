@@ -1,5 +1,5 @@
-import ReportsPage from "../page";
+import { redirect } from "next/navigation";
 
-export default function FinancialReportsPage() {
-  return <ReportsPage initialCategory="FINANCIAL" />;
+export default function LegacyFinancialReportsPage() {
+  redirect("/business-intelligence/financial");
 }

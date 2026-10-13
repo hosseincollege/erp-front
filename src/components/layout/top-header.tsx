@@ -26,12 +26,14 @@ import {
   ChevronLeft,
   LogOut,
   Lock,
+  Menu,
   Monitor,
   Moon,
   ShieldCheck,
   Sun,
   Unlock,
   User,
+  X,
 } from 'lucide-react';
 import { useTheme } from '@/components/theme-provider';
 import { getLocaleDirection, usePreferences } from '@/components/preferences-provider';
@@ -39,18 +41,22 @@ import { uiMessage } from '@/lib/ui-messages';
 
 interface TopHeaderProps {
   isCollapsed?: boolean;
+  isMobileMenuOpen?: boolean;
   isSidebarLocked?: boolean;
   navigateOnClick?: boolean;
   onToggleSidebar?: () => void;
+  onToggleMobileMenu?: () => void;
   onToggleSidebarLock?: () => void;
   onToggleNavigateOnClick?: () => void;
 }
 
 export function TopHeader({
   isCollapsed = true,
+  isMobileMenuOpen = false,
   isSidebarLocked = false,
   navigateOnClick = false,
   onToggleSidebar,
+  onToggleMobileMenu,
   onToggleSidebarLock,
   onToggleNavigateOnClick,
 }: TopHeaderProps) {
@@ -237,14 +243,25 @@ export function TopHeader({
       <div
         dir={direction}
         className="
-          absolute start-5 top-1/2 z-10
-          flex -translate-y-1/2
-          items-center gap-2
+          absolute inset-x-2 top-1/2 z-10 w-[calc(100%-1rem)] -translate-y-1/2
+          flex items-center justify-between gap-2
+          md:inset-x-auto md:start-5 md:w-auto md:justify-start
         "
       >
         {/* ۱. دکمه کنترل سایدبار (فلش باز/بستن/قفل) */}
         {onToggleSidebar && (
           <div id="sidebar-controls" className="order-1">
+            <button
+              type="button"
+              onClick={onToggleMobileMenu}
+              title={message(isMobileMenuOpen ? 'closeSidebar' : 'openSidebar')}
+              aria-label={message(isMobileMenuOpen ? 'closeSidebar' : 'openSidebar')}
+              aria-expanded={isMobileMenuOpen}
+              aria-controls="erp-mobile-navigation"
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border)] text-[var(--foreground)] md:hidden"
+            >
+              {isMobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+            </button>
             <button
               id="sidebar-toggle-btn"
               type="button"
@@ -253,7 +270,7 @@ export function TopHeader({
               title={sidebarButtonTitle}
               aria-label={sidebarButtonTitle}
               aria-pressed={!isCollapsed && isSidebarLocked}
-              className={`
+              className={`hidden md:flex
                 flex h-9 w-9 cursor-pointer
                 items-center justify-center
                 rounded-xl transition-all duration-200
@@ -280,8 +297,7 @@ export function TopHeader({
             title={navigateModeTitle}
             aria-label={navigateModeTitle}
             aria-pressed={navigateOnClick}
-            className={`
-              flex h-9 w-9 cursor-pointer items-center justify-center
+            className={`hidden md:flex h-9 w-9 cursor-pointer items-center justify-center
               order-2
               rounded-xl transition-all duration-200
               ${
@@ -339,7 +355,7 @@ export function TopHeader({
           </div>
 
           {/* نام و نقش */}
-          <div className="pointer-events-none text-start">
+          <div className="pointer-events-none hidden text-start sm:block">
             <p className="text-xs font-bold leading-tight">
               {user?.name || message('admin')}
             </p>
@@ -355,7 +371,7 @@ export function TopHeader({
           </div>
           </button>
           {isAccountMenuOpen && (
-            <div role="menu" className="absolute start-full top-1/2 z-[60] ms-2 min-w-44 -translate-y-1/2 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-1.5 shadow-lg">
+            <div role="menu" className="absolute end-0 top-full z-[60] mt-2 min-w-44 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-1.5 shadow-lg md:start-full md:top-1/2 md:mt-0 md:ms-2 md:end-auto md:-translate-y-1/2">
               <button
                 type="button"
                 role="menuitem"
@@ -384,7 +400,7 @@ export function TopHeader({
           className="relative flex h-12 w-12 items-center justify-center rounded-xl"
         >
           <span
-            className="absolute right-[calc(100%+0.0625rem)] top-1/2 w-max max-w-[min(24vw,15rem)] -translate-y-1/2 truncate text-left font-black tracking-tight text-[var(--foreground)]"
+            className="absolute right-[calc(100%+0.0625rem)] top-1/2 hidden w-max max-w-[min(24vw,15rem)] -translate-y-1/2 truncate text-left font-black tracking-tight text-[var(--foreground)] sm:block"
             style={{ fontSize: english ? '0.8rem' : '0.95rem' }}
           >
             {organizationBranding?.name || 'ERP Pro'}
@@ -418,7 +434,7 @@ export function TopHeader({
             )}
           </div>
 
-          <span className="absolute left-[calc(100%+0.0625rem)] top-1/2 -translate-y-1/2 text-[11px] font-bold tracking-wide text-primary">
+          <span className="absolute left-[calc(100%+0.0625rem)] top-1/2 hidden -translate-y-1/2 text-[11px] font-bold tracking-wide text-primary sm:block">
             ERP
           </span>
         </Link>

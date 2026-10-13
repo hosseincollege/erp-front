@@ -64,15 +64,15 @@ export default function LoginPage() {
       <PublicHeader />
 
       <section className="flex min-h-[calc(100vh-5rem)] items-center justify-center p-4">
-        <div className="w-full max-w-sm rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-8 shadow-sm">
+        <div className="w-full max-w-sm rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm sm:p-8">
           <h1 className="mb-6 text-center text-2xl font-bold text-[var(--foreground)]">
             ورود به سیستم
           </h1>
 
           {/* باکس حساب دمو - مرتب و جمع‌وجور */}
           <div className="mb-6 rounded-xl border border-blue-500/20 bg-blue-500/10 p-3.5 text-xs text-blue-900 dark:border-blue-500/30 dark:bg-blue-950/40 dark:text-blue-200">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4 font-mono text-[13px]">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[13px]">
                 <div>
                   نام کاربری: <span className="font-bold text-blue-600 dark:text-blue-400">demo</span>
                 </div>

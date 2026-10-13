@@ -1,5 +1,5 @@
-import ReportsPage from "../page";
+import { redirect } from "next/navigation";
 
-export default function HumanResourcesReportsPage() {
-  return <ReportsPage initialCategory="HR" />;
+export default function LegacyHumanResourcesReportsPage() {
+  redirect("/business-intelligence/hr");
 }

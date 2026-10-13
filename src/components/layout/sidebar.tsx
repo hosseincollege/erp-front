@@ -23,6 +23,7 @@ import {
   BarChart3,
   BriefcaseBusiness,
   Calculator,
+  Code2,
   ExternalLink,
   LayoutDashboard,
   LogOut,
@@ -114,15 +115,15 @@ const navigation: NavigationItem[] = [
     ],
   },
   {
-    id: 'reports',
-    titleKey: 'sidebarReports',
+    id: 'business-intelligence',
+    titleKey: 'sidebarBusinessIntelligence',
     icon: BarChart3,
-    href: '/reports',
+    href: '/business-intelligence',
     sub: [
-      { titleKey: 'sidebarFinancialReports', href: '/reports/financial' },
-      { titleKey: 'sidebarSalesReports', href: '/reports/sales' },
-      { titleKey: 'sidebarHrReports', href: '/reports/hr' },
-      { titleKey: 'sidebarInventoryReports', href: '/reports/inventory' },
+      { titleKey: 'sidebarFinancialReports', href: '/business-intelligence/financial' },
+      { titleKey: 'sidebarSalesReports', href: '/business-intelligence/sales' },
+      { titleKey: 'sidebarHrReports', href: '/business-intelligence/hr' },
+      { titleKey: 'sidebarInventoryReports', href: '/business-intelligence/inventory' },
     ],
   },
   {
@@ -148,6 +149,13 @@ const navigation: NavigationItem[] = [
     href: '/support',
     sub: [],
   },
+  {
+    id: 'development',
+    titleKey: 'sidebarDevelopment',
+    icon: Code2,
+    href: '/development',
+    sub: [{ titleKey: 'sidebarTestData', href: '/development/test-data' }],
+  },
 ];
 
 interface SidebarProps {
@@ -156,6 +164,8 @@ interface SidebarProps {
   isProfileActive?: boolean;
   navigateOnClick?: boolean;
   onCloseSidebar?: () => void;
+  isMobileOpen?: boolean;
+  onMobileClose?: () => void;
   onSetProfileActive?: (active: boolean) => void;
 }
 
@@ -165,6 +175,8 @@ export function Sidebar({
   isProfileActive = false,
   navigateOnClick = false,
   onCloseSidebar,
+  isMobileOpen = false,
+  onMobileClose,
   onSetProfileActive,
 }: SidebarProps) {
   const pathname = usePathname();
@@ -339,9 +351,11 @@ export function Sidebar({
     <aside
       ref={sidebarRef}
       dir={getLocaleDirection(locale)}
+      id="erp-mobile-navigation"
+      data-mobile-open={isMobileOpen}
       className="
-        sticky top-16 z-40
-        flex h-[calc(100vh-4rem)]
+        erp-sidebar-drawer fixed inset-y-16 start-0 z-40 flex h-auto max-w-[calc(100vw-0.5rem)]
+        md:sticky md:inset-auto md:top-16 md:z-40 md:h-[calc(100vh-4rem)] md:max-w-none
         shrink-0 select-none
         transition-all duration-300
       "
@@ -408,7 +422,10 @@ export function Sidebar({
           <div className="flex flex-col gap-3">
             <Link
               href="/dashboard/profile"
-              onClick={() => onSetProfileActive?.(true)}
+              onClick={() => {
+                onSetProfileActive?.(true);
+                onMobileClose?.();
+              }}
               className="flex items-center justify-between rounded-xl bg-[var(--primary)] px-3.5 py-2.5 text-xs font-semibold text-[var(--primary-foreground)] shadow-md shadow-[var(--primary)]/20 transition-colors hover:bg-[var(--primary-hover)]"
             >
               <span className="flex items-center gap-2">
@@ -465,6 +482,7 @@ export function Sidebar({
                     <Link
                       key={subItem.href}
                       href={subItem.href}
+                      onClick={onMobileClose}
                       className={`
                         flex items-center gap-2 rounded-lg px-3 py-2.5 transition-colors
                         ${
