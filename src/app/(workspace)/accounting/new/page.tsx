@@ -364,6 +364,7 @@ export default function NewAccountingInvoicePage() {
               </span>
 
               <input
+                required
                 value={form.vendorName}
                 onChange={(event) =>
                   updateFormField("vendorName", event.target.value)

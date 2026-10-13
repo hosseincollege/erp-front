@@ -15,6 +15,7 @@ const messages = {
     preferencesSaving: "Enregistrement…",
     preferencesSaveFailed: "Impossible d’enregistrer les préférences.",
     headerSearch: "Rechercher dans l’espace de travail",
+    sidebarDashboard: "Tableau de bord", searchDescription: "Rechercher dans les modules et les pages du système.", searchNoResults: "Aucune page correspondante trouvée.",
     sidebarAccounting: "Comptabilité",
     sidebarCommercial: "Commerce",
     sidebarSupplyChain: "Logistique",
@@ -161,6 +162,17 @@ const messages = {
     announcementCategoryFinance: 'Finances',
     announcementCategoryHr: 'Ressources humaines',
     announcementCategoryTechnical: 'Technique',
+    dashboardNotifications: 'Notifications',
+    dashboardMessages: 'Messages',
+    dashboardHistory: 'Historique', dashboardActivities: 'Activités',
+    dashboardHelp: 'Aide',
+    dashboardSearch: 'Recherche',
+    dashboardAccount: 'Compte utilisateur',
+    dashboardConversation: 'Conversations',
+    conversationsComingSoon: 'Cet espace est prévu pour les échanges au sein de votre organisation et sera bientôt disponible.',
+    dashboardPlanning: 'Planification',
+    planningComingSoon: 'Cette section servira à créer des plans, attribuer des responsables ou groupes, ajouter des rapports et suivre leur avancement. Elle sera bientôt disponible.',
+    messagesTitle: 'Messages', messagesDescription: 'Messages et annonces de l’organisation', messagesEmpty: 'Aucun message à afficher.', messagesLoadFailed: 'Impossible de charger les messages.', activityHistoryTitle: 'Historique des activités', activityTabAll: 'Activités récentes', activityTabCreated: 'Éléments récemment créés', activityEmpty: 'Aucun élément à afficher.', activityLoadFailed: 'Impossible de charger l’historique des activités.', userGuideTitle: 'Guide utilisateur', userGuideDescription: 'Un guide rapide des principales sections du système.', guideNavigationTitle: 'Navigation dans le système', guideNavigationDescription: 'Choisissez un module dans la première colonne et ouvrez ses tâches dans la deuxième.', guideNotificationsTitle: 'Notifications', guideNotificationsDescription: 'Suivez les affectations, changements de statut et événements de l’organisation depuis la cloche.', guideMessagesTitle: 'Messages', guideMessagesDescription: 'Consultez les annonces de l’organisation dans la boîte de réception. Elles peuvent s’adresser à toute l’organisation ou à des groupes précis.', guideSupportTitle: 'Assistance', guideSupportDescription: 'Utilisez l’assistance pour demander de l’aide ou suivre un problème.',
     dashboardServiceTitle: 'État des services',
     dashboardActivityTitle: 'Résumé de l’activité',
     dashboardActivityEmpty: 'Aucune activité enregistrée.',
@@ -186,7 +198,7 @@ const messages = {
     supportTicketsEmpty: 'Aucun ticket n’a encore été créé pour ce projet.',
     supportProjectViewOnly: 'Ce projet est accessible en lecture seule.',
     supportProjectsTitle: 'Projets disponibles',
-    accountingChartOfAccounts: 'Plan comptable', accountingPurchaseInvoices: 'Factures fournisseurs', accountingReceiptsPayments: 'Encaissements et paiements', accountingOverview: 'Vue d’ensemble', accountingInvoices: 'Factures', accountingEntriesLedger: 'Écritures et grand livre', accountingNavigation: 'Sections comptables', accountingAccessDenied: 'Vous n’avez pas l’autorisation de consulter la comptabilité.', accountingTotalDocuments: 'Total des pièces', accountingAwaitingReview: 'En attente de vérification', accountingApproved: 'Approuvés', accountingPaid: 'Payés', accountingOverdue: 'En retard', accountingNotConfigured: 'Aucune donnée ni aucun service comptable n’est encore disponible pour cette section.',
+    accountingAttentionTitle: 'État du circuit des pièces', accountingAttentionDescription: 'Nombre de pièces à chaque étape du circuit comptable', accountingRecentTitle: 'Pièces récentes', accountingRecentDescription: 'Les cinq dernières pièces financières créées', accountingChartOfAccounts: 'Plan comptable', accountingPurchaseInvoices: 'Factures fournisseurs', accountingReceiptsPayments: 'Encaissements et paiements', accountingOverview: 'Comptabilité', accountingInvoices: 'Factures', accountingEntriesLedger: 'Écritures et grand livre', accountingNavigation: 'Sections comptables', accountingAccessDenied: 'Vous n’avez pas l’autorisation de consulter la comptabilité.', accountingTotalDocuments: 'Total des pièces', accountingAwaitingReview: 'En attente de vérification', accountingApproved: 'Approuvés', accountingRejected: 'Rejetés', accountingPaid: 'Payés', accountingOverdue: 'En retard', accountingNotConfigured: 'Aucune donnée ni aucun service comptable n’est encore disponible pour cette section.',
   accountingManageDenied: 'Vous n’avez pas l’autorisation de gérer les écritures comptables.',
     sidebarDatabase: "Base de données",
     databaseTitle: "Base de données",
@@ -210,6 +222,7 @@ const messages = {
     calendarPersian: "Persan (hégire solaire)",
     calendarIslamic: "Islamique (hégire lunaire)",
     calendarGregorian: "Grégorien",
+  acctCode: 'Code du compte', acctName: 'Nom du compte', acctType: 'Type de compte', acctCreate: 'Ajouter un compte', acctAsset: 'Actif', acctLiability: 'Passif', acctEquity: 'Capitaux propres', acctRevenue: 'Produit', acctExpense: 'Charge', acctVoucherDate: 'Date de pièce', acctDescription: 'Description', acctDebit: 'Débit', acctCredit: 'Crédit', acctAddVoucher: 'Créer une écriture', acctPost: 'Comptabiliser', acctDraft: 'Brouillon', acctPosted: 'Comptabilisé', acctBalance: 'Solde', acctUnbalanced: 'Le total des débits doit égaler celui des crédits.', acctAccountsEmpty: 'Aucun compte n’a encore été créé.', acctVouchersEmpty: 'Aucune pièce n’a encore été créée.', acctLedgerEmpty: 'Aucune écriture comptabilisée pour ce compte.', acctSelectAccount: 'Sélectionner un compte', acctLoadFailed: 'Impossible de charger les données comptables.', acctSaveFailed: 'Impossible d’enregistrer les données comptables.', acctSaved: 'Enregistré avec succès.', acctPostConfirm: 'Une pièce comptabilisée ne peut plus être modifiée.', acctAddLine: 'Ajouter une ligne', acctRemoveLine: 'Supprimer la ligne', acctAmount: 'Montant', acctMethod: 'Mode de paiement', acctNewPurchase: 'Saisir une facture fournisseur', acctCodeInvalid: 'Saisissez un code de compte unique de 24 caractères maximum.', acctNameRequired: 'Saisissez un nom de compte.', acctDateInvalid: 'Saisissez une date valide.', acctLineRequired: 'Une pièce doit comporter au moins deux lignes.', acctPositiveLine: 'Saisissez un montant au débit ou au crédit pour chaque ligne.', acctLineSide: 'Chaque ligne doit être au débit ou au crédit, pas les deux.'
 } satisfies Record<UiMessage, string>;
 
 export default messages;

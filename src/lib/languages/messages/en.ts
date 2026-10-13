@@ -15,6 +15,7 @@ const messages = {
     preferencesSaving: "Saving…",
     preferencesSaveFailed: "Could not save preferences.",
     headerSearch: "Search the workspace",
+    sidebarDashboard: "Dashboard", searchDescription: "Search the system's modules and pages.", searchNoResults: "No matching pages found.",
     sidebarAccounting: "Accounting",
     sidebarCommercial: "Commerce",
     sidebarSupplyChain: "Supply",
@@ -161,6 +162,17 @@ const messages = {
     announcementCategoryFinance: 'Finance',
     announcementCategoryHr: 'Human resources',
     announcementCategoryTechnical: 'Technical',
+    dashboardNotifications: 'Notifications',
+    dashboardMessages: 'Messages',
+    dashboardHistory: 'History', dashboardActivities: 'Activities',
+    dashboardHelp: 'Help',
+    dashboardSearch: 'Search',
+    dashboardAccount: 'User account',
+    dashboardConversation: 'Conversations',
+    conversationsComingSoon: 'This space is for conversations within the organization and will be available soon.',
+    dashboardPlanning: 'Planning',
+    planningComingSoon: 'This space is for creating plans, assigning people or groups, adding reports, and tracking progress. It will be available soon.',
+    messagesTitle: 'Messages', messagesDescription: 'Organization messages and announcements', messagesEmpty: 'There are no messages to display.', messagesLoadFailed: 'Could not load messages.', activityHistoryTitle: 'Activity history', activityTabAll: 'Latest activity', activityTabCreated: 'Recently created', activityEmpty: 'There is nothing to display.', activityLoadFailed: 'Could not load activity history.', userGuideTitle: 'User guide', userGuideDescription: 'A quick guide to the main areas of the system.', guideNavigationTitle: 'Navigating the system', guideNavigationDescription: 'Choose a module in the first sidebar column and use the second column to open its workflows.', guideNotificationsTitle: 'Notifications', guideNotificationsDescription: 'Use the bell to follow task assignments, status changes, and organization events.', guideMessagesTitle: 'Messages', guideMessagesDescription: 'Read organization announcements in the message inbox. Messages can be intended for the whole organization or selected groups.', guideSupportTitle: 'Support', guideSupportDescription: 'Use Support to request help or follow up on an issue.',
     dashboardServiceTitle: 'Service status',
     dashboardActivityTitle: 'Activity summary',
     dashboardActivityEmpty: 'No activity has been recorded yet.',
@@ -186,7 +198,7 @@ const messages = {
     supportTicketsEmpty: 'No tickets have been created for this project yet.',
     supportProjectViewOnly: 'This project is available in view-only mode.',
     supportProjectsTitle: 'Available projects',
-    accountingChartOfAccounts: 'Chart of accounts', accountingPurchaseInvoices: 'Purchase invoices', accountingReceiptsPayments: 'Receipts and payments', accountingOverview: 'Overview', accountingInvoices: 'Invoices', accountingEntriesLedger: 'Entries and ledger', accountingNavigation: 'Accounting sections', accountingAccessDenied: 'You do not have permission to view accounting.', accountingTotalDocuments: 'Total documents', accountingAwaitingReview: 'Awaiting review', accountingApproved: 'Approved', accountingPaid: 'Paid', accountingOverdue: 'Overdue', accountingNotConfigured: 'No accounting data or service is available for this section yet.',
+    accountingAttentionTitle: 'Document workflow status', accountingAttentionDescription: 'Number of documents at each accounting workflow stage', accountingRecentTitle: 'Recent documents', accountingRecentDescription: 'The five most recently created financial documents', accountingChartOfAccounts: 'Chart of accounts', accountingPurchaseInvoices: 'Purchase invoices', accountingReceiptsPayments: 'Receipts and payments', accountingOverview: 'Accounting', accountingInvoices: 'Invoices', accountingEntriesLedger: 'Entries and ledger', accountingNavigation: 'Accounting sections', accountingAccessDenied: 'You do not have permission to view accounting.', accountingTotalDocuments: 'Total documents', accountingAwaitingReview: 'Awaiting review', accountingApproved: 'Approved', accountingRejected: 'Rejected', accountingPaid: 'Paid', accountingOverdue: 'Overdue', accountingNotConfigured: 'No accounting data or service is available for this section yet.',
   accountingManageDenied: 'You do not have permission to manage accounting records.',
     sidebarDatabase: "Database",
     databaseTitle: "Database",
@@ -210,6 +222,7 @@ const messages = {
     calendarPersian: "Persian (Solar Hijri)",
     calendarIslamic: "Islamic (Lunar Hijri)",
     calendarGregorian: "Gregorian",
+  acctCode: 'Account code', acctName: 'Account name', acctType: 'Account type', acctCreate: 'Add account', acctAsset: 'Asset', acctLiability: 'Liability', acctEquity: 'Equity', acctRevenue: 'Revenue', acctExpense: 'Expense', acctVoucherDate: 'Voucher date', acctDescription: 'Description', acctDebit: 'Debit', acctCredit: 'Credit', acctAddVoucher: 'Create journal voucher', acctPost: 'Post', acctDraft: 'Draft', acctPosted: 'Posted', acctBalance: 'Balance', acctUnbalanced: 'Total debits and credits must match.', acctAccountsEmpty: 'No accounts have been created yet.', acctVouchersEmpty: 'No vouchers have been created yet.', acctLedgerEmpty: 'No posted entries exist for this account.', acctSelectAccount: 'Select account', acctLoadFailed: 'Could not load accounting data.', acctSaveFailed: 'Could not save accounting data.', acctSaved: 'Saved successfully.', acctPostConfirm: 'Posted vouchers can no longer be edited.', acctAddLine: 'Add line', acctRemoveLine: 'Remove line', acctAmount: 'Amount', acctMethod: 'Payment method', acctNewPurchase: 'Record purchase invoice', acctCodeInvalid: 'Use a unique account code of up to 24 characters.', acctNameRequired: 'Enter an account name.', acctDateInvalid: 'Enter a valid date.', acctLineRequired: 'A voucher must contain at least two lines.', acctPositiveLine: 'Enter a debit or credit amount for every line.', acctLineSide: 'Each line must contain either a debit or a credit.'
 } satisfies Record<UiMessage, string>;
 
 export default messages;

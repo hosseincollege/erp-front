@@ -20,16 +20,13 @@ import { accountingApi } from '@/lib/api/accounting/accounting-api';
 import type { AccountingAccess } from '@/types/accounting';
 
 import {
-  Activity,
   BarChart3,
-  Bell,
   BriefcaseBusiness,
   Calculator,
-  CheckCircle2,
   ExternalLink,
+  LayoutDashboard,
   LogOut,
   Package,
-  Radio,
   Settings,
   Ticket,
   User,
@@ -53,6 +50,23 @@ type NavigationItem = {
 // فهرست ماژول‌های اصلی سیستم
 const navigation: NavigationItem[] = [
   {
+    id: 'dashboard',
+    titleKey: 'sidebarDashboard',
+    icon: LayoutDashboard,
+    href: '/dashboard',
+    sub: [
+      { titleKey: 'dashboardNotifications', href: '/dashboard/notifications' },
+      { titleKey: 'dashboardMessages', href: '/dashboard/messages' },
+      { titleKey: 'dashboardConversation', href: '/dashboard/conversations' },
+      { titleKey: 'dashboardPlanning', href: '/dashboard/planning' },
+      { titleKey: 'dashboardHistory', href: '/dashboard/history' },
+      { titleKey: 'dashboardActivities', href: '/dashboard/activity' },
+      { titleKey: 'dashboardHelp', href: '/dashboard/help' },
+      { titleKey: 'dashboardSearch', href: '/dashboard/search' },
+      { titleKey: 'dashboardAccount', href: '/dashboard/profile' },
+    ],
+  },
+  {
     id: 'accounting',
     titleKey: 'sidebarAccounting',
     icon: Calculator,
@@ -61,7 +75,9 @@ const navigation: NavigationItem[] = [
       { titleKey: 'accountingChartOfAccounts', href: '/accounting/accounts' },
       { titleKey: 'accountingEntriesLedger', href: '/accounting/vouchers' },
       { titleKey: 'accountingInvoices', href: '/accounting/invoices' },
+      { titleKey: 'accountingPurchaseInvoices', href: '/accounting/purchases' },
       { titleKey: 'accountingReceiptsPayments', href: '/accounting/payments' },
+      { titleKey: 'sidebarLedger', href: '/accounting/ledger' },
       { titleKey: 'sidebarFinancialReports', href: '/accounting/reports' },
     ],
   },
@@ -162,8 +178,8 @@ export function Sidebar({
   const [hrAccess, setHrAccess] = useState<HrAccess | null>(null);
   const [accountingAccess, setAccountingAccess] = useState<AccountingAccess | null>(null);
 
-  const isProfileRoute = pathname === '/profile' || pathname.startsWith('/profile/');
-  const isHomeRoute = pathname === '/' || pathname === '/dashboard' || pathname.startsWith('/dashboard/');
+  const isProfileRoute = pathname === '/dashboard/profile' || pathname.startsWith('/dashboard/profile/');
+  const isHomeRoute = pathname === '/' || pathname === '/dashboard' || pathname.startsWith('/dashboard/') || ['/dashboard/notifications', '/dashboard/messages', '/dashboard/conversations', '/dashboard/planning', '/dashboard/activity', '/dashboard/help', '/dashboard/search', '/dashboard/profile'].some((route) => pathname === route || pathname.startsWith(`${route}/`));
 
   useEffect(() => {
     const refreshUser = () => {
@@ -199,8 +215,10 @@ export function Sidebar({
 
   // یافتن ماژول مطابق با مسیر فعلی
   const getMatchedModuleId = () => {
+    if (pathname === '/') return 'dashboard';
     const matched = navigation.find(
-      (item) => pathname === item.href || pathname.startsWith(`${item.href}/`)
+      (item) => pathname === item.href || pathname.startsWith(`${item.href}/`) ||
+        item.sub?.some((subItem) => pathname === subItem.href.split('?')[0] || pathname.startsWith(`${subItem.href.split('?')[0]}/`))
     );
     return matched?.id || null;
   };
@@ -210,7 +228,7 @@ export function Sidebar({
   // همگام‌سازی تب فعال هنگام تغییر مسیر (Navigation)
   useEffect(() => {
     if (isHomeRoute) {
-      setActiveTab(null);
+      setActiveTab(getMatchedModuleId());
       onSetProfileActive?.(false);
     } else if (isProfileRoute) {
       setActiveTab(null);
@@ -244,7 +262,7 @@ export function Sidebar({
 
       // ریست وضعیت موقت تب به حالت متناظر با صفحه جاری
       if (isHomeRoute) {
-        setActiveTab(null);
+        setActiveTab(getMatchedModuleId());
         onSetProfileActive?.(false);
       } else if (isProfileRoute) {
         setActiveTab(null);
@@ -312,9 +330,8 @@ export function Sidebar({
         : item.sub?.map((subItem) => ({ ...subItem, title: subItem.titleKey ? message(subItem.titleKey) : subItem.title })),
   }));
   const activeGroup = localizedNavigation.find((item) => item.id === activeTab);
-  const isGroupHome = Boolean(activeGroup && pathname === activeGroup.href);
   const activeSubItemPath = activeGroup?.sub
-    ?.map((subItem) => subItem.href.split('?')[0])
+    ?.map((subItem) => subItem.href.split(/[?#]/)[0])
     .filter((href) => pathname === href || pathname.startsWith(`${href}/`))
     .sort((left, right) => right.length - left.length)[0];
 
@@ -341,7 +358,7 @@ export function Sidebar({
         `}
       >
         <div className="flex w-full flex-col gap-1.5 overflow-y-auto no-scrollbar">
-          {localizedNavigation.map((item) => {
+          {localizedNavigation.map((item, index) => {
             const Icon = item.icon;
             const isSelected = !isProfileActive && activeTab === item.id;
 
@@ -353,20 +370,24 @@ export function Sidebar({
                 aria-label={item.title}
                 onClick={() => handleSelectModule(item)}
                 className={`
-                  flex w-full items-center rounded-xl p-2.5 text-start transition-all duration-200 cursor-pointer
+                  relative flex w-full items-center rounded-xl p-2.5 text-start transition-all duration-200 cursor-pointer
                   ${
                     isSelected
-                      ? 'bg-[var(--primary)] font-medium text-[var(--primary-foreground)] shadow-lg shadow-[var(--primary)]/20'
+                      ? 'sidebar-module-selected bg-[var(--primary)] font-medium shadow-lg shadow-[var(--primary)]/20'
                       : 'text-[var(--foreground)] hover:bg-[var(--primary-soft)] hover:text-[var(--primary)]'
                   }
                   text-sm
-                  ${isMainCollapsed ? 'justify-center' : 'justify-start gap-3'}
+                    ${isMainCollapsed ? 'justify-center' : 'justify-start gap-2'}
                 `}
               >
                 <Icon size={20} className="shrink-0" />
                 {!isMainCollapsed && (
-                  <span className="truncate leading-none">{item.title}</span>
+                  <>
+                    <span className="shrink-0 text-xs font-medium tabular-nums text-current" dir="ltr">{index + 1}</span>
+                    <span className="truncate leading-none">{item.title}</span>
+                  </>
                 )}
+                {isMainCollapsed && <span className="absolute end-0.5 top-0.5 text-[8px] font-medium leading-none tabular-nums text-current" dir="ltr">{index + 1}</span>}
               </button>
             );
           })}
@@ -386,7 +407,7 @@ export function Sidebar({
           /* حالت اول: پنل پروفایل کاربر */
           <div className="flex flex-col gap-3">
             <Link
-              href="/profile"
+              href="/dashboard/profile"
               onClick={() => onSetProfileActive?.(true)}
               className="flex items-center justify-between rounded-xl bg-[var(--primary)] px-3.5 py-2.5 text-xs font-semibold text-[var(--primary-foreground)] shadow-md shadow-[var(--primary)]/20 transition-colors hover:bg-[var(--primary-hover)]"
             >
@@ -435,32 +456,17 @@ export function Sidebar({
         ) : activeGroup ? (
           /* حالت دوم: زیرمنوهای ماژول انتخاب شده */
           <>
-            <div className="mb-4 border-b border-[var(--border)] pb-3">
-              <Link
-                href={activeGroup.href}
-                title={activeGroup.title}
-                className="flex items-center gap-2.5 rounded-lg transition-opacity hover:opacity-80"
-              >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--primary-soft)] text-[var(--primary)]">
-                  {React.createElement(activeGroup.icon, { size: 19 })}
-                </div>
-                <span className={`truncate text-start text-sm font-bold transition-colors ${isGroupHome ? 'text-[var(--primary)]' : 'text-[var(--foreground)]'}`}>
-                  {activeGroup.title}
-                </span>
-              </Link>
-            </div>
-
             <div className="flex flex-col gap-1 overflow-y-auto">
               {activeGroup.sub && activeGroup.sub.length > 0 ? (
-                activeGroup.sub.map((subItem) => {
-                  const isActive = activeSubItemPath === subItem.href.split('?')[0];
+                activeGroup.sub.map((subItem, index) => {
+                  const isActive = activeSubItemPath === subItem.href.split(/[?#]/)[0];
 
                   return (
                     <Link
                       key={subItem.href}
                       href={subItem.href}
                       className={`
-                        flex items-center gap-2.5 rounded-lg px-3 py-2.5 transition-colors
+                        flex items-center gap-2 rounded-lg px-3 py-2.5 transition-colors
                         ${
                           isActive
                             ? 'bg-[var(--primary-soft)] font-bold text-[var(--primary)] ring-1 ring-[var(--primary)]/20'
@@ -470,16 +476,8 @@ export function Sidebar({
                       `}
                       style={isActive ? { color: 'var(--primary)' } : undefined}
                     >
-                      <span
-                        className={`h-1.5 w-1.5 shrink-0 rounded-full ${
-                          isActive
-                            ? 'bg-[var(--primary)]'
-                            : 'bg-slate-300 dark:bg-slate-700'
-                        }`}
-                      />
-                      <span className="truncate leading-none">
-                        {subItem.title}
-                      </span>
+                      <span className="shrink-0 text-xs font-medium tabular-nums text-current" dir="ltr">{index + 1}</span>
+                      <span className="truncate leading-none">{subItem.title}</span>
                     </Link>
                   );
                 })
@@ -488,70 +486,6 @@ export function Sidebar({
                   {activeGroup.id === 'support' ? message('supportNoProjects') : message('sidebarNoSubmenu')}
                 </p>
               )}
-            </div>
-          </>
-        ) : isHomeRoute ? (
-          /* حالت سوم: پنل اختصاصی صفحه اصلی / پیشخوان */
-          <>
-            <div className="mb-4 border-b border-[var(--border)] pb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--primary-soft)] text-[var(--primary)]">
-                  <Activity size={18} />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-[var(--foreground)] leading-none">
-                    {message('sidebarDashboardEvents')}
-                  </h3>
-                  <span className="text-[11px] text-muted-foreground">
-                    {message('sidebarSystemAnnouncements')}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2 overflow-y-auto">
-              <a
-                href="#announcements"
-                className="flex items-center justify-between rounded-xl border border-[var(--border)]/50 bg-slate-50/50 p-2.5 text-xs transition-colors hover:bg-slate-100 dark:bg-slate-900/30 dark:hover:bg-slate-800/60"
-              >
-                <div className="flex items-center gap-2">
-                  <Bell size={15} className="text-amber-500 shrink-0" />
-                  <span className="font-medium text-[var(--foreground)]">
-                    {message('sidebarAnnouncementBoard')}
-                  </span>
-                </div>
-              </a>
-
-              <a
-                href="#system-status"
-                className="flex items-center justify-between rounded-xl border border-[var(--border)]/50 bg-slate-50/50 p-2.5 text-xs transition-colors hover:bg-slate-100 dark:bg-slate-900/30 dark:hover:bg-slate-800/60"
-              >
-                <div className="flex items-center gap-2">
-                  <Radio size={15} className="text-emerald-500 shrink-0" />
-                  <span className="font-medium text-[var(--foreground)]">
-                    {message('sidebarServiceStatus')}
-                  </span>
-                </div>
-              </a>
-
-              <a
-                href="#activity-summary"
-                className="flex items-center justify-between rounded-xl border border-[var(--border)]/50 bg-slate-50/50 p-2.5 text-xs transition-colors hover:bg-slate-100 dark:bg-slate-900/30 dark:hover:bg-slate-800/60"
-              >
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 size={15} className="shrink-0 text-[var(--primary)]" />
-                  <span className="font-medium text-[var(--foreground)]">
-                    {message('sidebarActivitySummary')}
-                  </span>
-                </div>
-              </a>
-              <Link
-                href="/notifications"
-                className="flex items-center gap-2 rounded-xl border border-[var(--border)]/50 bg-slate-50/50 p-2.5 text-xs transition-colors hover:bg-[var(--primary-soft)] dark:bg-slate-900/30"
-              >
-                <Bell size={15} className="shrink-0 text-[var(--primary)]" />
-                <span className="font-medium text-[var(--foreground)]">{message('notificationsTitle')}</span>
-              </Link>
             </div>
           </>
         ) : null}

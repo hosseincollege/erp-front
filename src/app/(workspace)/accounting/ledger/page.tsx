@@ -1,2 +1,2 @@
-import { AccountingSectionContent } from '../accounting-section-content';
-export default function Page() { return <AccountingSectionContent title="sidebarLedger" />; }
+import { AccountingLedgerPage } from '../accounting-ledger-pages';
+export default function Page() { return <AccountingLedgerPage mode="ledger" />; }

@@ -15,6 +15,7 @@ const messages = {
     preferencesSaving: "保存中…",
     preferencesSaveFailed: "无法保存偏好设置。",
     headerSearch: "搜索工作区",
+    sidebarDashboard: "仪表盘", searchDescription: "搜索系统中的模块和页面。", searchNoResults: "未找到匹配的页面。",
     sidebarAccounting: "会计",
     sidebarCommercial: "商务",
     sidebarSupplyChain: "供应",
@@ -161,6 +162,17 @@ const messages = {
     announcementCategoryFinance: '财务',
     announcementCategoryHr: '人力资源',
     announcementCategoryTechnical: '技术',
+    dashboardNotifications: '通知',
+    dashboardMessages: '消息',
+    dashboardHistory: '历史记录', dashboardActivities: '活动',
+    dashboardHelp: '帮助',
+    dashboardSearch: '搜索',
+    dashboardAccount: '用户账户',
+    dashboardConversation: '对话',
+    conversationsComingSoon: '此区域用于组织内部交流，即将开放使用。',
+    dashboardPlanning: '规划',
+    planningComingSoon: '此区域用于制定计划、分配给个人或群组、添加报告并跟踪进度，即将开放使用。',
+    messagesTitle: '消息', messagesDescription: '组织消息与公告', messagesEmpty: '暂无可显示的消息。', messagesLoadFailed: '无法加载消息。', activityHistoryTitle: '活动记录', activityTabAll: '最近活动', activityTabCreated: '最近创建的记录', activityEmpty: '暂无可显示的记录。', activityLoadFailed: '无法加载活动记录。', userGuideTitle: '系统使用指南', userGuideDescription: '快速了解系统的主要功能区域。', guideNavigationTitle: '系统导航', guideNavigationDescription: '在第一列选择模块，并在第二列打开对应的业务页面。', guideNotificationsTitle: '通知', guideNotificationsDescription: '通过铃铛查看任务分配、状态变更和组织事件。', guideMessagesTitle: '消息', guideMessagesDescription: '在消息收件箱中阅读组织公告。消息可以面向整个组织或指定群组。', guideSupportTitle: '支持', guideSupportDescription: '如需帮助或跟进问题，请使用支持服务。',
     dashboardServiceTitle: '服务状态',
     dashboardActivityTitle: '活动摘要',
     dashboardActivityEmpty: '尚无活动记录。',
@@ -186,7 +198,7 @@ const messages = {
     supportTicketsEmpty: '此项目尚无工单。',
     supportProjectViewOnly: '此项目仅可查看。',
     supportProjectsTitle: '可访问的项目',
-    accountingChartOfAccounts: '会计科目表', accountingPurchaseInvoices: '采购发票', accountingReceiptsPayments: '收款与付款', accountingOverview: '概览', accountingInvoices: '发票', accountingEntriesLedger: '会计分录与总账', accountingNavigation: '会计模块', accountingAccessDenied: '您没有查看会计模块的权限。', accountingTotalDocuments: '单据总数', accountingAwaitingReview: '待审核', accountingApproved: '已批准', accountingPaid: '已付款', accountingOverdue: '已逾期', accountingNotConfigured: '此部分暂时没有可用的会计数据或服务。',
+    accountingAttentionTitle: '单据流程状态', accountingAttentionDescription: '会计流程各阶段的单据数量', accountingRecentTitle: '最近单据', accountingRecentDescription: '最近创建的五份财务单据', accountingChartOfAccounts: '会计科目表', accountingPurchaseInvoices: '采购发票', accountingReceiptsPayments: '收款与付款', accountingOverview: '会计', accountingInvoices: '发票', accountingEntriesLedger: '会计分录与总账', accountingNavigation: '会计模块', accountingAccessDenied: '您没有查看会计模块的权限。', accountingTotalDocuments: '单据总数', accountingAwaitingReview: '待审核', accountingApproved: '已批准', accountingRejected: '已拒绝', accountingPaid: '已付款', accountingOverdue: '已逾期', accountingNotConfigured: '此部分暂时没有可用的会计数据或服务。',
   accountingManageDenied: '您没有管理会计记录的权限。',
     sidebarDatabase: "数据库",
     databaseTitle: "数据库",
@@ -210,6 +222,7 @@ const messages = {
     calendarPersian: "波斯历（太阳回历）",
     calendarIslamic: "伊斯兰历（太阴回历）",
     calendarGregorian: "公历",
+  acctCode: '科目代码', acctName: '科目名称', acctType: '科目类型', acctCreate: '添加科目', acctAsset: '资产', acctLiability: '负债', acctEquity: '所有者权益', acctRevenue: '收入', acctExpense: '费用', acctVoucherDate: '凭证日期', acctDescription: '摘要', acctDebit: '借方', acctCredit: '贷方', acctAddVoucher: '新建记账凭证', acctPost: '过账', acctDraft: '草稿', acctPosted: '已过账', acctBalance: '余额', acctUnbalanced: '借方和贷方合计必须相等。', acctAccountsEmpty: '尚未创建科目。', acctVouchersEmpty: '尚未创建凭证。', acctLedgerEmpty: '此科目没有已过账分录。', acctSelectAccount: '选择科目', acctLoadFailed: '无法加载会计数据。', acctSaveFailed: '无法保存会计数据。', acctSaved: '保存成功。', acctPostConfirm: '凭证过账后将无法编辑。', acctAddLine: '添加行', acctRemoveLine: '删除行', acctAmount: '金额', acctMethod: '付款方式', acctNewPurchase: '登记采购发票', acctCodeInvalid: '请输入不超过 24 个字符的唯一科目代码。', acctNameRequired: '请输入科目名称。', acctDateInvalid: '请输入有效日期。', acctLineRequired: '凭证至少需要两行。', acctPositiveLine: '请为每行输入借方或贷方金额。', acctLineSide: '每行只能填写借方或贷方。'
 } satisfies Record<UiMessage, string>;
 
 export default messages;

@@ -203,3 +203,11 @@ export interface AccountingAccess {
   canView: boolean;
   canManage: boolean;
 }
+
+export type AccountingAccountType = 'ASSET' | 'LIABILITY' | 'EQUITY' | 'REVENUE' | 'EXPENSE';
+export interface AccountingAccount { id: string; code: string; name: string; type: AccountingAccountType; isActive: boolean; }
+export interface AccountingVoucherLine { id?: string; accountId: string; description?: string | null; debit: number; credit: number; account?: Pick<AccountingAccount, 'id' | 'code' | 'name'>; }
+export interface AccountingVoucher { id: string; number: string; date: string; description: string; status: 'DRAFT' | 'POSTED'; lines: AccountingVoucherLine[]; }
+export interface AccountingLedgerLine extends AccountingVoucherLine { account: AccountingAccount; voucher: Pick<AccountingVoucher, 'id' | 'number' | 'date' | 'description'>; }
+export interface AccountingPaymentActivity { id: string; paidAmount: number; paidAt: string; method?: string | null; referenceNumber?: string | null; note?: string | null; invoice: { id: string; documentNumber: string; title: string; vendorName?: string | null; currency: string }; }
+export interface AccountingTrialBalance { rows: Array<Pick<AccountingAccount, 'id' | 'code' | 'name' | 'type'> & { debit: number; credit: number }>; debitTotal: number; creditTotal: number; }

@@ -15,6 +15,7 @@ const messages = {
     preferencesSaving: "Сохранение…",
     preferencesSaveFailed: "Не удалось сохранить настройки.",
     headerSearch: "Поиск по рабочему пространству",
+    sidebarDashboard: "Панель управления", searchDescription: "Поиск по модулям и страницам системы.", searchNoResults: "Подходящие страницы не найдены.",
     sidebarAccounting: "Бухгалтерия",
     sidebarCommercial: "Коммерция",
     sidebarSupplyChain: "Снабжение",
@@ -161,6 +162,17 @@ const messages = {
     announcementCategoryFinance: 'Финансы',
     announcementCategoryHr: 'Кадры',
     announcementCategoryTechnical: 'Техническое',
+    dashboardNotifications: 'Уведомления',
+    dashboardMessages: 'Сообщения',
+    dashboardHistory: 'История', dashboardActivities: 'Активность',
+    dashboardHelp: 'Помощь',
+    dashboardSearch: 'Поиск',
+    dashboardAccount: 'Учётная запись',
+    dashboardConversation: 'Беседы',
+    conversationsComingSoon: 'Этот раздел предназначен для общения внутри организации и скоро станет доступен.',
+    dashboardPlanning: 'Планирование',
+    planningComingSoon: 'В этом разделе можно будет создавать планы, назначать ответственных или группы, добавлять отчёты и отслеживать ход выполнения. Скоро он станет доступен.',
+    messagesTitle: 'Сообщения', messagesDescription: 'Сообщения и объявления организации', messagesEmpty: 'Нет сообщений для отображения.', messagesLoadFailed: 'Не удалось загрузить сообщения.', activityHistoryTitle: 'История действий', activityTabAll: 'Последние действия', activityTabCreated: 'Недавно созданные записи', activityEmpty: 'Нет записей для отображения.', activityLoadFailed: 'Не удалось загрузить историю действий.', userGuideTitle: 'Руководство пользователя', userGuideDescription: 'Краткое руководство по основным разделам системы.', guideNavigationTitle: 'Навигация по системе', guideNavigationDescription: 'Выберите модуль в первой колонке, а его процессы открывайте во второй.', guideNotificationsTitle: 'Уведомления', guideNotificationsDescription: 'Следите за назначениями, изменениями статусов и событиями организации через колокольчик.', guideMessagesTitle: 'Сообщения', guideMessagesDescription: 'Читайте объявления организации в почтовом ящике. Они могут быть адресованы всей организации или выбранным группам.', guideSupportTitle: 'Поддержка', guideSupportDescription: 'Обратитесь в поддержку, чтобы запросить помощь или узнать о ходе решения проблемы.',
     dashboardServiceTitle: 'Состояние сервисов',
     dashboardActivityTitle: 'Сводка активности',
     dashboardActivityEmpty: 'Активность ещё не зарегистрирована.',
@@ -186,7 +198,7 @@ const messages = {
     supportTicketsEmpty: 'Для этого проекта пока нет заявок.',
     supportProjectViewOnly: 'Проект доступен только для просмотра.',
     supportProjectsTitle: 'Доступные проекты',
-    accountingChartOfAccounts: 'План счетов', accountingPurchaseInvoices: 'Счета поставщиков', accountingReceiptsPayments: 'Поступления и платежи', accountingOverview: 'Обзор', accountingInvoices: 'Счета', accountingEntriesLedger: 'Проводки и главная книга', accountingNavigation: 'Разделы бухгалтерии', accountingAccessDenied: 'У вас нет разрешения на просмотр бухгалтерии.', accountingTotalDocuments: 'Всего документов', accountingAwaitingReview: 'Ожидают проверки', accountingApproved: 'Одобрено', accountingPaid: 'Оплачено', accountingOverdue: 'Просрочено', accountingNotConfigured: 'Для этого раздела пока нет бухгалтерских данных или сервиса.',
+    accountingAttentionTitle: 'Состояние документооборота', accountingAttentionDescription: 'Количество документов на каждом этапе учёта', accountingRecentTitle: 'Последние документы', accountingRecentDescription: 'Пять недавно созданных финансовых документов', accountingChartOfAccounts: 'План счетов', accountingPurchaseInvoices: 'Счета поставщиков', accountingReceiptsPayments: 'Поступления и платежи', accountingOverview: 'Бухгалтерия', accountingInvoices: 'Счета', accountingEntriesLedger: 'Проводки и главная книга', accountingNavigation: 'Разделы бухгалтерии', accountingAccessDenied: 'У вас нет разрешения на просмотр бухгалтерии.', accountingTotalDocuments: 'Всего документов', accountingAwaitingReview: 'Ожидают проверки', accountingApproved: 'Одобрено', accountingRejected: 'Отклонено', accountingPaid: 'Оплачено', accountingOverdue: 'Просрочено', accountingNotConfigured: 'Для этого раздела пока нет бухгалтерских данных или сервиса.',
   accountingManageDenied: 'У вас нет разрешения на управление бухгалтерскими записями.',
     sidebarDatabase: "База данных",
     databaseTitle: "База данных",
@@ -210,6 +222,7 @@ const messages = {
     calendarPersian: "Персидский (солнечная хиджра)",
     calendarIslamic: "Исламский (лунная хиджра)",
     calendarGregorian: "Григорианский",
+  acctCode: 'Код счёта', acctName: 'Название счёта', acctType: 'Тип счёта', acctCreate: 'Добавить счёт', acctAsset: 'Актив', acctLiability: 'Обязательство', acctEquity: 'Капитал', acctRevenue: 'Доход', acctExpense: 'Расход', acctVoucherDate: 'Дата проводки', acctDescription: 'Описание', acctDebit: 'Дебет', acctCredit: 'Кредит', acctAddVoucher: 'Создать проводку', acctPost: 'Провести', acctDraft: 'Черновик', acctPosted: 'Проведено', acctBalance: 'Баланс', acctUnbalanced: 'Суммы дебета и кредита должны совпадать.', acctAccountsEmpty: 'Счета ещё не созданы.', acctVouchersEmpty: 'Проводки ещё не созданы.', acctLedgerEmpty: 'По этому счёту нет проведённых записей.', acctSelectAccount: 'Выберите счёт', acctLoadFailed: 'Не удалось загрузить бухгалтерские данные.', acctSaveFailed: 'Не удалось сохранить бухгалтерские данные.', acctSaved: 'Успешно сохранено.', acctPostConfirm: 'Проведённые документы нельзя редактировать.', acctAddLine: 'Добавить строку', acctRemoveLine: 'Удалить строку', acctAmount: 'Сумма', acctMethod: 'Способ оплаты', acctNewPurchase: 'Создать счёт поставщика', acctCodeInvalid: 'Введите уникальный код счёта длиной до 24 символов.', acctNameRequired: 'Введите название счёта.', acctDateInvalid: 'Введите корректную дату.', acctLineRequired: 'В проводке должно быть не менее двух строк.', acctPositiveLine: 'Укажите дебетовую или кредитовую сумму для каждой строки.', acctLineSide: 'В строке допускается только дебет или кредит.'
 } satisfies Record<UiMessage, string>;
 
 export default messages;

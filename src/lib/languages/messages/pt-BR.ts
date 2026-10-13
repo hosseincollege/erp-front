@@ -15,6 +15,7 @@ const messages = {
     preferencesSaving: "Salvando…",
     preferencesSaveFailed: "Não foi possível salvar as preferências.",
     headerSearch: "Pesquisar no espaço de trabalho",
+    sidebarDashboard: "Painel", searchDescription: "Pesquise nos módulos e páginas do sistema.", searchNoResults: "Nenhuma página correspondente foi encontrada.",
     sidebarAccounting: "Contabilidade",
     sidebarCommercial: "Comercial",
     sidebarSupplyChain: "Logística",
@@ -161,6 +162,17 @@ const messages = {
     announcementCategoryFinance: 'Finanças',
     announcementCategoryHr: 'Recursos humanos',
     announcementCategoryTechnical: 'Técnico',
+    dashboardNotifications: 'Notificações',
+    dashboardMessages: 'Mensagens',
+    dashboardHistory: 'Histórico', dashboardActivities: 'Atividades',
+    dashboardHelp: 'Ajuda',
+    dashboardSearch: 'Pesquisa',
+    dashboardAccount: 'Conta de usuário',
+    dashboardConversation: 'Conversas',
+    conversationsComingSoon: 'Este espaço foi criado para conversas dentro da organização e estará disponível em breve.',
+    dashboardPlanning: 'Planejamento',
+    planningComingSoon: 'Este espaço permitirá criar planos, atribuí-los a pessoas ou grupos, adicionar relatórios e acompanhar o progresso. Estará disponível em breve.',
+    messagesTitle: 'Mensagens', messagesDescription: 'Mensagens e comunicados da organização', messagesEmpty: 'Não há mensagens para exibir.', messagesLoadFailed: 'Não foi possível carregar as mensagens.', activityHistoryTitle: 'Histórico de atividades', activityTabAll: 'Atividades recentes', activityTabCreated: 'Itens criados recentemente', activityEmpty: 'Não há itens para exibir.', activityLoadFailed: 'Não foi possível carregar o histórico de atividades.', userGuideTitle: 'Guia do sistema', userGuideDescription: 'Um guia rápido das principais áreas do sistema.', guideNavigationTitle: 'Navegação no sistema', guideNavigationDescription: 'Escolha um módulo na primeira coluna e abra seus fluxos pela segunda coluna.', guideNotificationsTitle: 'Notificações', guideNotificationsDescription: 'Use o sino para acompanhar atribuições, mudanças de status e eventos da organização.', guideMessagesTitle: 'Mensagens', guideMessagesDescription: 'Leia os comunicados da organização na caixa de mensagens. Eles podem ser destinados a toda a organização ou a grupos selecionados.', guideSupportTitle: 'Suporte', guideSupportDescription: 'Use o Suporte para pedir ajuda ou acompanhar um problema.',
     dashboardServiceTitle: 'Status dos serviços',
     dashboardActivityTitle: 'Resumo de atividades',
     dashboardActivityEmpty: 'Nenhuma atividade registrada ainda.',
@@ -186,7 +198,7 @@ const messages = {
     supportTicketsEmpty: 'Ainda não há chamados para este projeto.',
     supportProjectViewOnly: 'Este projeto está disponível somente para visualização.',
     supportProjectsTitle: 'Projetos disponíveis',
-    accountingChartOfAccounts: 'Plano de contas', accountingPurchaseInvoices: 'Notas fiscais de compra', accountingReceiptsPayments: 'Recebimentos e pagamentos', accountingOverview: 'Visão geral', accountingInvoices: 'Faturas', accountingEntriesLedger: 'Lançamentos e razão geral', accountingNavigation: 'Seções contábeis', accountingAccessDenied: 'Você não tem permissão para visualizar a contabilidade.', accountingTotalDocuments: 'Total de documentos', accountingAwaitingReview: 'Aguardando revisão', accountingApproved: 'Aprovados', accountingPaid: 'Pagos', accountingOverdue: 'Vencidos', accountingNotConfigured: 'Esta seção ainda não possui dados ou serviço contábil disponível.',
+    accountingAttentionTitle: 'Status do fluxo de documentos', accountingAttentionDescription: 'Quantidade de documentos em cada etapa contábil', accountingRecentTitle: 'Documentos recentes', accountingRecentDescription: 'Os cinco documentos financeiros criados mais recentemente', accountingChartOfAccounts: 'Plano de contas', accountingPurchaseInvoices: 'Notas fiscais de compra', accountingReceiptsPayments: 'Recebimentos e pagamentos', accountingOverview: 'Contabilidade', accountingInvoices: 'Faturas', accountingEntriesLedger: 'Lançamentos e razão geral', accountingNavigation: 'Seções contábeis', accountingAccessDenied: 'Você não tem permissão para visualizar a contabilidade.', accountingTotalDocuments: 'Total de documentos', accountingAwaitingReview: 'Aguardando revisão', accountingApproved: 'Aprovados', accountingRejected: 'Rejeitados', accountingPaid: 'Pagos', accountingOverdue: 'Vencidos', accountingNotConfigured: 'Esta seção ainda não possui dados ou serviço contábil disponível.',
   accountingManageDenied: 'Você não tem permissão para gerenciar os registros contábeis.',
     sidebarDatabase: "Banco de dados",
     databaseTitle: "Banco de dados",
@@ -210,6 +222,7 @@ const messages = {
     calendarPersian: "Persa (Hégira solar)",
     calendarIslamic: "Islâmico (Hégira lunar)",
     calendarGregorian: "Gregoriano",
+  acctCode: 'Código da conta', acctName: 'Nome da conta', acctType: 'Tipo de conta', acctCreate: 'Adicionar conta', acctAsset: 'Ativo', acctLiability: 'Passivo', acctEquity: 'Patrimônio líquido', acctRevenue: 'Receita', acctExpense: 'Despesa', acctVoucherDate: 'Data do lançamento', acctDescription: 'Descrição', acctDebit: 'Débito', acctCredit: 'Crédito', acctAddVoucher: 'Criar lançamento contábil', acctPost: 'Contabilizar', acctDraft: 'Rascunho', acctPosted: 'Contabilizado', acctBalance: 'Saldo', acctUnbalanced: 'O total de débitos e créditos deve ser igual.', acctAccountsEmpty: 'Nenhuma conta foi criada ainda.', acctVouchersEmpty: 'Nenhum lançamento foi criado ainda.', acctLedgerEmpty: 'Não há lançamentos contabilizados para esta conta.', acctSelectAccount: 'Selecionar conta', acctLoadFailed: 'Não foi possível carregar os dados contábeis.', acctSaveFailed: 'Não foi possível salvar os dados contábeis.', acctSaved: 'Salvo com sucesso.', acctPostConfirm: 'Lançamentos contabilizados não podem mais ser editados.', acctAddLine: 'Adicionar linha', acctRemoveLine: 'Remover linha', acctAmount: 'Valor', acctMethod: 'Forma de pagamento', acctNewPurchase: 'Registrar nota fiscal de compra', acctCodeInvalid: 'Informe um código de conta exclusivo com até 24 caracteres.', acctNameRequired: 'Informe o nome da conta.', acctDateInvalid: 'Informe uma data válida.', acctLineRequired: 'O lançamento deve conter pelo menos duas linhas.', acctPositiveLine: 'Informe um valor de débito ou crédito em cada linha.', acctLineSide: 'Cada linha deve conter débito ou crédito, nunca ambos.'
 } satisfies Record<UiMessage, string>;
 
 export default messages;

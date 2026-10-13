@@ -33,6 +33,12 @@ import type {
   CreatePaymentRequestPayload,
   RegisterPaymentPayload,
   UpdateAccountingStatusPayload,
+  AccountingAccount,
+  AccountingAccountType,
+  AccountingVoucher,
+  AccountingLedgerLine,
+  AccountingPaymentActivity,
+  AccountingTrialBalance,
 } from "@/types/accounting";
 
 /**
@@ -55,6 +61,7 @@ export interface AccountingListQuery {
   moduleType?: string | "ALL";
   branchId?: string;
   departmentId?: string;
+  vendorOnly?: boolean;
 }
 
 /**
@@ -103,6 +110,10 @@ function buildQueryString(query: AccountingListQuery = {}): string {
     params.set("departmentId", query.departmentId);
   }
 
+  if (query.vendorOnly) {
+    params.set("vendorOnly", "true");
+  }
+
   const serializedParams = params.toString();
 
   return serializedParams ? `?${serializedParams}` : "";
@@ -112,6 +123,14 @@ function buildQueryString(query: AccountingListQuery = {}): string {
  * APIهای دامنه حسابداری.
  */
 export const accountingApi = {
+  async getAccounts(): Promise<AccountingAccount[]> { return normalizeResponse<AccountingAccount[]>(await apiClient.get<unknown>('/accounting/accounts')); },
+  async createAccount(payload: { code: string; name: string; type: AccountingAccountType }): Promise<AccountingAccount> { return normalizeResponse<AccountingAccount>(await apiClient.post<unknown>('/accounting/accounts', payload)); },
+  async getVouchers(): Promise<AccountingVoucher[]> { return normalizeResponse<AccountingVoucher[]>(await apiClient.get<unknown>('/accounting/vouchers')); },
+  async createVoucher(payload: { date: string; description: string; lines: Array<{ accountId: string; description?: string; debit: number; credit: number }> }): Promise<AccountingVoucher> { return normalizeResponse<AccountingVoucher>(await apiClient.post<unknown>('/accounting/vouchers', payload)); },
+  async postVoucher(id: string): Promise<AccountingVoucher> { return normalizeResponse<AccountingVoucher>(await apiClient.post<unknown>(`/accounting/vouchers/${id}/post`, {})); },
+  async getLedger(accountId?: string): Promise<AccountingLedgerLine[]> { return normalizeResponse<AccountingLedgerLine[]>(await apiClient.get<unknown>(`/accounting/ledger${accountId ? `?accountId=${encodeURIComponent(accountId)}` : ''}`)); },
+  async getPayments(): Promise<AccountingPaymentActivity[]> { return normalizeResponse<AccountingPaymentActivity[]>(await apiClient.get<unknown>('/accounting/payments')); },
+  async getTrialBalance(): Promise<AccountingTrialBalance> { return normalizeResponse<AccountingTrialBalance>(await apiClient.get<unknown>('/accounting/reports/trial-balance')); },
   async getAccess(): Promise<AccountingAccess> {
     const response = await apiClient.get<unknown>("/accounting/access");
     return normalizeResponse<AccountingAccess>(response);

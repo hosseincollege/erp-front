@@ -15,6 +15,7 @@ const messages = {
     preferencesSaving: "جارٍ الحفظ…",
     preferencesSaveFailed: "تعذر حفظ التفضيلات.",
     headerSearch: "ابحث في مساحة العمل",
+    sidebarDashboard: "لوحة التحكم", searchDescription: "ابحث في وحدات النظام وصفحاته.", searchNoResults: "لم يتم العثور على صفحات مطابقة.",
     sidebarAccounting: "المحاسبة",
     sidebarCommercial: "التجارة",
     sidebarSupplyChain: "الإمداد",
@@ -161,6 +162,17 @@ const messages = {
     announcementCategoryFinance: 'المالية',
     announcementCategoryHr: 'الموارد البشرية',
     announcementCategoryTechnical: 'تقني',
+    dashboardNotifications: 'الإشعارات',
+    dashboardMessages: 'الرسائل',
+    dashboardHistory: 'السجل', dashboardActivities: 'الأنشطة',
+    dashboardHelp: 'المساعدة',
+    dashboardSearch: 'البحث',
+    dashboardAccount: 'حساب المستخدم',
+    dashboardConversation: 'المحادثات',
+    conversationsComingSoon: 'هذه المساحة مخصصة للمحادثات داخل المؤسسة، وستتوفر قريبًا.',
+    dashboardPlanning: 'التخطيط',
+    planningComingSoon: 'هذا القسم مخصص لإنشاء الخطط وتحديد المسؤولين أو المجموعات وإضافة التقارير ومتابعة التقدم، وسيتوفر قريبًا.',
+    messagesTitle: 'الرسائل', messagesDescription: 'رسائل المؤسسة وإعلاناتها', messagesEmpty: 'لا توجد رسائل لعرضها.', messagesLoadFailed: 'تعذر تحميل الرسائل.', activityHistoryTitle: 'سجل النشاط', activityTabAll: 'أحدث الأنشطة', activityTabCreated: 'العناصر المنشأة حديثًا', activityEmpty: 'لا توجد عناصر لعرضها.', activityLoadFailed: 'تعذر تحميل سجل النشاط.', userGuideTitle: 'دليل المستخدم', userGuideDescription: 'دليل موجز للأقسام الرئيسية في النظام.', guideNavigationTitle: 'التنقل في النظام', guideNavigationDescription: 'اختر وحدة من العمود الأول واستخدم العمود الثاني لفتح مهامها.', guideNotificationsTitle: 'الإشعارات', guideNotificationsDescription: 'استخدم الجرس لمتابعة إسناد المهام وتغييرات الحالة وأحداث المؤسسة.', guideMessagesTitle: 'الرسائل', guideMessagesDescription: 'اقرأ إعلانات المؤسسة في صندوق الرسائل. قد تكون الرسائل موجهة إلى المؤسسة كلها أو إلى مجموعات محددة.', guideSupportTitle: 'الدعم', guideSupportDescription: 'استخدم قسم الدعم لطلب المساعدة أو متابعة مشكلة.',
     dashboardServiceTitle: 'حالة الخدمات',
     dashboardActivityTitle: 'ملخص النشاط',
     dashboardActivityEmpty: 'لا يوجد نشاط مسجل بعد.',
@@ -186,7 +198,7 @@ const messages = {
     supportTicketsEmpty: 'لم تُنشأ تذاكر لهذا المشروع بعد.',
     supportProjectViewOnly: 'هذا المشروع متاح للعرض فقط.',
     supportProjectsTitle: 'المشاريع المتاحة',
-    accountingChartOfAccounts: 'دليل الحسابات', accountingPurchaseInvoices: 'فواتير المشتريات', accountingReceiptsPayments: 'المقبوضات والمدفوعات', accountingOverview: 'نظرة عامة', accountingInvoices: 'الفواتير', accountingEntriesLedger: 'القيود ودفتر الأستاذ', accountingNavigation: 'أقسام المحاسبة', accountingAccessDenied: 'ليست لديك صلاحية لعرض المحاسبة.', accountingTotalDocuments: 'إجمالي المستندات', accountingAwaitingReview: 'بانتظار المراجعة', accountingApproved: 'معتمد', accountingPaid: 'مدفوع', accountingOverdue: 'متأخر', accountingNotConfigured: 'لا تتوفر بيانات أو خدمة محاسبية لهذا القسم بعد.',
+    accountingAttentionTitle: 'حالة سير المستندات', accountingAttentionDescription: 'عدد المستندات في كل مرحلة من مراحل المحاسبة', accountingRecentTitle: 'أحدث المستندات', accountingRecentDescription: 'آخر خمسة مستندات مالية أُنشئت', accountingChartOfAccounts: 'دليل الحسابات', accountingPurchaseInvoices: 'فواتير المشتريات', accountingReceiptsPayments: 'المقبوضات والمدفوعات', accountingOverview: 'المحاسبة', accountingInvoices: 'الفواتير', accountingEntriesLedger: 'القيود ودفتر الأستاذ', accountingNavigation: 'أقسام المحاسبة', accountingAccessDenied: 'ليست لديك صلاحية لعرض المحاسبة.', accountingTotalDocuments: 'إجمالي المستندات', accountingAwaitingReview: 'بانتظار المراجعة', accountingApproved: 'معتمد', accountingRejected: 'مرفوض', accountingPaid: 'مدفوع', accountingOverdue: 'متأخر', accountingNotConfigured: 'لا تتوفر بيانات أو خدمة محاسبية لهذا القسم بعد.',
   accountingManageDenied: 'ليست لديك صلاحية لإدارة السجلات المحاسبية.',
     sidebarDatabase: "قاعدة البيانات",
     databaseTitle: "قاعدة البيانات",
@@ -210,6 +222,7 @@ const messages = {
     calendarPersian: "الهجري الشمسي",
     calendarIslamic: "الهجري القمري",
     calendarGregorian: "الميلادي",
+  acctCode: 'رمز الحساب', acctName: 'اسم الحساب', acctType: 'نوع الحساب', acctCreate: 'إضافة حساب', acctAsset: 'أصل', acctLiability: 'التزام', acctEquity: 'حقوق الملكية', acctRevenue: 'إيراد', acctExpense: 'مصروف', acctVoucherDate: 'تاريخ القيد', acctDescription: 'الوصف', acctDebit: 'مدين', acctCredit: 'دائن', acctAddVoucher: 'إنشاء قيد يومية', acctPost: 'ترحيل', acctDraft: 'مسودة', acctPosted: 'مُرحّل', acctBalance: 'الرصيد', acctUnbalanced: 'يجب أن يتساوى إجمالي المدين والدائن.', acctAccountsEmpty: 'لم يتم إنشاء حسابات بعد.', acctVouchersEmpty: 'لم يتم إنشاء قيود بعد.', acctLedgerEmpty: 'لا توجد قيود مُرحّلة لهذا الحساب.', acctSelectAccount: 'اختر حساباً', acctLoadFailed: 'تعذر تحميل البيانات المحاسبية.', acctSaveFailed: 'تعذر حفظ البيانات المحاسبية.', acctSaved: 'تم الحفظ بنجاح.', acctPostConfirm: 'لا يمكن تعديل القيود بعد ترحيلها.', acctAddLine: 'إضافة سطر', acctRemoveLine: 'حذف السطر', acctAmount: 'المبلغ', acctMethod: 'طريقة الدفع', acctNewPurchase: 'تسجيل فاتورة شراء', acctCodeInvalid: 'أدخل رمز حساب فريداً لا يتجاوز 24 حرفاً.', acctNameRequired: 'أدخل اسم الحساب.', acctDateInvalid: 'أدخل تاريخاً صالحاً.', acctLineRequired: 'يجب أن يتضمن القيد سطرين على الأقل.', acctPositiveLine: 'أدخل مبلغاً مديناً أو دائناً لكل سطر.', acctLineSide: 'يجب أن يحتوي كل سطر على مدين أو دائن فقط.'
 } satisfies Record<UiMessage, string>;
 
 export default messages;

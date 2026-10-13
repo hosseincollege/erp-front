@@ -15,6 +15,7 @@ const messages = {
     preferencesSaving: "در حال ذخیره…",
     preferencesSaveFailed: "ذخیرهٔ ترجیح‌ها انجام نشد.",
     headerSearch: "جست‌وجو در سامانه",
+    sidebarDashboard: "داشبورد", searchDescription: "جست‌وجو میان ماژول‌ها و صفحه‌های سامانه.", searchNoResults: "نتیجه‌ای برای این جست‌وجو پیدا نشد.",
     sidebarAccounting: "حسابداری",
     sidebarCommercial: "بازرگانی",
     sidebarSupplyChain: "تأمین",
@@ -161,6 +162,17 @@ const messages = {
     announcementCategoryFinance: 'مالی',
     announcementCategoryHr: 'منابع انسانی',
     announcementCategoryTechnical: 'فنی',
+    dashboardNotifications: 'اعلان‌ها',
+    dashboardMessages: 'پیام‌ها',
+    dashboardHistory: 'تاریخچه', dashboardActivities: 'فعالیت‌ها',
+    dashboardHelp: 'راهنما',
+    dashboardSearch: 'جستجو',
+    dashboardAccount: 'حساب کاربری',
+    dashboardConversation: 'گفتگو',
+    conversationsComingSoon: 'این بخش برای گفتگو با اعضای سازمان در نظر گرفته شده و به‌زودی فعال می‌شود.',
+    dashboardPlanning: 'برنامه‌ریزی',
+    planningComingSoon: 'این بخش برای تعریف برنامه‌ها، تعیین مسئول یا گروه، ثبت گزارش و پیگیری پیشرفت در نظر گرفته شده است و به‌زودی فعال می‌شود.',
+    messagesTitle: 'پیام‌ها', messagesDescription: 'اطلاعیه‌ها و پیام‌های سازمانی', messagesEmpty: 'پیامی برای نمایش وجود ندارد.', messagesLoadFailed: 'دریافت پیام‌ها ناموفق بود.', activityHistoryTitle: 'تاریخچه فعالیت‌ها', activityTabAll: 'آخرین فعالیت‌ها', activityTabCreated: 'موارد تازه ثبت‌شده', activityEmpty: 'موردی برای نمایش وجود ندارد.', activityLoadFailed: 'دریافت تاریخچه فعالیت‌ها ناموفق بود.', userGuideTitle: 'راهنمای سامانه', userGuideDescription: 'راهنمای کوتاه برای استفاده از بخش‌های اصلی سامانه.', guideNavigationTitle: 'ناوبری در سامانه', guideNavigationDescription: 'ماژول‌ها را از ستون اول انتخاب کنید و برای دسترسی به فرایندها از ستون دوم استفاده کنید.', guideNotificationsTitle: 'اعلان‌ها', guideNotificationsDescription: 'تغییر وضعیت کارها، ارجاع‌ها و رویدادهای مرتبط با سازمان را از زنگوله دنبال کنید.', guideMessagesTitle: 'پیام‌ها', guideMessagesDescription: 'اطلاعیه‌های سازمانی را در صندوق پیام‌ها بخوانید. پیام‌ها می‌توانند برای کل سازمان یا گروه‌های مشخص باشند.', guideSupportTitle: 'پشتیبانی', guideSupportDescription: 'برای ثبت درخواست کمک یا پیگیری مشکل، از بخش پشتیبانی استفاده کنید.',
     dashboardServiceTitle: 'وضعیت سرویس\u200cها',
     dashboardActivityTitle: 'خلاصهٔ فعالیت',
     dashboardActivityEmpty: 'هنوز فعالیتی ثبت نشده است.',
@@ -186,7 +198,7 @@ const messages = {
     supportTicketsEmpty: 'هنوز تیکتی برای این پروژه ثبت نشده است.',
     supportProjectViewOnly: 'دسترسی این پروژه فقط برای مشاهده است.',
     supportProjectsTitle: 'پروژه‌های در دسترس',
-    accountingChartOfAccounts: 'کدینگ حساب‌ها', accountingPurchaseInvoices: 'فاکتورهای خرید', accountingReceiptsPayments: 'دریافت و پرداخت', accountingOverview: 'نمای کلی', accountingInvoices: 'فاکتورها', accountingEntriesLedger: 'اسناد و دفتر کل', accountingNavigation: 'بخش‌های حسابداری', accountingAccessDenied: 'برای مشاهدهٔ این بخش مجوز حسابداری ندارید.', accountingTotalDocuments: 'کل اسناد', accountingAwaitingReview: 'در انتظار بررسی', accountingApproved: 'تأییدشده', accountingPaid: 'پرداخت‌شده', accountingOverdue: 'سررسیدگذشته', accountingNotConfigured: 'برای این بخش هنوز داده یا سرویس حسابداری ثبت نشده است.',
+    accountingAttentionTitle: 'نمای وضعیت گردش اسناد', accountingAttentionDescription: 'تعداد اسناد در هر مرحله از فرایند حسابداری', accountingRecentTitle: 'آخرین اسناد', accountingRecentDescription: 'پنج سند مالی که اخیراً ثبت شده‌اند', accountingChartOfAccounts: 'کدینگ حساب‌ها', accountingPurchaseInvoices: 'فاکتورهای خرید', accountingReceiptsPayments: 'دریافت و پرداخت', accountingOverview: 'حسابداری', accountingInvoices: 'فاکتورها', accountingEntriesLedger: 'اسناد و دفتر کل', accountingNavigation: 'بخش‌های حسابداری', accountingAccessDenied: 'برای مشاهدهٔ این بخش مجوز حسابداری ندارید.', accountingTotalDocuments: 'کل اسناد', accountingAwaitingReview: 'در انتظار بررسی', accountingApproved: 'تأییدشده', accountingRejected: 'ردشده', accountingPaid: 'پرداخت‌شده', accountingOverdue: 'سررسیدگذشته', accountingNotConfigured: 'برای این بخش هنوز داده یا سرویس حسابداری ثبت نشده است.',
   accountingManageDenied: 'مجوز مدیریت و ثبت اطلاعات حسابداری را ندارید.',
     sidebarDatabase: "پایگاه داده",
     databaseTitle: "پایگاه داده",
@@ -210,6 +222,7 @@ const messages = {
     calendarPersian: "هجری شمسی",
     calendarIslamic: "هجری قمری",
     calendarGregorian: "میلادی",
+  acctCode: 'کد حساب', acctName: 'عنوان حساب', acctType: 'نوع حساب', acctCreate: 'افزودن حساب', acctAsset: 'دارایی', acctLiability: 'بدهی', acctEquity: 'حقوق مالکانه', acctRevenue: 'درآمد', acctExpense: 'هزینه', acctVoucherDate: 'تاریخ سند', acctDescription: 'شرح', acctDebit: 'بدهکار', acctCredit: 'بستانکار', acctAddVoucher: 'ثبت سند جدید', acctPost: 'ثبت قطعی', acctDraft: 'پیش‌نویس', acctPosted: 'ثبت قطعی‌شده', acctBalance: 'تراز', acctUnbalanced: 'جمع بدهکار و بستانکار باید برابر باشد.', acctAccountsEmpty: 'هنوز حسابی تعریف نشده است.', acctVouchersEmpty: 'هنوز سندی ثبت نشده است.', acctLedgerEmpty: 'برای این حساب سند قطعی ثبت نشده است.', acctSelectAccount: 'انتخاب حساب', acctLoadFailed: 'دریافت اطلاعات حسابداری ناموفق بود.', acctSaveFailed: 'ذخیره اطلاعات حسابداری ناموفق بود.', acctSaved: 'اطلاعات با موفقیت ذخیره شد.', acctPostConfirm: 'پس از ثبت قطعی، ردیف‌های سند قابل ویرایش نیستند.', acctAddLine: 'افزودن ردیف', acctRemoveLine: 'حذف ردیف', acctAmount: 'مبلغ', acctMethod: 'روش پرداخت', acctNewPurchase: 'ثبت فاکتور خرید', acctCodeInvalid: 'کد حساب باید یکتا و حداکثر ۲۴ نویسه باشد.', acctNameRequired: 'عنوان حساب را وارد کنید.', acctDateInvalid: 'تاریخ معتبری وارد کنید.', acctLineRequired: 'سند باید دست‌کم دو ردیف داشته باشد.', acctPositiveLine: 'برای هر ردیف مبلغ بدهکار یا بستانکار وارد کنید.', acctLineSide: 'هر ردیف باید فقط بدهکار یا فقط بستانکار باشد.'
 } satisfies Record<UiMessage, string>;
 
 export default messages;

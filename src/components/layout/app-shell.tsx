@@ -115,10 +115,6 @@ export function AppShell({ children }: AppShellProps) {
     });
   };
 
-  const handleToggleProfileSidebar = () => {
-    setIsProfileActive((previous) => !previous);
-  };
-
   const handleToggleNavigateOnClick = () => {
     setNavigateOnClick((previous) => !previous);
   };
@@ -135,11 +131,9 @@ export function AppShell({ children }: AppShellProps) {
       <TopHeader
         isCollapsed={isCollapsed}
         isSidebarLocked={isSidebarLocked}
-        isProfileActive={isProfileActive}
         navigateOnClick={navigateOnClick}
         onToggleSidebar={handleToggleSidebar}
         onToggleSidebarLock={handleToggleSidebarLock}
-        onToggleProfile={handleToggleProfileSidebar}
         onToggleNavigateOnClick={handleToggleNavigateOnClick}
       />
 

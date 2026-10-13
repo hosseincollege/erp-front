@@ -15,6 +15,7 @@ const messages = {
     preferencesSaving: "Speichern…",
     preferencesSaveFailed: "Einstellungen konnten nicht gespeichert werden.",
     headerSearch: "Arbeitsbereich durchsuchen",
+    sidebarDashboard: "Dashboard", searchDescription: "Module und Seiten des Systems durchsuchen.", searchNoResults: "Keine passenden Seiten gefunden.",
     sidebarAccounting: "Buchhaltung",
     sidebarCommercial: "Handel",
     sidebarSupplyChain: "Logistik",
@@ -161,6 +162,17 @@ const messages = {
     announcementCategoryFinance: 'Finanzen',
     announcementCategoryHr: 'Personal',
     announcementCategoryTechnical: 'Technik',
+    dashboardNotifications: 'Benachrichtigungen',
+    dashboardMessages: 'Nachrichten',
+    dashboardHistory: 'Verlauf', dashboardActivities: 'Aktivitäten',
+    dashboardHelp: 'Hilfe',
+    dashboardSearch: 'Suche',
+    dashboardAccount: 'Benutzerkonto',
+    dashboardConversation: 'Unterhaltungen',
+    conversationsComingSoon: 'Dieser Bereich ist für Unterhaltungen innerhalb der Organisation vorgesehen und wird in Kürze verfügbar sein.',
+    dashboardPlanning: 'Planung',
+    planningComingSoon: 'Dieser Bereich dient zum Erstellen von Plänen, Zuweisen von Verantwortlichen oder Gruppen, Hinzufügen von Berichten und Verfolgen des Fortschritts. Er wird in Kürze verfügbar sein.',
+    messagesTitle: 'Nachrichten', messagesDescription: 'Nachrichten und Mitteilungen der Organisation', messagesEmpty: 'Keine Nachrichten vorhanden.', messagesLoadFailed: 'Nachrichten konnten nicht geladen werden.', activityHistoryTitle: 'Aktivitätsverlauf', activityTabAll: 'Letzte Aktivitäten', activityTabCreated: 'Kürzlich erstellt', activityEmpty: 'Keine Einträge vorhanden.', activityLoadFailed: 'Aktivitätsverlauf konnte nicht geladen werden.', userGuideTitle: 'Systemhilfe', userGuideDescription: 'Kurzanleitung zu den wichtigsten Bereichen des Systems.', guideNavigationTitle: 'Navigation im System', guideNavigationDescription: 'Wählen Sie ein Modul in der ersten Spalte und öffnen Sie dessen Abläufe in der zweiten Spalte.', guideNotificationsTitle: 'Benachrichtigungen', guideNotificationsDescription: 'Verfolgen Sie Zuweisungen, Statusänderungen und Organisationsereignisse über die Glocke.', guideMessagesTitle: 'Nachrichten', guideMessagesDescription: 'Lesen Sie Organisationsmitteilungen im Postfach. Nachrichten können für die gesamte Organisation oder ausgewählte Gruppen bestimmt sein.', guideSupportTitle: 'Support', guideSupportDescription: 'Nutzen Sie den Support, um Hilfe anzufordern oder ein Problem weiterzuverfolgen.',
     dashboardServiceTitle: 'Dienststatus',
     dashboardActivityTitle: 'Aktivitätsübersicht',
     dashboardActivityEmpty: 'Noch keine Aktivität erfasst.',
@@ -186,7 +198,7 @@ const messages = {
     supportTicketsEmpty: 'Für dieses Projekt wurden noch keine Tickets erstellt.',
     supportProjectViewOnly: 'Dieses Projekt ist nur lesbar.',
     supportProjectsTitle: 'Verfügbare Projekte',
-    accountingChartOfAccounts: 'Kontenplan', accountingPurchaseInvoices: 'Eingangsrechnungen', accountingReceiptsPayments: 'Zahlungseingänge und -ausgänge', accountingOverview: 'Übersicht', accountingInvoices: 'Rechnungen', accountingEntriesLedger: 'Buchungen und Hauptbuch', accountingNavigation: 'Buchhaltungsbereiche', accountingAccessDenied: 'Sie haben keine Berechtigung, die Buchhaltung anzuzeigen.', accountingTotalDocuments: 'Belege insgesamt', accountingAwaitingReview: 'Ausstehende Prüfung', accountingApproved: 'Genehmigt', accountingPaid: 'Bezahlt', accountingOverdue: 'Überfällig', accountingNotConfigured: 'Für diesen Bereich sind noch keine Buchhaltungsdaten oder Dienste verfügbar.',
+    accountingAttentionTitle: 'Status des Belegablaufs', accountingAttentionDescription: 'Anzahl der Belege je Buchhaltungsphase', accountingRecentTitle: 'Neueste Belege', accountingRecentDescription: 'Die fünf zuletzt erstellten Finanzbelege', accountingChartOfAccounts: 'Kontenplan', accountingPurchaseInvoices: 'Eingangsrechnungen', accountingReceiptsPayments: 'Zahlungseingänge und -ausgänge', accountingOverview: 'Buchhaltung', accountingInvoices: 'Rechnungen', accountingEntriesLedger: 'Buchungen und Hauptbuch', accountingNavigation: 'Buchhaltungsbereiche', accountingAccessDenied: 'Sie haben keine Berechtigung, die Buchhaltung anzuzeigen.', accountingTotalDocuments: 'Belege insgesamt', accountingAwaitingReview: 'Ausstehende Prüfung', accountingApproved: 'Genehmigt', accountingRejected: 'Abgelehnt', accountingPaid: 'Bezahlt', accountingOverdue: 'Überfällig', accountingNotConfigured: 'Für diesen Bereich sind noch keine Buchhaltungsdaten oder Dienste verfügbar.',
   accountingManageDenied: 'Sie haben keine Berechtigung, Buchhaltungsdaten zu verwalten.',
     sidebarDatabase: "Datenbank",
     databaseTitle: "Datenbank",
@@ -210,6 +222,7 @@ const messages = {
     calendarPersian: "Persisch (Solar-Hidschri)",
     calendarIslamic: "Islamisch (Mond-Hidschri)",
     calendarGregorian: "Gregorianisch",
+  acctCode: 'Kontonummer', acctName: 'Kontoname', acctType: 'Kontotyp', acctCreate: 'Konto hinzufügen', acctAsset: 'Vermögen', acctLiability: 'Verbindlichkeit', acctEquity: 'Eigenkapital', acctRevenue: 'Ertrag', acctExpense: 'Aufwand', acctVoucherDate: 'Belegdatum', acctDescription: 'Beschreibung', acctDebit: 'Soll', acctCredit: 'Haben', acctAddVoucher: 'Buchung erstellen', acctPost: 'Buchen', acctDraft: 'Entwurf', acctPosted: 'Gebucht', acctBalance: 'Saldo', acctUnbalanced: 'Soll und Haben müssen übereinstimmen.', acctAccountsEmpty: 'Es wurden noch keine Konten angelegt.', acctVouchersEmpty: 'Es wurden noch keine Buchungen angelegt.', acctLedgerEmpty: 'Für dieses Konto gibt es keine gebuchten Einträge.', acctSelectAccount: 'Konto auswählen', acctLoadFailed: 'Buchhaltungsdaten konnten nicht geladen werden.', acctSaveFailed: 'Buchhaltungsdaten konnten nicht gespeichert werden.', acctSaved: 'Erfolgreich gespeichert.', acctPostConfirm: 'Gebuchte Belege können nicht mehr bearbeitet werden.', acctAddLine: 'Zeile hinzufügen', acctRemoveLine: 'Zeile entfernen', acctAmount: 'Betrag', acctMethod: 'Zahlungsart', acctNewPurchase: 'Eingangsrechnung erfassen', acctCodeInvalid: 'Geben Sie eine eindeutige Kontonummer mit höchstens 24 Zeichen ein.', acctNameRequired: 'Geben Sie einen Kontonamen ein.', acctDateInvalid: 'Geben Sie ein gültiges Datum ein.', acctLineRequired: 'Eine Buchung muss mindestens zwei Zeilen enthalten.', acctPositiveLine: 'Geben Sie je Zeile einen Soll- oder Habenbetrag ein.', acctLineSide: 'Jede Zeile darf entweder Soll oder Haben enthalten.'
 } satisfies Record<UiMessage, string>;
 
 export default messages;

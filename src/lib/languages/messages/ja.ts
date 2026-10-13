@@ -15,6 +15,7 @@ const messages = {
     preferencesSaving: "保存中…",
     preferencesSaveFailed: "設定を保存できませんでした。",
     headerSearch: "ワークスペースを検索",
+    sidebarDashboard: "ダッシュボード", searchDescription: "システムのモジュールやページを検索します。", searchNoResults: "一致するページが見つかりません。",
     sidebarAccounting: "会計",
     sidebarCommercial: "商取引",
     sidebarSupplyChain: "調達",
@@ -161,6 +162,17 @@ const messages = {
     announcementCategoryFinance: '財務',
     announcementCategoryHr: '人事',
     announcementCategoryTechnical: '技術',
+    dashboardNotifications: '通知',
+    dashboardMessages: 'メッセージ',
+    dashboardHistory: '履歴', dashboardActivities: 'アクティビティ',
+    dashboardHelp: 'ヘルプ',
+    dashboardSearch: '検索',
+    dashboardAccount: 'ユーザーアカウント',
+    dashboardConversation: '会話',
+    conversationsComingSoon: '組織内で会話するための機能です。近日中に利用できるようになります。',
+    dashboardPlanning: '計画',
+    planningComingSoon: '計画の作成、個人やグループへの割り当て、報告の追加、進捗の確認を行う機能です。近日中に利用できるようになります。',
+    messagesTitle: 'メッセージ', messagesDescription: '組織からのお知らせとメッセージ', messagesEmpty: '表示できるメッセージはありません。', messagesLoadFailed: 'メッセージを読み込めませんでした。', activityHistoryTitle: 'アクティビティ履歴', activityTabAll: '最近のアクティビティ', activityTabCreated: '最近作成された項目', activityEmpty: '表示できる項目はありません。', activityLoadFailed: 'アクティビティ履歴を読み込めませんでした。', userGuideTitle: 'システムガイド', userGuideDescription: 'システムの主な機能を簡単に説明します。', guideNavigationTitle: 'システム内の移動', guideNavigationDescription: '左の列でモジュールを選び、2列目から各業務を開きます。', guideNotificationsTitle: '通知', guideNotificationsDescription: 'ベルから担当割り当て、状態変更、組織のお知らせを確認できます。', guideMessagesTitle: 'メッセージ', guideMessagesDescription: 'メッセージ受信箱で組織のお知らせを確認します。全体向けまたは特定グループ向けの内容が表示されます。', guideSupportTitle: 'サポート', guideSupportDescription: 'ヘルプの依頼や問題の確認にはサポートを利用してください。',
     dashboardServiceTitle: 'サービス状態',
     dashboardActivityTitle: 'アクティビティ概要',
     dashboardActivityEmpty: '記録されたアクティビティはありません。',
@@ -186,7 +198,7 @@ const messages = {
     supportTicketsEmpty: 'このプロジェクトにはまだチケットがありません。',
     supportProjectViewOnly: 'このプロジェクトは閲覧のみ可能です。',
     supportProjectsTitle: '利用可能なプロジェクト',
-    accountingChartOfAccounts: '勘定科目表', accountingPurchaseInvoices: '仕入請求書', accountingReceiptsPayments: '入出金', accountingOverview: '概要', accountingInvoices: '請求書', accountingEntriesLedger: '仕訳と総勘定元帳', accountingNavigation: '会計セクション', accountingAccessDenied: '会計を表示する権限がありません。', accountingTotalDocuments: '書類の合計', accountingAwaitingReview: '確認待ち', accountingApproved: '承認済み', accountingPaid: '支払済み', accountingOverdue: '期限超過', accountingNotConfigured: 'このセクションの会計データまたはサービスはまだ利用できません。',
+    accountingAttentionTitle: '伝票ワークフローの状況', accountingAttentionDescription: '会計処理の各段階にある伝票数', accountingRecentTitle: '最近の伝票', accountingRecentDescription: '最近作成された5件の財務伝票', accountingChartOfAccounts: '勘定科目表', accountingPurchaseInvoices: '仕入請求書', accountingReceiptsPayments: '入出金', accountingOverview: '会計', accountingInvoices: '請求書', accountingEntriesLedger: '仕訳と総勘定元帳', accountingNavigation: '会計セクション', accountingAccessDenied: '会計を表示する権限がありません。', accountingTotalDocuments: '書類の合計', accountingAwaitingReview: '確認待ち', accountingApproved: '承認済み', accountingRejected: '却下', accountingPaid: '支払済み', accountingOverdue: '期限超過', accountingNotConfigured: 'このセクションの会計データまたはサービスはまだ利用できません。',
   accountingManageDenied: '会計記録を管理する権限がありません。',
     sidebarDatabase: "データベース",
     databaseTitle: "データベース",
@@ -210,6 +222,7 @@ const messages = {
     calendarPersian: "ペルシャ暦（太陽ヒジュラ暦）",
     calendarIslamic: "イスラム暦（太陰ヒジュラ暦）",
     calendarGregorian: "グレゴリオ暦",
+  acctCode: '勘定コード', acctName: '勘定名', acctType: '勘定科目の種類', acctCreate: '勘定科目を追加', acctAsset: '資産', acctLiability: '負債', acctEquity: '純資産', acctRevenue: '収益', acctExpense: '費用', acctVoucherDate: '仕訳日', acctDescription: '摘要', acctDebit: '借方', acctCredit: '貸方', acctAddVoucher: '仕訳を作成', acctPost: '転記', acctDraft: '下書き', acctPosted: '転記済み', acctBalance: '残高', acctUnbalanced: '借方合計と貸方合計を一致させてください。', acctAccountsEmpty: '勘定科目はまだありません。', acctVouchersEmpty: '仕訳はまだありません。', acctLedgerEmpty: 'この勘定科目に転記済みの記録はありません。', acctSelectAccount: '勘定科目を選択', acctLoadFailed: '会計データを読み込めませんでした。', acctSaveFailed: '会計データを保存できませんでした。', acctSaved: '保存しました。', acctPostConfirm: '転記後の仕訳は編集できません。', acctAddLine: '行を追加', acctRemoveLine: '行を削除', acctAmount: '金額', acctMethod: '支払方法', acctNewPurchase: '仕入請求書を登録', acctCodeInvalid: '24文字以内の一意な勘定コードを入力してください。', acctNameRequired: '勘定名を入力してください。', acctDateInvalid: '有効な日付を入力してください。', acctLineRequired: '仕訳には2行以上必要です。', acctPositiveLine: '各行に借方または貸方の金額を入力してください。', acctLineSide: '各行は借方か貸方のどちらか一方にしてください。'
 } satisfies Record<UiMessage, string>;
 
 export default messages;

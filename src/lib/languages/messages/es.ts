@@ -15,6 +15,7 @@ const messages = {
     preferencesSaving: "Guardando…",
     preferencesSaveFailed: "No se pudieron guardar las preferencias.",
     headerSearch: "Buscar en el espacio de trabajo",
+    sidebarDashboard: "Panel", searchDescription: "Busca entre los módulos y las páginas del sistema.", searchNoResults: "No se encontraron páginas coincidentes.",
     sidebarAccounting: "Contabilidad",
     sidebarCommercial: "Comercial",
     sidebarSupplyChain: "Suministros",
@@ -161,6 +162,17 @@ const messages = {
     announcementCategoryFinance: 'Finanzas',
     announcementCategoryHr: 'Recursos humanos',
     announcementCategoryTechnical: 'Técnico',
+    dashboardNotifications: 'Notificaciones',
+    dashboardMessages: 'Mensajes',
+    dashboardHistory: 'Historial', dashboardActivities: 'Actividades',
+    dashboardHelp: 'Ayuda',
+    dashboardSearch: 'Búsqueda',
+    dashboardAccount: 'Cuenta de usuario',
+    dashboardConversation: 'Conversaciones',
+    conversationsComingSoon: 'Este espacio está pensado para conversar dentro de la organización y estará disponible próximamente.',
+    dashboardPlanning: 'Planificación',
+    planningComingSoon: 'Este espacio permitirá crear planes, asignarlos a personas o grupos, añadir informes y seguir el progreso. Estará disponible próximamente.',
+    messagesTitle: 'Mensajes', messagesDescription: 'Mensajes y avisos de la organización', messagesEmpty: 'No hay mensajes para mostrar.', messagesLoadFailed: 'No se pudieron cargar los mensajes.', activityHistoryTitle: 'Historial de actividad', activityTabAll: 'Actividad reciente', activityTabCreated: 'Elementos creados recientemente', activityEmpty: 'No hay elementos para mostrar.', activityLoadFailed: 'No se pudo cargar el historial de actividad.', userGuideTitle: 'Guía del sistema', userGuideDescription: 'Guía rápida de las secciones principales del sistema.', guideNavigationTitle: 'Navegación por el sistema', guideNavigationDescription: 'Elige un módulo en la primera columna y abre sus tareas desde la segunda.', guideNotificationsTitle: 'Notificaciones', guideNotificationsDescription: 'Usa la campana para seguir asignaciones, cambios de estado y eventos de la organización.', guideMessagesTitle: 'Mensajes', guideMessagesDescription: 'Lee los avisos de la organización en la bandeja de mensajes. Pueden dirigirse a toda la organización o a grupos específicos.', guideSupportTitle: 'Soporte', guideSupportDescription: 'Usa Soporte para pedir ayuda o hacer seguimiento de un problema.',
     dashboardServiceTitle: 'Estado del servicio',
     dashboardActivityTitle: 'Resumen de actividad',
     dashboardActivityEmpty: 'Aún no hay actividad registrada.',
@@ -186,7 +198,7 @@ const messages = {
     supportTicketsEmpty: 'Todavía no hay tickets para este proyecto.',
     supportProjectViewOnly: 'Este proyecto está disponible solo para lectura.',
     supportProjectsTitle: 'Proyectos disponibles',
-    accountingChartOfAccounts: 'Plan de cuentas', accountingPurchaseInvoices: 'Facturas de compra', accountingReceiptsPayments: 'Cobros y pagos', accountingOverview: 'Resumen', accountingInvoices: 'Facturas', accountingEntriesLedger: 'Asientos y libro mayor', accountingNavigation: 'Secciones de contabilidad', accountingAccessDenied: 'No tienes permiso para ver contabilidad.', accountingTotalDocuments: 'Documentos totales', accountingAwaitingReview: 'Pendientes de revisión', accountingApproved: 'Aprobados', accountingPaid: 'Pagados', accountingOverdue: 'Vencidos', accountingNotConfigured: 'Esta sección aún no tiene datos ni servicios contables disponibles.',
+    accountingAttentionTitle: 'Estado del flujo documental', accountingAttentionDescription: 'Cantidad de documentos en cada etapa contable', accountingRecentTitle: 'Documentos recientes', accountingRecentDescription: 'Los cinco documentos financieros creados más recientemente', accountingChartOfAccounts: 'Plan de cuentas', accountingPurchaseInvoices: 'Facturas de compra', accountingReceiptsPayments: 'Cobros y pagos', accountingOverview: 'Contabilidad', accountingInvoices: 'Facturas', accountingEntriesLedger: 'Asientos y libro mayor', accountingNavigation: 'Secciones de contabilidad', accountingAccessDenied: 'No tienes permiso para ver contabilidad.', accountingTotalDocuments: 'Documentos totales', accountingAwaitingReview: 'Pendientes de revisión', accountingApproved: 'Aprobados', accountingRejected: 'Rechazados', accountingPaid: 'Pagados', accountingOverdue: 'Vencidos', accountingNotConfigured: 'Esta sección aún no tiene datos ni servicios contables disponibles.',
   accountingManageDenied: 'No tienes permiso para gestionar los registros contables.',
     sidebarDatabase: "Base de datos",
     databaseTitle: "Base de datos",
@@ -210,6 +222,7 @@ const messages = {
     calendarPersian: "Persa (Hégira solar)",
     calendarIslamic: "Islámico (Hégira lunar)",
     calendarGregorian: "Gregoriano",
+  acctCode: 'Código de cuenta', acctName: 'Nombre de cuenta', acctType: 'Tipo de cuenta', acctCreate: 'Añadir cuenta', acctAsset: 'Activo', acctLiability: 'Pasivo', acctEquity: 'Patrimonio', acctRevenue: 'Ingreso', acctExpense: 'Gasto', acctVoucherDate: 'Fecha del asiento', acctDescription: 'Descripción', acctDebit: 'Debe', acctCredit: 'Haber', acctAddVoucher: 'Crear asiento contable', acctPost: 'Contabilizar', acctDraft: 'Borrador', acctPosted: 'Contabilizado', acctBalance: 'Saldo', acctUnbalanced: 'El total del debe y el haber debe coincidir.', acctAccountsEmpty: 'Aún no hay cuentas creadas.', acctVouchersEmpty: 'Aún no hay asientos creados.', acctLedgerEmpty: 'No hay movimientos contabilizados para esta cuenta.', acctSelectAccount: 'Seleccionar cuenta', acctLoadFailed: 'No se pudieron cargar los datos contables.', acctSaveFailed: 'No se pudieron guardar los datos contables.', acctSaved: 'Guardado correctamente.', acctPostConfirm: 'Los asientos contabilizados ya no se pueden editar.', acctAddLine: 'Añadir línea', acctRemoveLine: 'Eliminar línea', acctAmount: 'Importe', acctMethod: 'Método de pago', acctNewPurchase: 'Registrar factura de compra', acctCodeInvalid: 'Introduce un código de cuenta único de hasta 24 caracteres.', acctNameRequired: 'Introduce el nombre de la cuenta.', acctDateInvalid: 'Introduce una fecha válida.', acctLineRequired: 'El asiento debe contener al menos dos líneas.', acctPositiveLine: 'Introduce un importe al debe o al haber en cada línea.', acctLineSide: 'Cada línea debe contener solo debe o solo haber.'
 } satisfies Record<UiMessage, string>;
 
 export default messages;
