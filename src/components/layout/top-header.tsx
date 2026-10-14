@@ -375,6 +375,7 @@ export function TopHeader({
           </button>
           {isAccountMenuOpen && (
             <div role="menu" className="pointer-events-auto absolute end-0 top-full z-[60] mt-2 min-w-44 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-1.5 shadow-lg md:start-full md:top-1/2 md:mt-0 md:ms-2 md:end-auto md:-translate-y-1/2">
+              <HeaderAccountSwitcher userId={user?.id} embedded />
               <button
                 type="button"
                 role="menuitem"
@@ -387,7 +388,9 @@ export function TopHeader({
             </div>
           )}
         </div>
-        <HeaderAccountSwitcher userId={user?.id} />
+        <div className="hidden md:block">
+          <HeaderAccountSwitcher userId={user?.id} />
+        </div>
         </div>
       </div>
 
