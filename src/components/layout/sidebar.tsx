@@ -115,15 +115,13 @@ const navigation: NavigationItem[] = [
     ],
   },
   {
-    id: 'business-intelligence',
-    titleKey: 'sidebarBusinessIntelligence',
+    id: 'statistics',
+    titleKey: 'sidebarStatistics',
     icon: BarChart3,
-    href: '/business-intelligence',
+    href: '/statistics',
     sub: [
-      { titleKey: 'sidebarFinancialReports', href: '/business-intelligence/financial' },
-      { titleKey: 'sidebarSalesReports', href: '/business-intelligence/sales' },
-      { titleKey: 'sidebarHrReports', href: '/business-intelligence/hr' },
-      { titleKey: 'sidebarInventoryReports', href: '/business-intelligence/inventory' },
+      { titleKey: 'sidebarReports', href: '/statistics/reports' },
+      { titleKey: 'sidebarBusinessIntelligence', href: '/statistics/business-intelligence' },
     ],
   },
   {
@@ -154,7 +152,10 @@ const navigation: NavigationItem[] = [
     titleKey: 'sidebarDevelopment',
     icon: Code2,
     href: '/development',
-    sub: [{ titleKey: 'sidebarTestData', href: '/development/test-data' }],
+    sub: [
+      { titleKey: 'sidebarTestData', href: '/development/test-data' },
+      { titleKey: 'developmentAccountSwitching', href: '/development/account-switching' },
+    ],
   },
 ];
 

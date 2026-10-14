@@ -38,6 +38,7 @@ import {
 import { useTheme } from '@/components/theme-provider';
 import { getLocaleDirection, usePreferences } from '@/components/preferences-provider';
 import { uiMessage } from '@/lib/ui-messages';
+import { HeaderAccountSwitcher } from './header-account-switcher';
 
 interface TopHeaderProps {
   isCollapsed?: boolean;
@@ -239,18 +240,19 @@ export function TopHeader({
         backdrop-blur-md transition-colors duration-200
       "
     >
-      {/* کنترل‌های سایدبار، زنگوله و تم، سپس کپسول حساب کاربری */}
+      {/* در موبایل کنترل‌ها کنار هم در سمت شروع و کپسول حساب در سمت مقابل می‌ماند. */}
       <div
         dir={direction}
         className="
-          absolute inset-x-2 top-1/2 z-10 w-[calc(100%-1rem)] -translate-y-1/2
+          pointer-events-none absolute inset-x-2 top-1/2 z-10 w-[calc(100%-1rem)] -translate-y-1/2
           flex items-center justify-between gap-2
           md:inset-x-auto md:start-5 md:w-auto md:justify-start
         "
       >
+        <div className="order-1 flex shrink-0 items-center gap-1.5">
         {/* ۱. دکمه کنترل سایدبار (فلش باز/بستن/قفل) */}
         {onToggleSidebar && (
-          <div id="sidebar-controls" className="order-1">
+          <div id="sidebar-controls">
             <button
               type="button"
               onClick={onToggleMobileMenu}
@@ -258,7 +260,7 @@ export function TopHeader({
               aria-label={message(isMobileMenuOpen ? 'closeSidebar' : 'openSidebar')}
               aria-expanded={isMobileMenuOpen}
               aria-controls="erp-mobile-navigation"
-              className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border)] text-[var(--foreground)] md:hidden"
+              className="pointer-events-auto flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border)] text-[var(--foreground)] md:hidden"
             >
               {isMobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
             </button>
@@ -270,7 +272,7 @@ export function TopHeader({
               title={sidebarButtonTitle}
               aria-label={sidebarButtonTitle}
               aria-pressed={!isCollapsed && isSidebarLocked}
-              className={`hidden md:flex
+              className={`pointer-events-auto hidden md:flex
                 flex h-9 w-9 cursor-pointer
                 items-center justify-center
                 rounded-xl transition-all duration-200
@@ -297,8 +299,7 @@ export function TopHeader({
             title={navigateModeTitle}
             aria-label={navigateModeTitle}
             aria-pressed={navigateOnClick}
-            className={`hidden md:flex h-9 w-9 cursor-pointer items-center justify-center
-              order-2
+            className={`pointer-events-auto flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center
               rounded-xl transition-all duration-200
               ${
                 navigateOnClick
@@ -316,13 +317,15 @@ export function TopHeader({
           onClick={cycleTheme}
           title={themeTitle}
           aria-label={message('changeTheme')}
-          className="order-3 flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border)] text-[var(--foreground)] transition-all duration-200 hover:bg-slate-100 dark:hover:bg-slate-800/80"
+          className="pointer-events-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--border)] text-[var(--foreground)] transition-all duration-200 hover:bg-slate-100 dark:hover:bg-slate-800/80"
         >
           {themeIcon}
         </button>
+        </div>
 
-        {/* ۳. بخش کپسول حساب کاربری */}
-        <div ref={accountMenuRef} className="relative order-4">
+        {/* کپسول حساب کاربری در سوی مقابل کنترل‌ها */}
+        <div className="pointer-events-none order-2 flex shrink-0 items-center gap-1.5">
+        <div ref={accountMenuRef} className="pointer-events-none relative shrink-0">
           <button
             id="user-profile-header-btn"
             type="button"
@@ -331,7 +334,7 @@ export function TopHeader({
             aria-haspopup="menu"
             aria-expanded={isAccountMenuOpen}
             className={`
-              flex cursor-pointer select-none items-center gap-2.5
+              pointer-events-auto flex cursor-pointer select-none items-center gap-2.5
               rounded-2xl border p-1.5 pe-4 ps-1.5 transition-all
               ${isAccountMenuOpen ? 'border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]' : 'border-[var(--border)] text-[var(--foreground)]'}
               focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]/40
@@ -371,7 +374,7 @@ export function TopHeader({
           </div>
           </button>
           {isAccountMenuOpen && (
-            <div role="menu" className="absolute end-0 top-full z-[60] mt-2 min-w-44 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-1.5 shadow-lg md:start-full md:top-1/2 md:mt-0 md:ms-2 md:end-auto md:-translate-y-1/2">
+            <div role="menu" className="pointer-events-auto absolute end-0 top-full z-[60] mt-2 min-w-44 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-1.5 shadow-lg md:start-full md:top-1/2 md:mt-0 md:ms-2 md:end-auto md:-translate-y-1/2">
               <button
                 type="button"
                 role="menuitem"
@@ -383,6 +386,8 @@ export function TopHeader({
               </button>
             </div>
           )}
+        </div>
+        <HeaderAccountSwitcher userId={user?.id} />
         </div>
       </div>
 
@@ -397,7 +402,7 @@ export function TopHeader({
           href="/dashboard"
           aria-label={message('dashboard')}
           dir="ltr"
-          className="relative flex h-12 w-12 items-center justify-center rounded-xl"
+          className="pointer-events-auto relative flex h-12 w-12 items-center justify-center rounded-xl"
         >
           <span
             className="absolute right-[calc(100%+0.0625rem)] top-1/2 hidden w-max max-w-[min(24vw,15rem)] -translate-y-1/2 truncate text-left font-black tracking-tight text-[var(--foreground)] sm:block"

@@ -132,8 +132,10 @@ const reportCards: {
 
 export default function ReportsPage({
   initialCategory = "ALL",
+  titleKey = "sidebarBusinessIntelligence",
 }: {
   initialCategory?: ReportCategory;
+  titleKey?: UiMessage;
 }) {
   const { locale } = usePreferences();
   const [period, setPeriod] = useState<ReportPeriod>("THIS_MONTH");
@@ -147,7 +149,7 @@ export default function ReportsPage({
     setFailed(false);
     try {
       const response = await apiClient.get<ReportsOverview>(
-        `/reports/overview?period=${period}`,
+        `/statistics/overview?period=${period}`,
       );
       setData(response);
     } catch {
@@ -181,7 +183,7 @@ export default function ReportsPage({
           </div>
           <div>
             <h1 className="text-lg font-bold text-foreground">
-              {t("sidebarBusinessIntelligence")}
+              {t(titleKey)}
             </h1>
             <p className="mt-1 text-xs text-muted-foreground">
               {t("reportsDescription")}

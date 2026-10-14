@@ -12,6 +12,11 @@ const nextConfig: NextConfig = {
       { source: '/inventory/purchasing', destination: '/supply/purchasing', permanent: true },
       { source: '/purchases', destination: '/supply/purchasing', permanent: true },
       { source: '/sales', destination: '/commerce/sales', permanent: true },
+      { source: '/analysis', destination: '/statistics', permanent: true },
+      { source: '/reports', destination: '/statistics/reports', permanent: true },
+      { source: '/reports/:path*', destination: '/statistics/reports/:path*', permanent: true },
+      { source: '/business-intelligence', destination: '/statistics/business-intelligence', permanent: true },
+      { source: '/business-intelligence/:path*', destination: '/statistics/business-intelligence/:path*', permanent: true },
     ];
   },
 };

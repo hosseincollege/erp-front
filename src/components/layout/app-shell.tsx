@@ -8,6 +8,7 @@
 import React, { useEffect, useState } from 'react';
 import { Sidebar } from './sidebar';
 import { TopHeader } from './top-header';
+import { ImpersonationBanner } from './impersonation-banner';
 import { getCustomAccentStyle, getLocaleDirection, isCustomAccentColor, usePreferences } from '@/components/preferences-provider';
 
 const SIDEBAR_COLLAPSED_KEY = 'erp-sidebar-collapsed';
@@ -157,6 +158,8 @@ export function AppShell({ children }: AppShellProps) {
         onToggleSidebarLock={handleToggleSidebarLock}
         onToggleNavigateOnClick={handleToggleNavigateOnClick}
       />
+
+      <ImpersonationBanner />
 
       <div className="flex min-h-0 flex-1 items-stretch overflow-hidden">
         {isMobileNavOpen && (
