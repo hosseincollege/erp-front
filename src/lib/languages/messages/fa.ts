@@ -260,6 +260,10 @@ const messages = {
   notificationsNoRecent: "اعلان تازه‌ای ندارید.",
   notificationsUnreadCount: "خوانده‌نشده",
   changeTheme: "تغییر تم",
+  publicHeaderActions: "دسترسی‌های حساب کاربری",
+  publicHeaderLogin: "ورود",
+  publicHeaderRegister: "ثبت‌نام",
+  publicHeaderHome: "صفحه اصلی ERP Pro",
   navigateOn: "ناوبری خودکار فعال است؛ کلیک روی ماژول صفحه را باز می‌کند",
   navigateOff:
     "ناوبری خودکار غیرفعال است؛ کلیک روی ماژول فقط منو را باز می‌کند",

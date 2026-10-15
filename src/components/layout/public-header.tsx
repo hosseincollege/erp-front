@@ -13,19 +13,20 @@ import {
   Moon,
   ShieldAlert,
   Sparkles,
+  ShieldCheck,
   Sun,
   UserPlus,
   X,
 } from 'lucide-react';
-
-type ThemeMode = 'system' | 'light' | 'dark';
+import { useTheme } from '@/components/theme-provider';
+import { getLocaleDirection, usePreferences } from '@/components/preferences-provider';
+import { uiMessage } from '@/lib/ui-messages';
+import type { UiMessage } from '@/lib/languages/types';
 
 type SetupStatusResponse = {
   hasUsers: boolean;
   isFirstInstall?: boolean;
 };
-
-const THEME_STORAGE_KEY = 'erp-theme';
 
 function getBackendBaseUrl(): string {
   const url =
@@ -34,29 +35,6 @@ function getBackendBaseUrl(): string {
     process.env.NEXT_PUBLIC_BACKEND_BASE_URL ||
     'http://localhost:3006';
   return url.replace(/\/+$/, '');
-}
-
-function isThemeMode(value: string | null): value is ThemeMode {
-  return value === 'system' || value === 'light' || value === 'dark';
-}
-
-function getSavedTheme(): ThemeMode {
-  if (typeof window === 'undefined') {
-    return 'system';
-  }
-  const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
-  return isThemeMode(savedTheme) ? savedTheme : 'system';
-}
-
-function applyTheme(mode: ThemeMode): void {
-  if (typeof window === 'undefined') {
-    return;
-  }
-  const systemIsDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const shouldUseDark = mode === 'dark' || (mode === 'system' && systemIsDark);
-
-  document.documentElement.classList.toggle('dark', shouldUseDark);
-  document.documentElement.style.colorScheme = shouldUseDark ? 'dark' : 'light';
 }
 
 async function fetchSetupStatus(): Promise<SetupStatusResponse> {
@@ -77,31 +55,14 @@ async function fetchSetupStatus(): Promise<SetupStatusResponse> {
 }
 
 export function PublicHeader() {
-  const [theme, setTheme] = useState<ThemeMode>('system');
   const [hasUsers, setHasUsers] = useState<boolean | null>(null);
   const [showDisabledNotice, setShowDisabledNotice] = useState(false);
+  const { theme, setTheme } = useTheme();
+  const { locale } = usePreferences();
+  const direction = getLocaleDirection(locale);
+  const message = (key: UiMessage) => uiMessage(locale, key);
 
   useEffect(() => {
-    const savedTheme = getSavedTheme();
-    setTheme(savedTheme);
-    applyTheme(savedTheme);
-
-    const media = window.matchMedia('(prefers-color-scheme: dark)');
-
-    const handleSystemThemeChange = () => {
-      if (getSavedTheme() === 'system') {
-        applyTheme('system');
-      }
-    };
-
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === null || event.key === THEME_STORAGE_KEY) {
-        const currentTheme = getSavedTheme();
-        setTheme(currentTheme);
-        applyTheme(currentTheme);
-      }
-    };
-
     const checkStatus = async () => {
       try {
         const data = await fetchSetupStatus();
@@ -112,14 +73,6 @@ export function PublicHeader() {
     };
 
     void checkStatus();
-
-    media.addEventListener?.('change', handleSystemThemeChange);
-    window.addEventListener('storage', handleStorageChange);
-
-    return () => {
-      media.removeEventListener?.('change', handleSystemThemeChange);
-      window.removeEventListener('storage', handleStorageChange);
-    };
   }, []);
 
   useEffect(() => {
@@ -133,97 +86,81 @@ export function PublicHeader() {
   }, [showDisabledNotice]);
 
   const cycleTheme = () => {
-    const nextTheme: ThemeMode =
+    const nextTheme =
       theme === 'system' ? 'light' : theme === 'light' ? 'dark' : 'system';
 
     setTheme(nextTheme);
-    localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
-    applyTheme(nextTheme);
   };
 
   const ThemeIcon =
     theme === 'system' ? Monitor : theme === 'light' ? Sun : Moon;
+  const themeTitle = message(theme === 'system' ? 'themeSystem' : theme === 'light' ? 'themeLight' : 'themeDark');
 
   return (
     <>
       <header
-        dir="rtl"
-        className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-xl"
+        dir={direction}
+        className="sticky top-0 z-40 relative flex h-16 items-center border-b border-[var(--border)] bg-[var(--surface)]/90 px-5 backdrop-blur-md transition-colors duration-200"
       >
-        <div className="mx-auto grid h-16 w-full max-w-7xl grid-cols-[1fr_auto_1fr] items-center gap-2 px-2 sm:h-20 sm:px-8">
-          {/* سمت راست: ورود و ثبت‌نام */}
-          <nav className="flex items-center justify-start gap-2.5">
+        {/* ورود، ثبت‌نام و تم در سمت راست؛ هم‌ارتفاع و هم‌جایگاه با هدر برنامه */}
+        <nav className="absolute start-5 flex items-center gap-1.5 sm:gap-2" aria-label={message('publicHeaderActions')}>
             <Link
               href="/login"
-              className="inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-primary px-2.5 py-2 text-xs font-bold text-primary-foreground shadow-md shadow-primary/20 transition-all hover:opacity-95 hover:shadow-lg active:scale-95 sm:h-10 sm:gap-2 sm:px-4 sm:text-sm"
+              aria-label={message('publicHeaderLogin')}
+              title={message('publicHeaderLogin')}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-xs transition-colors hover:bg-muted active:scale-95"
             >
               <LogIn size={16} />
-              <span className="max-sm:sr-only">ورود</span>
             </Link>
 
-            {hasUsers === null && (
-              <div
-                className="h-9 w-6 animate-pulse rounded-xl bg-muted sm:h-10 sm:w-24"
-                aria-hidden="true"
-              />
-            )}
-
-            {hasUsers === false && (
+            {hasUsers === false ? (
               <Link
                 href="/register"
-              className="inline-flex h-9 items-center justify-center gap-1 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-2 py-2 text-[11px] font-bold text-emerald-600 transition-all hover:bg-emerald-500/20 active:scale-95 animate-pulse dark:text-emerald-400 sm:h-10 sm:gap-1.5 sm:px-3.5 sm:text-sm"
-                title="سامانه آماده راه‌اندازی است، اولین مالک را تعریف کنید"
+                aria-label={message('publicHeaderRegister')}
+                title={message('publicHeaderRegister')}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-xs transition-colors hover:bg-muted active:scale-95"
               >
-                <Sparkles size={16} />
-                <span className="max-sm:sr-only">ثبت‌نام اولیه</span>
+                <UserPlus size={16} />
               </Link>
-            )}
-
-            {hasUsers === true && (
+            ) : (
               <button
                 type="button"
                 onClick={() => setShowDisabledNotice(true)}
-                className="inline-flex h-9 items-center justify-center gap-1 rounded-xl border border-border bg-muted/50 px-2 py-2 text-[11px] font-medium text-muted-foreground transition-all hover:bg-muted hover:text-foreground active:scale-95 cursor-pointer sm:h-10 sm:gap-1.5 sm:px-3.5 sm:text-sm"
-                title="راهنمای ثبت‌نام"
+                aria-label={message('publicHeaderRegister')}
+                title={message('publicHeaderRegister')}
+                disabled={hasUsers === null}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-xs transition-colors hover:bg-muted active:scale-95 disabled:cursor-wait disabled:opacity-60"
               >
-                <UserPlus size={16} className="opacity-70" />
-                <span className="max-sm:sr-only">ثبت‌نام</span>
+                <UserPlus size={16} />
               </button>
             )}
-          </nav>
 
-          {/* وسط: لوگو و نام سامانه */}
-          <Link
-            href="/"
-            className="group flex items-center gap-2.5 rounded-2xl p-1.5 transition-opacity hover:opacity-90"
-            aria-label="صفحه اصلی ERP Pro"
-          >
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md shadow-primary/20 transition-transform duration-300 group-hover:scale-105">
-              <Sparkles size={20} />
-            </div>
-
-            <div className="text-right">
-              <div className="text-base sm:text-lg font-black tracking-tight text-foreground">
-                ERP Pro
-              </div>
-              <div className="text-[11px] text-muted-foreground hidden sm:block">
-                سامانه یکپارچه سازمانی
-              </div>
-            </div>
-          </Link>
-
-          {/* سمت چپ: تغییر پوسته */}
-          <div className="flex items-center justify-end">
             <button
               type="button"
               onClick={cycleTheme}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-foreground shadow-xs transition-all hover:bg-muted active:scale-95"
-              aria-label="تغییر تم"
+              aria-label={message('changeTheme')}
+              title={themeTitle}
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-xs transition-colors hover:bg-muted active:scale-95"
             >
               <ThemeIcon size={18} />
             </button>
+        </nav>
+
+        {/* نشان سامانه در مرکز دقیق هدر */}
+        <Link
+          href="/"
+          className="group absolute left-1/2 flex -translate-x-1/2 items-center gap-2.5 rounded-xl"
+          aria-label={message('publicHeaderHome')}
+        >
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-primary transition-opacity group-hover:opacity-85 sm:h-12 sm:w-12">
+            <ShieldCheck size={24} />
           </div>
-        </div>
+
+          <div className="hidden text-start sm:block">
+            <div className="text-base font-black tracking-tight text-foreground sm:text-lg">ERP Pro</div>
+            <div className="hidden text-[11px] text-muted-foreground sm:block">سامانه یکپارچه سازمانی</div>
+          </div>
+        </Link>
       </header>
 
       {/* مدال راهنمای ثبت‌نام */}

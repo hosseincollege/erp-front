@@ -264,6 +264,10 @@ const messages = {
   notificationsNoRecent: "Keine neuen Benachrichtigungen.",
   notificationsUnreadCount: "ungelesen",
   changeTheme: "Design ändern",
+  publicHeaderActions: "Kontoaktionen",
+  publicHeaderLogin: "Anmelden",
+  publicHeaderRegister: "Registrieren",
+  publicHeaderHome: "ERP Pro Startseite",
   navigateOn: "Automatische Navigation ist aktiv; Modul anklicken zum Öffnen",
   navigateOff:
     "Automatische Navigation ist aus; Modul anklicken zum Öffnen des Menüs",

@@ -264,6 +264,10 @@ const messages = {
   notificationsNoRecent: "Новых уведомлений нет.",
   notificationsUnreadCount: "непрочитано",
   changeTheme: "Изменить тему",
+  publicHeaderActions: "Действия с аккаунтом",
+  publicHeaderLogin: "Войти",
+  publicHeaderRegister: "Регистрация",
+  publicHeaderHome: "Главная ERP Pro",
   navigateOn:
     "Автоматическая навигация включена; нажмите модуль, чтобы открыть его",
   navigateOff:
