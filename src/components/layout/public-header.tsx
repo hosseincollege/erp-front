@@ -103,14 +103,14 @@ export function PublicHeader() {
         className="sticky top-0 z-40 relative flex h-16 items-center border-b border-[var(--border)] bg-[var(--surface)]/90 px-5 backdrop-blur-md transition-colors duration-200"
       >
         {/* ورود، ثبت‌نام و تم در سمت راست؛ هم‌ارتفاع و هم‌جایگاه با هدر برنامه */}
-        <nav className="absolute start-5 flex items-center gap-1.5 sm:gap-2" aria-label={message('publicHeaderActions')}>
+        <nav className="absolute start-2 flex items-center gap-1.5 md:start-5" aria-label={message('publicHeaderActions')}>
             <Link
               href="/login"
               aria-label={message('publicHeaderLogin')}
               title={message('publicHeaderLogin')}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-xs transition-colors hover:bg-muted active:scale-95"
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--border)] text-[var(--foreground)] transition-all duration-200 hover:bg-slate-100 dark:hover:bg-slate-800/80"
             >
-              <LogIn size={16} />
+              <LogIn size={18} />
             </Link>
 
             {hasUsers === false ? (
@@ -118,9 +118,9 @@ export function PublicHeader() {
                 href="/register"
                 aria-label={message('publicHeaderRegister')}
                 title={message('publicHeaderRegister')}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-xs transition-colors hover:bg-muted active:scale-95"
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--border)] text-[var(--foreground)] transition-all duration-200 hover:bg-slate-100 dark:hover:bg-slate-800/80"
               >
-                <UserPlus size={16} />
+                <UserPlus size={18} />
               </Link>
             ) : (
               <button
@@ -129,9 +129,9 @@ export function PublicHeader() {
                 aria-label={message('publicHeaderRegister')}
                 title={message('publicHeaderRegister')}
                 disabled={hasUsers === null}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-xs transition-colors hover:bg-muted active:scale-95 disabled:cursor-wait disabled:opacity-60"
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--border)] text-[var(--foreground)] transition-all duration-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 disabled:cursor-wait disabled:opacity-60"
               >
-                <UserPlus size={16} />
+                <UserPlus size={18} />
               </button>
             )}
 
@@ -140,7 +140,7 @@ export function PublicHeader() {
               onClick={cycleTheme}
               aria-label={message('changeTheme')}
               title={themeTitle}
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-xs transition-colors hover:bg-muted active:scale-95"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--border)] text-[var(--foreground)] transition-all duration-200 hover:bg-slate-100 dark:hover:bg-slate-800/80"
             >
               <ThemeIcon size={18} />
             </button>
