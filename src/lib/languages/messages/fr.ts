@@ -213,10 +213,23 @@ const messages = {
 
   settingsTitle: "Paramètres généraux",
   settingsDescription:
-    "Choisissez la couleur principale et la langue. Le mode clair ou sombre reste accessible dans l’en-tête.",
+    "Définissez la couleur et l’arrière-plan pour toute l’organisation. La langue et le contraste restent propres à chaque personne.",
   accentTitle: "Couleur principale",
   accentDescription:
     "La couleur choisie est prévisualisée immédiatement. Cliquez sur « Enregistrer » pour la conserver ; quitter sans enregistrer rétablit la couleur précédente.",
+  organizationAppearanceTitle: "Apparence de l’organisation",
+  organizationAppearanceDescription: "La couleur, l’arrière-plan, le calendrier et le fuseau horaire sont communs à tous.",
+  organizationAppearanceSharedNotice: "Ces réglages s’appliquent à tous les membres. Seul un administrateur autorisé peut les modifier.",
+  organizationAppearanceReadOnly: "Ces réglages sont communs à tous. Contactez l’administrateur pour les modifier.",
+  accentLightColor: "Couleur du mode clair",
+  accentDarkColor: "Couleur du mode sombre",
+  backgroundStyleTitle: "Arrière-plan de l’espace de travail",
+  backgroundStyleDescription: "Choisissez un arrière-plan teinté par la couleur principale ou gris.",
+  backgroundTheme: "Assorti à la couleur principale",
+  backgroundGray: "Gris",
+  timezoneTitle: "Fuseau horaire de l’organisation",
+  timezoneDescription: "Les heures et dates dépendantes de l’heure utilisent ce fuseau pour tous.",
+  timezoneLabel: "Fuseau horaire",
   preview: "Aperçu",
   primaryAction: "Action principale",
   selectedItem: "Élément sélectionné",
@@ -482,7 +495,7 @@ const messages = {
   databaseNoOrganization: "Aucune organisation active trouvée.",
   calendarTitle: "Calendrier des dates",
   calendarDescription:
-    "Le calendrier choisi sert à afficher les dates dans l’ERP ; les données restent stockées au format standard.",
+    "Le calendrier choisi s’applique aux dates de tous les membres ; les données restent stockées au format standard.",
   calendarLabel: "Calendrier",
   calendarPersian: "Persan (hégire solaire)",
   calendarIslamic: "Islamique (hégire lunaire)",

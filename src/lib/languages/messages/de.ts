@@ -213,10 +213,23 @@ const messages = {
 
   settingsTitle: "Allgemeine Einstellungen",
   settingsDescription:
-    "Wähle Akzentfarbe und Anzeigesprache. Heller und dunkler Modus sind über die Kopfzeile verfügbar.",
+    "Lege Akzentfarbe und Hintergrund für die gesamte Organisation fest. Sprache und Kontrast bleiben persönliche Einstellungen.",
   accentTitle: "Akzentfarbe",
   accentDescription:
     "Die gewählte Farbe wird sofort in der Arbeitsfläche angezeigt. Mit „Änderungen speichern“ bleibt sie erhalten; ohne Speichern wird die vorherige Farbe wiederhergestellt.",
+  organizationAppearanceTitle: "Erscheinungsbild der Organisation",
+  organizationAppearanceDescription: "Akzentfarbe, Hintergrund, Kalender und Zeitzone gelten für alle Mitglieder.",
+  organizationAppearanceSharedNotice: "Diese Einstellungen gelten für alle Mitglieder. Ändern darf sie nur ein berechtigter Administrator.",
+  organizationAppearanceReadOnly: "Diese Einstellungen gelten für alle Mitglieder. Wenden Sie sich zum Ändern an die Organisationsverwaltung.",
+  accentLightColor: "Farbe für helles Design",
+  accentDarkColor: "Farbe für dunkles Design",
+  backgroundStyleTitle: "Arbeitsbereich-Hintergrund",
+  backgroundStyleDescription: "Wählen Sie einen akzentfarbenen oder grauen Hintergrund.",
+  backgroundTheme: "An Akzentfarbe angepasst",
+  backgroundGray: "Grau",
+  timezoneTitle: "Zeitzone der Organisation",
+  timezoneDescription: "Uhrzeiten und zeitabhängige Daten verwenden für alle diese Zeitzone.",
+  timezoneLabel: "Zeitzone",
   preview: "Vorschau",
   primaryAction: "Hauptaktion",
   selectedItem: "Ausgewählter Eintrag",
@@ -485,7 +498,7 @@ const messages = {
   databaseNoOrganization: "Keine aktive Organisation gefunden.",
   calendarTitle: "Kalenderdarstellung",
   calendarDescription:
-    "Der gewählte Kalender steuert die Datumsanzeige im ERP; gespeichert werden die Daten weiterhin im Standardformat.",
+    "Der gewählte Kalender gilt für die Datumsanzeige aller Mitglieder; gespeichert werden die Daten weiterhin im Standardformat.",
   calendarLabel: "Kalender",
   calendarPersian: "Persisch (Solar-Hidschri)",
   calendarIslamic: "Islamisch (Mond-Hidschri)",

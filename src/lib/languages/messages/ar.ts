@@ -208,10 +208,23 @@ const messages = {
 
   settingsTitle: "الإعدادات العامة",
   settingsDescription:
-    "اختر لون الواجهة ولغة العرض. يتوفر الوضع الفاتح والداكن في الشريط العلوي.",
+    "اضبط لون المؤسسة وخلفيتها للجميع؛ وتظل لغة العرض والتباين إعدادين شخصيين لكل مستخدم.",
   accentTitle: "لون الواجهة",
   accentDescription:
     "يُعرض اللون المختار فورًا في مساحة العمل. اختر «حفظ التغييرات» للاحتفاظ به؛ والانتقال دون حفظ يعيد اللون السابق.",
+  organizationAppearanceTitle: "مظهر المؤسسة",
+  organizationAppearanceDescription: "يشارك جميع أعضاء المؤسسة لون التمييز والخلفية والتقويم والمنطقة الزمنية.",
+  organizationAppearanceSharedNotice: "تُطبّق هذه الإعدادات على جميع الأعضاء، ولا يغيّرها إلا مدير مخوّل.",
+  organizationAppearanceReadOnly: "هذه الإعدادات مشتركة بين الأعضاء. تواصل مع مدير المؤسسة لتغييرها.",
+  accentLightColor: "لون الوضع الفاتح",
+  accentDarkColor: "لون الوضع الداكن",
+  backgroundStyleTitle: "خلفية مساحة العمل",
+  backgroundStyleDescription: "اختر خلفية متناسقة مع لون التمييز أو خلفية رمادية.",
+  backgroundTheme: "متناسقة مع لون التمييز",
+  backgroundGray: "رمادي",
+  timezoneTitle: "المنطقة الزمنية للمؤسسة",
+  timezoneDescription: "تُعرض الأوقات والتواريخ المرتبطة بالوقت للجميع وفق هذه المنطقة.",
+  timezoneLabel: "المنطقة الزمنية",
   preview: "معاينة",
   primaryAction: "إجراء رئيسي",
   selectedItem: "عنصر محدد",
@@ -466,7 +479,7 @@ const messages = {
   databaseNoOrganization: "لم يتم العثور على مؤسسة نشطة.",
   calendarTitle: "تقويم عرض التواريخ",
   calendarDescription:
-    "يُستخدم التقويم المحدد لعرض التواريخ في النظام؛ وتظل البيانات محفوظة بالتنسيق القياسي.",
+    "يُستخدم التقويم المحدد لعرض التواريخ لجميع أعضاء المؤسسة؛ وتظل البيانات محفوظة بالتنسيق القياسي.",
   calendarLabel: "التقويم",
   calendarPersian: "الهجري الشمسي",
   calendarIslamic: "الهجري القمري",

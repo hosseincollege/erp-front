@@ -12,7 +12,13 @@ import {
   type ReactNode,
 } from 'react';
 import { getLocaleDirection, supportedLocales, type Locale } from '@/lib/languages';
-import { preferencesApi, type SaveUserPreferences } from '@/lib/api/shared/preferences-api';
+import { getCurrentOrganizationId } from '@/lib/api/shared/auth-api';
+import {
+  preferencesApi,
+  type OrganizationAppearance,
+  type SaveOrganizationAppearance,
+  type SaveUserPreferences,
+} from '@/lib/api/shared/preferences-api';
 import { getAccessToken } from '@/lib/api-client';
 
 export {
@@ -22,31 +28,39 @@ export {
 } from '@/lib/languages';
 export type { Locale } from '@/lib/languages';
 
-export type AccentColor = 'blue' | 'green' | 'red' | 'amber' | 'violet' | `#${string}`;
 export type ContrastLevel = 'soft' | 'balanced' | 'strong';
 export type ContrastPreferences = { light: ContrastLevel; dark: ContrastLevel };
 export type CalendarSystem = 'persian' | 'islamic' | 'gregorian';
 
 type PreferencesContextValue = {
   locale: Locale;
-  accentColor: AccentColor;
   contrastPreferences: ContrastPreferences;
+  organizationAppearance: OrganizationAppearance;
+  appearancePreview: SaveOrganizationAppearance | null;
   calendar: CalendarSystem;
+  timezone: string;
+  canEditOrganizationAppearance: boolean;
   contrastPreview: ContrastPreferences | null;
   previewContrastPreferences: (preferences: ContrastPreferences | null) => void;
-  previewAccentColor: (color: AccentColor) => void;
+  previewOrganizationAppearance: (appearance: SaveOrganizationAppearance | null) => void;
   savePreferences: (preferences: SaveUserPreferences) => Promise<void>;
+  saveOrganizationAppearance: (appearance: SaveOrganizationAppearance) => Promise<void>;
 };
 
 const LOCALE_KEY = 'erp-locale';
-const ACCENT_KEY = 'erp-accent-color';
 const CONTRAST_KEY = 'erp-shell-contrast';
-const CALENDAR_KEY = 'erp-calendar';
+const ORGANIZATION_APPEARANCE_KEY = 'erp-organization-appearance';
 const DEFAULT_CONTRAST = { light: 'balanced', dark: 'balanced' } as const satisfies ContrastPreferences;
 const DEFAULT_CONTRAST_SNAPSHOT = JSON.stringify(DEFAULT_CONTRAST);
-const accentStyleProperties = [
-  '--primary', '--primary-hover', '--primary-soft', '--primary-foreground', '--ring', '--sidebar-active',
-] as const;
+const DEFAULT_ORGANIZATION_APPEARANCE: OrganizationAppearance = {
+  accentPreset: 'blue',
+  accentLightColor: '#2563eb',
+  accentDarkColor: '#1d4ed8',
+  backgroundStyle: 'THEME',
+  timezone: 'Asia/Tehran',
+  calendar: 'persian',
+  canEdit: false,
+};
 
 const PreferencesContext = createContext<PreferencesContextValue | null>(null);
 
@@ -87,44 +101,66 @@ function readContrastSnapshot(): string {
   }
 }
 
-function isAccentColor(value: string | null): value is AccentColor {
-  return (
-    value === 'blue' ||
-    value === 'green' ||
-    value === 'red' ||
-    value === 'amber' ||
-    value === 'violet' ||
-    isHexColor(value)
-  );
-}
-
 export function isHexColor(value: string | null): value is `#${string}` {
   return typeof value === 'string' && /^#[0-9a-fA-F]{6}$/.test(value);
 }
 
-export function isCustomAccentColor(color: AccentColor): color is `#${string}` {
-  return isHexColor(color);
+function readOrganizationAppearanceSnapshot(): string {
+  try {
+    const key = `${ORGANIZATION_APPEARANCE_KEY}:${getCurrentOrganizationId() ?? 'none'}`;
+    return window.localStorage.getItem(key)
+      ?? JSON.stringify(DEFAULT_ORGANIZATION_APPEARANCE);
+  } catch {
+    return JSON.stringify(DEFAULT_ORGANIZATION_APPEARANCE);
+  }
 }
 
-export function getCustomAccentStyle(
-  color: AccentColor,
-): (CSSProperties & Record<(typeof accentStyleProperties)[number], string>) | undefined {
-  if (!isCustomAccentColor(color)) return undefined;
-  const red = parseInt(color.slice(1, 3), 16);
-  const green = parseInt(color.slice(3, 5), 16);
-  const blue = parseInt(color.slice(5, 7), 16);
-  const darker = [red, green, blue]
-    .map((channel) => Math.round(channel * 0.82).toString(16).padStart(2, '0'))
-    .join('');
-  const luminance = (0.299 * red + 0.587 * green + 0.114 * blue) / 255;
+function parseOrganizationAppearance(value: string): OrganizationAppearance {
+  try {
+    const parsed = JSON.parse(value) as Partial<OrganizationAppearance>;
+    return {
+      ...DEFAULT_ORGANIZATION_APPEARANCE,
+      ...parsed,
+      canEdit: parsed.canEdit === true,
+      accentLightColor: isHexColor(parsed.accentLightColor ?? null)
+        ? parsed.accentLightColor!
+        : DEFAULT_ORGANIZATION_APPEARANCE.accentLightColor,
+      accentDarkColor: isHexColor(parsed.accentDarkColor ?? null)
+        ? parsed.accentDarkColor!
+        : DEFAULT_ORGANIZATION_APPEARANCE.accentDarkColor,
+      backgroundStyle: parsed.backgroundStyle === 'GRAY' ? 'GRAY' : 'THEME',
+      calendar: parsed.calendar === 'islamic' || parsed.calendar === 'gregorian'
+        ? parsed.calendar
+        : 'persian',
+    };
+  } catch {
+    return { ...DEFAULT_ORGANIZATION_APPEARANCE };
+  }
+}
+
+export function getOrganizationAccentStyle(
+  appearance: Pick<OrganizationAppearance, 'accentLightColor' | 'accentDarkColor'>,
+): CSSProperties & Record<
+  '--accent-light' | '--accent-dark' | '--accent-light-foreground' | '--accent-dark-foreground',
+  string
+> {
+  const foregroundFor = (hex: string) => {
+    const channels = [1, 3, 5].map((offset) => parseInt(hex.slice(offset, offset + 2), 16) / 255);
+    const linear = channels.map((channel) => channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4);
+    const luminance = 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2];
+    const darkContrast = (luminance + 0.05) / 0.05;
+    const lightContrast = 1.05 / (luminance + 0.05);
+    return darkContrast > lightContrast ? '#172033' : '#ffffff';
+  };
   return {
-    '--primary': color,
-    '--primary-hover': `#${darker}`,
-    '--primary-soft': `${color}1a`,
-    '--primary-foreground': luminance > 0.68 ? '#172033' : '#ffffff',
-    '--ring': `${color}55`,
-    '--sidebar-active': color,
-  } as CSSProperties & Record<(typeof accentStyleProperties)[number], string>;
+    '--accent-light': appearance.accentLightColor,
+    '--accent-dark': appearance.accentDarkColor,
+    '--accent-light-foreground': foregroundFor(appearance.accentLightColor),
+    '--accent-dark-foreground': foregroundFor(appearance.accentDarkColor),
+  } as CSSProperties & Record<
+    '--accent-light' | '--accent-dark' | '--accent-light-foreground' | '--accent-dark-foreground',
+    string
+  >;
 }
 
 function applyLocale(locale: Locale) {
@@ -134,21 +170,9 @@ function applyLocale(locale: Locale) {
   root.dataset.locale = locale;
 }
 
-function applyCalendar(calendar: CalendarSystem) {
-  document.documentElement.dataset.calendar = calendar;
-}
-
-function applyAccentColor(color: AccentColor) {
-  document.documentElement.dataset.accent = color;
-  const shell = document.querySelector<HTMLElement>('.erp-app-shell');
-  if (!shell) return;
-  shell.dataset.accent = isCustomAccentColor(color) ? 'custom' : color;
-  const customStyle = getCustomAccentStyle(color);
-  for (const property of accentStyleProperties) {
-    const value = customStyle?.[property];
-    if (value) shell.style.setProperty(property, value);
-    else shell.style.removeProperty(property);
-  }
+function applyOrganizationDisplay(appearance: OrganizationAppearance) {
+  document.documentElement.dataset.calendar = appearance.calendar;
+  document.documentElement.dataset.timezone = appearance.timezone;
 }
 
 export function PreferencesProvider({ children }: { children: ReactNode }) {
@@ -160,64 +184,63 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     },
     (): Locale => 'fa',
   );
-  const accentColor = useSyncExternalStore<AccentColor>(
-    subscribePreferences,
-    () => {
-      const saved = window.localStorage.getItem(ACCENT_KEY);
-      return isAccentColor(saved) ? saved : 'blue';
-    },
-    (): AccentColor => 'blue',
-  );
   const contrastSnapshot = useSyncExternalStore(
     subscribePreferences,
     readContrastSnapshot,
     () => DEFAULT_CONTRAST_SNAPSHOT,
   );
-  const calendar = useSyncExternalStore<CalendarSystem>(
+  const organizationAppearanceSnapshot = useSyncExternalStore(
     subscribePreferences,
-    () => {
-      const saved = window.localStorage.getItem(CALENDAR_KEY);
-      return saved === 'islamic' || saved === 'gregorian' || saved === 'persian' ? saved : 'persian';
-    },
-    (): CalendarSystem => 'persian',
+    readOrganizationAppearanceSnapshot,
+    () => JSON.stringify(DEFAULT_ORGANIZATION_APPEARANCE),
+  );
+  const organizationAppearance = useMemo(
+    () => parseOrganizationAppearance(organizationAppearanceSnapshot),
+    [organizationAppearanceSnapshot],
   );
   const contrastPreferences = useMemo(
     () => parseContrastPreferences(contrastSnapshot),
     [contrastSnapshot],
   );
   const [contrastPreview, setContrastPreview] = useState<ContrastPreferences | null>(null);
+  const [appearancePreview, setAppearancePreview] = useState<SaveOrganizationAppearance | null>(null);
 
   useEffect(() => {
     applyLocale(locale);
-    applyCalendar(calendar);
-    applyAccentColor(accentColor);
-  }, [locale, accentColor, calendar]);
+    applyOrganizationDisplay(appearancePreview
+      ? { ...organizationAppearance, ...appearancePreview }
+      : organizationAppearance);
+  }, [locale, organizationAppearance, appearancePreview]);
 
   const loadUserPreferences = useCallback(async () => {
     if (!getAccessToken()) return;
     try {
       const saved = await preferencesApi.get();
       window.localStorage.setItem(LOCALE_KEY, saved.locale);
-      window.localStorage.setItem(ACCENT_KEY, saved.accentColor);
       window.localStorage.setItem(CONTRAST_KEY, JSON.stringify({
         light: saved.lightContrast,
         dark: saved.darkContrast,
       }));
-      window.localStorage.setItem(CALENDAR_KEY, saved.calendar);
-      applyCalendar(saved.calendar);
       window.dispatchEvent(new Event('erp-preferences-changed'));
     } catch (error) {
       console.error('Could not load user preferences:', error);
+    }
+    try {
+      const sharedAppearance = await preferencesApi.getOrganizationAppearance();
+      const key = `${ORGANIZATION_APPEARANCE_KEY}:${getCurrentOrganizationId() ?? 'none'}`;
+      window.localStorage.setItem(key, JSON.stringify(sharedAppearance));
+      applyOrganizationDisplay(sharedAppearance);
+      window.dispatchEvent(new Event('erp-preferences-changed'));
+    } catch (error) {
+      console.error('Could not load organization appearance:', error);
     }
   }, []);
 
   useEffect(() => {
     const resetPreferences = () => {
       window.localStorage.removeItem(LOCALE_KEY);
-      window.localStorage.removeItem(ACCENT_KEY);
       window.localStorage.removeItem(CONTRAST_KEY);
-      window.localStorage.removeItem(CALENDAR_KEY);
-      applyCalendar('persian');
+      setAppearancePreview(null);
       window.dispatchEvent(new Event('erp-preferences-changed'));
     };
     const handleAuthStorageChange = (event: StorageEvent) => {
@@ -240,43 +263,54 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     setContrastPreview(nextPreferences);
   }, []);
 
-  const previewAccentColor = useCallback((previewColor: AccentColor) => {
-    applyAccentColor(previewColor);
+  const previewOrganizationAppearance = useCallback((appearance: SaveOrganizationAppearance | null) => {
+    setAppearancePreview(appearance);
   }, []);
 
   const savePreferences = useCallback(async (preferences: SaveUserPreferences) => {
     const saved = await preferencesApi.save(preferences);
     window.localStorage.setItem(LOCALE_KEY, saved.locale);
-    window.localStorage.setItem(ACCENT_KEY, saved.accentColor);
     window.localStorage.setItem(CONTRAST_KEY, JSON.stringify({
       light: saved.lightContrast,
       dark: saved.darkContrast,
     }));
-    window.localStorage.setItem(CALENDAR_KEY, saved.calendar);
-    applyCalendar(saved.calendar);
+    window.dispatchEvent(new Event('erp-preferences-changed'));
+  }, []);
+
+  const saveOrganizationAppearance = useCallback(async (appearance: SaveOrganizationAppearance) => {
+    const saved = await preferencesApi.saveOrganizationAppearance(appearance);
+    const key = `${ORGANIZATION_APPEARANCE_KEY}:${getCurrentOrganizationId() ?? 'none'}`;
+    window.localStorage.setItem(key, JSON.stringify(saved));
+    setAppearancePreview(null);
+    applyOrganizationDisplay(saved);
     window.dispatchEvent(new Event('erp-preferences-changed'));
   }, []);
 
   const value = useMemo(
     () => ({
       locale,
-      accentColor,
       contrastPreferences,
-      calendar,
+      organizationAppearance,
+      appearancePreview,
+      calendar: organizationAppearance.calendar,
+      timezone: organizationAppearance.timezone ?? 'Asia/Tehran',
+      canEditOrganizationAppearance: organizationAppearance.canEdit,
       contrastPreview,
       previewContrastPreferences,
-      previewAccentColor,
+      previewOrganizationAppearance,
       savePreferences,
+      saveOrganizationAppearance,
     }),
     [
       locale,
-      accentColor,
       contrastPreferences,
-      calendar,
+      organizationAppearance,
+      appearancePreview,
       contrastPreview,
       previewContrastPreferences,
-      previewAccentColor,
+      previewOrganizationAppearance,
       savePreferences,
+      saveOrganizationAppearance,
     ],
   );
 

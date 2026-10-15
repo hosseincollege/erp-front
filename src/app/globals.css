@@ -135,6 +135,12 @@ html.dark {
 
 /* نرم‌تر کردن کنتراست فقط در پوستهٔ احراز هویت‌شده */
 .erp-app-shell {
+  --primary: var(--accent-light, #2563eb);
+  --primary-hover: color-mix(in srgb, var(--primary) 84%, #000000);
+  --primary-soft: color-mix(in srgb, var(--primary) 10%, #ffffff);
+  --primary-foreground: var(--accent-light-foreground, #ffffff);
+  --ring: color-mix(in srgb, var(--primary) 30%, transparent);
+  --sidebar-active: var(--primary);
   --background: #f1f3f5;
   --foreground: #3f4b5c;
   --surface: #f8f9fb;
@@ -156,6 +162,12 @@ html.dark {
 
 .dark .erp-app-shell,
 html.dark .erp-app-shell {
+  --primary: var(--accent-dark, #1d4ed8);
+  --primary-hover: color-mix(in srgb, var(--primary) 82%, #ffffff);
+  --primary-soft: color-mix(in srgb, var(--primary) 18%, transparent);
+  --primary-foreground: var(--accent-dark-foreground, #ffffff);
+  --ring: color-mix(in srgb, var(--primary) 38%, transparent);
+  --sidebar-active: var(--primary);
   --background: #141923;
   --foreground: #c0c8d4;
   --surface: #1a202c;
@@ -257,70 +269,22 @@ html.dark .erp-app-shell[data-dark-contrast="strong"] {
   --sidebar-border: #273448;
 }
 
-.erp-app-shell[data-accent="green"] {
-  --primary: #16a34a;
-  --primary-hover: #15803d;
-  --primary-soft: #f0fdf4;
-  --ring: rgba(22, 163, 74, 0.28);
-  --sidebar-active: #16a34a;
+.erp-app-shell[data-background-style="THEME"] {
+  --background: color-mix(in srgb, var(--primary) 5%, #f1f3f5);
 }
 
-html.dark .erp-app-shell[data-accent="green"] {
-  --primary: #16a34a;
-  --primary-hover: #22c55e;
-  --primary-soft: rgba(22, 163, 74, 0.18);
-  --ring: rgba(22, 163, 74, 0.3);
-  --sidebar-active: #16a34a;
+.erp-app-shell[data-background-style="GRAY"] {
+  --background: #e7e9ed;
 }
 
-.erp-app-shell[data-accent="red"] {
-  --primary: #ef4444;
-  --primary-hover: #dc2626;
-  --primary-soft: #fef2f2;
-  --ring: rgba(239, 68, 68, 0.26);
-  --sidebar-active: #ef4444;
+.dark .erp-app-shell[data-background-style="THEME"],
+html.dark .erp-app-shell[data-background-style="THEME"] {
+  --background: color-mix(in srgb, var(--primary) 9%, #141923);
 }
 
-html.dark .erp-app-shell[data-accent="red"] {
-  --primary: #ef4444;
-  --primary-hover: #f87171;
-  --primary-soft: rgba(239, 68, 68, 0.18);
-  --ring: rgba(239, 68, 68, 0.3);
-  --sidebar-active: #ef4444;
-}
-
-.erp-app-shell[data-accent="amber"] {
-  --primary: #facc15;
-  --primary-hover: #eab308;
-  --primary-soft: #fefce8;
-  --primary-foreground: #1c1917;
-  --ring: rgba(250, 204, 21, 0.28);
-  --sidebar-active: #eab308;
-}
-
-html.dark .erp-app-shell[data-accent="amber"] {
-  --primary: #facc15;
-  --primary-hover: #fde047;
-  --primary-soft: rgba(250, 204, 21, 0.18);
-  --primary-foreground: #1c1917;
-  --ring: rgba(250, 204, 21, 0.32);
-  --sidebar-active: #eab308;
-}
-
-.erp-app-shell[data-accent="violet"] {
-  --primary: #8b5cf6;
-  --primary-hover: #7c3aed;
-  --primary-soft: #f5f3ff;
-  --ring: rgba(139, 92, 246, 0.28);
-  --sidebar-active: #8b5cf6;
-}
-
-html.dark .erp-app-shell[data-accent="violet"] {
-  --primary: #8b5cf6;
-  --primary-hover: #a78bfa;
-  --primary-soft: rgba(139, 92, 246, 0.18);
-  --ring: rgba(139, 92, 246, 0.32);
-  --sidebar-active: #8b5cf6;
+.dark .erp-app-shell[data-background-style="GRAY"],
+html.dark .erp-app-shell[data-background-style="GRAY"] {
+  --background: #20242b;
 }
 
 .erp-app-shell .sidebar-module-selected {

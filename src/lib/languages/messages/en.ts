@@ -210,10 +210,23 @@ const messages = {
 
   settingsTitle: "General settings",
   settingsDescription:
-    "Choose the application accent color and display language. Light and dark mode stay available in the top header.",
+    "Set the organization-wide accent and background. Display language and contrast remain personal to each user.",
   accentTitle: "Accent color",
   accentDescription:
     "Selecting a color previews it immediately in the workspace. Choose “Save changes” to keep it; leaving without saving restores the previous color.",
+  organizationAppearanceTitle: "Organization appearance",
+  organizationAppearanceDescription: "The accent, background, calendar, and time zone are shared by everyone in the organization.",
+  organizationAppearanceSharedNotice: "These settings apply to every organization member. Only an administrator with permission can change them.",
+  organizationAppearanceReadOnly: "These settings are shared by all members. Contact your organization administrator to change them.",
+  accentLightColor: "Light mode color",
+  accentDarkColor: "Dark mode color",
+  backgroundStyleTitle: "Workspace background",
+  backgroundStyleDescription: "Use a background tinted with the accent color or a gray background.",
+  backgroundTheme: "Match accent color",
+  backgroundGray: "Gray",
+  timezoneTitle: "Organization time zone",
+  timezoneDescription: "Times and time-based dates use this time zone for everyone in the organization.",
+  timezoneLabel: "Time zone",
   preview: "Preview",
   primaryAction: "Primary action",
   selectedItem: "Selected item",
@@ -478,7 +491,7 @@ const messages = {
   databaseNoOrganization: "No active organization was found.",
   calendarTitle: "Calendar display",
   calendarDescription:
-    "The selected calendar is used to display dates across the ERP; dates remain stored in the standard format.",
+    "The selected calendar displays dates for everyone in the organization; dates remain stored in the standard format.",
   calendarLabel: "Calendar",
   calendarPersian: "Persian (Solar Hijri)",
   calendarIslamic: "Islamic (Lunar Hijri)",

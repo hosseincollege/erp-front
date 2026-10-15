@@ -1,21 +1,22 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { isHexColor, localeOptions, usePreferences, type AccentColor, type CalendarSystem, type ContrastLevel, type ContrastPreferences, type Locale } from '@/components/preferences-provider';
+import { localeOptions, usePreferences, type ContrastLevel, type ContrastPreferences, type Locale } from '@/components/preferences-provider';
 import { uiMessage } from '@/lib/ui-messages';
 import { useTheme } from '@/components/theme-provider';
+import type { OrganizationAppearance, SaveOrganizationAppearance } from '@/lib/api/shared/preferences-api';
 
 const accentOptions: Array<{
-  id: AccentColor;
-  hex: string;
-  darkHex?: string;
+  id: Exclude<OrganizationAppearance['accentPreset'], 'custom'>;
+  light: `#${string}`;
+  dark: `#${string}`;
   message: 'blue' | 'green' | 'red' | 'yellow' | 'purple';
 }> = [
-  { id: 'blue', hex: '#2563eb', darkHex: '#3b82f6', message: 'blue' },
-  { id: 'green', hex: '#16a34a', message: 'green' },
-  { id: 'red', hex: '#ef4444', message: 'red' },
-  { id: 'amber', hex: '#facc15', message: 'yellow' },
-  { id: 'violet', hex: '#8b5cf6', message: 'purple' },
+  { id: 'blue', light: '#2563eb', dark: '#1d4ed8', message: 'blue' },
+  { id: 'green', light: '#16a34a', dark: '#15803d', message: 'green' },
+  { id: 'red', light: '#ef4444', dark: '#b91c1c', message: 'red' },
+  { id: 'amber', light: '#facc15', dark: '#a16207', message: 'yellow' },
+  { id: 'violet', light: '#8b5cf6', dark: '#6d28d9', message: 'purple' },
 ];
 
 const contrastModes = [
@@ -32,147 +33,207 @@ const contrastOptions: Array<{
   { id: 'strong', message: 'contrastStrong' },
 ];
 
+const timezones = [
+  'Asia/Tehran', 'UTC', 'Asia/Dubai', 'Asia/Kolkata', 'Asia/Tokyo',
+  'Asia/Shanghai', 'Europe/London', 'Europe/Paris', 'Europe/Berlin',
+  'America/New_York', 'America/Chicago', 'America/Denver',
+  'America/Los_Angeles', 'Australia/Sydney',
+];
+
+function toSaveAppearance(appearance: OrganizationAppearance): SaveOrganizationAppearance {
+  return {
+    accentPreset: appearance.accentPreset,
+    accentLightColor: appearance.accentLightColor,
+    accentDarkColor: appearance.accentDarkColor,
+    backgroundStyle: appearance.backgroundStyle,
+    timezone: appearance.timezone,
+    calendar: appearance.calendar,
+  };
+}
+
 export function GeneralSettingsContent() {
   const {
     locale,
-    accentColor,
-    previewAccentColor,
     contrastPreferences,
-    calendar,
+    organizationAppearance,
+    canEditOrganizationAppearance,
     previewContrastPreferences,
+    previewOrganizationAppearance,
     savePreferences,
+    saveOrganizationAppearance,
   } = usePreferences();
   const { resolvedTheme } = useTheme();
   const [draftLocale, setDraftLocale] = useState<Locale>(locale);
-  const [draftAccent, setDraftAccent] = useState<AccentColor>(accentColor);
   const [draftContrast, setDraftContrast] = useState<ContrastPreferences>(contrastPreferences);
-  const [draftCalendar, setDraftCalendar] = useState<CalendarSystem>(calendar);
+  const [draftAppearance, setDraftAppearance] = useState<SaveOrganizationAppearance>(
+    toSaveAppearance(organizationAppearance),
+  );
   const [saveError, setSaveError] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const message = (key: Parameters<typeof uiMessage>[1]) => uiMessage(locale, key);
-  const previewHex = isHexColor(draftAccent)
-    ? draftAccent
-    : (() => {
-        const option = accentOptions.find((item) => item.id === draftAccent);
-        return (resolvedTheme === 'dark' ? option?.darkHex : option?.hex) ?? option?.hex ?? '#2563eb';
-      })();
 
-  useEffect(() => {
-    previewAccentColor(draftAccent);
-    return () => previewAccentColor(accentColor);
-  }, [accentColor, draftAccent, previewAccentColor]);
-
+  useEffect(() => setDraftLocale(locale), [locale]);
+  useEffect(() => setDraftContrast(contrastPreferences), [contrastPreferences]);
+  useEffect(() => setDraftAppearance(toSaveAppearance(organizationAppearance)), [organizationAppearance]);
   useEffect(() => {
     previewContrastPreferences(draftContrast);
     return () => previewContrastPreferences(null);
   }, [draftContrast, previewContrastPreferences]);
-
   useEffect(() => {
-    setDraftContrast(contrastPreferences);
-  }, [contrastPreferences]);
+    if (!canEditOrganizationAppearance) return;
+    previewOrganizationAppearance(draftAppearance);
+    return () => previewOrganizationAppearance(null);
+  }, [canEditOrganizationAppearance, draftAppearance, previewOrganizationAppearance]);
 
-  useEffect(() => setDraftCalendar(calendar), [calendar]);
-  useEffect(() => {
-    document.documentElement.dataset.calendar = draftCalendar;
-    return () => { document.documentElement.dataset.calendar = calendar; };
-  }, [calendar, draftCalendar]);
+  const setAccentPreset = (option: (typeof accentOptions)[number]) => {
+    setDraftAppearance((current) => ({
+      ...current,
+      accentPreset: option.id,
+      accentLightColor: option.light,
+      accentDarkColor: option.dark,
+    }));
+  };
 
   return (
     <div className="space-y-6" dir={localeOptions.find((option) => option.id === locale)?.direction}>
       <header>
-        <h1 className="text-2xl font-black text-foreground">
-          {message('settingsTitle')}
-        </h1>
-        <p className="mt-2 text-sm leading-7 text-muted-foreground">
-          {message('settingsDescription')}
-        </p>
+        <h1 className="text-2xl font-black text-foreground">{message('settingsTitle')}</h1>
+        <p className="mt-2 text-sm leading-7 text-muted-foreground">{message('settingsDescription')}</p>
       </header>
 
-      <section className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
-        <div className="mb-5">
-          <h2 className="text-base font-bold text-foreground">
-            {message('accentTitle')}
-          </h2>
-          <p className="mt-1 text-xs leading-6 text-muted-foreground">
-            {message('accentDescription')}
+      <section className="space-y-6 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+        <div>
+          <h2 className="text-base font-bold text-foreground">{message('organizationAppearanceTitle')}</h2>
+          <p className="mt-1 text-xs leading-6 text-muted-foreground">{message('organizationAppearanceDescription')}</p>
+          <p className="mt-2 rounded-xl border border-border bg-background px-3 py-2 text-xs leading-6 text-muted-foreground">
+            {message(canEditOrganizationAppearance ? 'organizationAppearanceSharedNotice' : 'organizationAppearanceReadOnly')}
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-3">
-          {accentOptions.map((option) => {
-            const selected = draftAccent === option.id;
-            return (
+        <fieldset disabled={!canEditOrganizationAppearance} className="space-y-5 disabled:opacity-75">
+          <div>
+            <h3 className="text-sm font-bold text-foreground">{message('accentTitle')}</h3>
+            <p className="mt-1 text-xs leading-6 text-muted-foreground">{message('accentDescription')}</p>
+            <div className="mt-3 flex flex-wrap gap-2.5">
+              {accentOptions.map((option) => {
+                const selected = draftAppearance.accentPreset === option.id;
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => setAccentPreset(option)}
+                    className={`inline-flex items-center gap-2.5 rounded-xl border px-3.5 py-2.5 text-sm font-semibold transition ${selected ? 'border-primary bg-primary-soft text-foreground ring-2 ring-primary/20' : 'border-border bg-background text-foreground hover:border-primary/50'}`}
+                  >
+                    <span className="flex gap-1" aria-hidden="true">
+                      <span className="size-4 rounded-full border border-black/10" style={{ backgroundColor: resolvedTheme === 'dark' ? option.dark : option.light }} />
+                      <span className="size-4 rounded-full border border-black/10" style={{ backgroundColor: resolvedTheme === 'dark' ? option.light : option.dark }} />
+                    </span>
+                    {message(option.message)}
+                  </button>
+                );
+              })}
               <button
-                key={option.id}
                 type="button"
-                aria-label={message(option.message)}
-                aria-pressed={selected}
-                onClick={() => setDraftAccent(option.id)}
-                className={`inline-flex items-center gap-2.5 rounded-xl border px-3.5 py-2.5 text-sm font-semibold transition hover:-translate-y-0.5 hover:shadow-sm ${
-                  selected
-                    ? 'border-primary bg-primary-soft text-foreground ring-2 ring-primary/20'
-                    : 'border-border bg-background text-foreground hover:border-primary/50'
-                }`}
+                aria-pressed={draftAppearance.accentPreset === 'custom'}
+                onClick={() => setDraftAppearance((current) => ({ ...current, accentPreset: 'custom' }))}
+                className={`rounded-xl border px-3.5 py-2.5 text-sm font-semibold transition ${draftAppearance.accentPreset === 'custom' ? 'border-primary bg-primary-soft ring-2 ring-primary/20' : 'border-border bg-background hover:border-primary/50'}`}
               >
-                <span
-                  className="h-5 w-5 rounded-full border border-black/10"
-                  style={{ backgroundColor: resolvedTheme === 'dark' ? option.darkHex ?? option.hex : option.hex }}
-                />
-                {message(option.message)}
+                {message('customColor')}
               </button>
-            );
-          })}
-          <label
-            className={`inline-flex cursor-pointer items-center gap-2.5 rounded-xl border px-3.5 py-2.5 text-sm font-semibold transition hover:shadow-sm ${isHexColor(draftAccent) ? 'border-primary bg-primary-soft ring-2 ring-primary/20' : 'border-border bg-background hover:border-primary/50'}`}
-          >
-            <input
-              type="color"
-              aria-label={message('customColor')}
-              value={isHexColor(draftAccent) ? draftAccent : '#2563eb'}
-              onChange={(event) => setDraftAccent(event.target.value as AccentColor)}
-              className="h-6 w-7 cursor-pointer rounded border-0 bg-transparent p-0"
-            />
-            {message('customColor')}
-          </label>
-        </div>
+            </div>
+          </div>
 
-        <div className="mt-6 flex flex-wrap items-center gap-3 rounded-xl border border-border bg-background p-4">
-          <span className="text-sm font-medium text-muted-foreground">{message('accentPreviewHint')}</span>
-          <span className="flex items-center gap-2 rounded-full border border-border px-3 py-1.5 text-xs font-bold text-foreground">
-            <span className="h-4 w-4 rounded-full border border-black/10" style={{ backgroundColor: previewHex }} />
-            {previewHex.toUpperCase()}
-          </span>
-        </div>
-      </section>
-      <section className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
-        <div className="max-w-xl">
-          <h2 className="text-base font-bold text-foreground">{message('calendarTitle')}</h2>
-          <p className="mt-1 text-xs leading-6 text-muted-foreground">{message('calendarDescription')}</p>
-          <label htmlFor="display-calendar" className="mb-1.5 mt-4 block text-xs font-semibold text-muted-foreground">{message('calendarLabel')}</label>
-          <select id="display-calendar" value={draftCalendar} onChange={(event) => setDraftCalendar(event.target.value as CalendarSystem)} className="w-full max-w-sm rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20">
-            <option value="persian">{message('calendarPersian')}</option>
-            <option value="islamic">{message('calendarIslamic')}</option>
-            <option value="gregorian">{message('calendarGregorian')}</option>
-          </select>
-        </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="flex items-center justify-between gap-3 rounded-xl border border-border bg-background p-3 text-sm font-medium text-foreground">
+              <span>{message('accentLightColor')}</span>
+              <input
+                type="color"
+                aria-label={message('accentLightColor')}
+                value={draftAppearance.accentLightColor}
+                onChange={(event) => setDraftAppearance((current) => ({ ...current, accentPreset: 'custom', accentLightColor: event.target.value as `#${string}` }))}
+                className="size-9 cursor-pointer rounded-lg border-0 bg-transparent p-0"
+              />
+            </label>
+            <label className="flex items-center justify-between gap-3 rounded-xl border border-border bg-background p-3 text-sm font-medium text-foreground">
+              <span>{message('accentDarkColor')}</span>
+              <input
+                type="color"
+                aria-label={message('accentDarkColor')}
+                value={draftAppearance.accentDarkColor}
+                onChange={(event) => setDraftAppearance((current) => ({ ...current, accentPreset: 'custom', accentDarkColor: event.target.value as `#${string}` }))}
+                className="size-9 cursor-pointer rounded-lg border-0 bg-transparent p-0"
+              />
+            </label>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-bold text-foreground">{message('backgroundStyleTitle')}</h3>
+            <p className="mt-1 text-xs leading-6 text-muted-foreground">{message('backgroundStyleDescription')}</p>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label={message('backgroundStyleTitle')}>
+              {(['THEME', 'GRAY'] as const).map((style) => (
+                <button
+                  key={style}
+                  type="button"
+                  role="radio"
+                  aria-checked={draftAppearance.backgroundStyle === style}
+                  onClick={() => setDraftAppearance((current) => ({ ...current, backgroundStyle: style }))}
+                  className={`rounded-xl border p-3 text-start text-sm font-semibold transition ${draftAppearance.backgroundStyle === style ? 'border-primary bg-primary-soft text-foreground ring-2 ring-primary/20' : 'border-border bg-background text-foreground hover:border-primary/50'}`}
+                >
+                  {message(style === 'THEME' ? 'backgroundTheme' : 'backgroundGray')}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <h3 className="text-sm font-bold text-foreground">{message('calendarTitle')}</h3>
+              <p className="mb-2 mt-1 text-xs leading-6 text-muted-foreground">{message('calendarDescription')}</p>
+              <label className="block text-sm font-semibold text-foreground" htmlFor="organization-calendar">
+                {message('calendarLabel')}
+              <select
+                id="organization-calendar"
+                value={draftAppearance.calendar}
+                onChange={(event) => setDraftAppearance((current) => ({ ...current, calendar: event.target.value as SaveOrganizationAppearance['calendar'] }))}
+                className="mt-2 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm font-normal outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+              >
+                <option value="persian">{message('calendarPersian')}</option>
+                <option value="islamic">{message('calendarIslamic')}</option>
+                <option value="gregorian">{message('calendarGregorian')}</option>
+              </select>
+              </label>
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-foreground">{message('timezoneTitle')}</h3>
+              <p className="mb-2 mt-1 text-xs leading-6 text-muted-foreground">{message('timezoneDescription')}</p>
+              <label className="block text-sm font-semibold text-foreground" htmlFor="organization-timezone">
+                {message('timezoneLabel')}
+              <select
+                id="organization-timezone"
+                dir="ltr"
+                value={draftAppearance.timezone}
+                onChange={(event) => setDraftAppearance((current) => ({ ...current, timezone: event.target.value }))}
+                className="mt-2 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm font-normal outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+              >
+                {!timezones.includes(draftAppearance.timezone) && <option value={draftAppearance.timezone}>{draftAppearance.timezone}</option>}
+                {timezones.map((timezone) => <option key={timezone} value={timezone}>{timezone}</option>)}
+              </select>
+              </label>
+            </div>
+          </div>
+        </fieldset>
       </section>
 
       <section className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
         <div className="mb-5">
-          <h2 className="text-base font-bold text-foreground">
-            {message('contrastTitle')}
-          </h2>
-          <p className="mt-1 text-xs leading-6 text-muted-foreground">
-            {message('contrastDescription')}
-          </p>
+          <h2 className="text-base font-bold text-foreground">{message('contrastTitle')}</h2>
+          <p className="mt-1 text-xs leading-6 text-muted-foreground">{message('contrastDescription')}</p>
         </div>
-
         <div className="grid gap-5 md:grid-cols-2">
           {contrastModes.map((mode) => (
             <div key={mode.id}>
-              <h3 className="mb-2 text-sm font-semibold text-foreground">
-                {message(mode.message)}
-              </h3>
+              <h3 className="mb-2 text-sm font-semibold text-foreground">{message(mode.message)}</h3>
               <div className="flex flex-wrap gap-2" role="group" aria-label={message(mode.message)}>
                 {contrastOptions.map((option) => {
                   const selected = draftContrast[mode.id] === option.id;
@@ -195,32 +256,20 @@ export function GeneralSettingsContent() {
       </section>
 
       <section className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
-        <div className="max-w-xl">
-          <h2 className="text-base font-bold text-foreground">
-            {message('languageTitle')}
-          </h2>
-          <p className="mt-1 text-xs leading-6 text-muted-foreground">
-            {message('languageDescription')}
-          </p>
-          <p className="mt-2 text-xs leading-6 text-muted-foreground">
-            {message('languageHelp')}
-          </p>
-          <label
-            htmlFor="display-language"
-            className="mb-1.5 mt-4 block text-xs font-semibold text-muted-foreground"
-          >
-            {message('languageLabel')}
-          </label>
-          <select
-            id="display-language"
-            value={draftLocale}
-            onChange={(event) => setDraftLocale(event.target.value as Locale)}
-            className="w-full max-w-sm rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-          >
-            {localeOptions.map((option) => <option key={option.id} value={option.id}>{option.name}</option>)}
-          </select>
-        </div>
+        <h2 className="text-base font-bold text-foreground">{message('languageTitle')}</h2>
+        <p className="mt-1 text-xs leading-6 text-muted-foreground">{message('languageDescription')}</p>
+        <p className="mt-2 text-xs leading-6 text-muted-foreground">{message('languageHelp')}</p>
+        <label htmlFor="display-language" className="mb-1.5 mt-4 block text-xs font-semibold text-muted-foreground">{message('languageLabel')}</label>
+        <select
+          id="display-language"
+          value={draftLocale}
+          onChange={(event) => setDraftLocale(event.target.value as Locale)}
+          className="w-full max-w-sm rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+        >
+          {localeOptions.map((option) => <option key={option.id} value={option.id}>{option.name}</option>)}
+        </select>
       </section>
+
       <div className="flex justify-end">
         <button
           type="button"
@@ -229,13 +278,10 @@ export function GeneralSettingsContent() {
             setIsSaving(true);
             setSaveError(false);
             try {
-              await savePreferences({
-                locale: draftLocale,
-                accentColor: draftAccent,
-                contrastPreferences: draftContrast,
-                calendar: draftCalendar,
-              });
+              await savePreferences({ locale: draftLocale, contrastPreferences: draftContrast });
+              if (canEditOrganizationAppearance) await saveOrganizationAppearance(draftAppearance);
               previewContrastPreferences(null);
+              previewOrganizationAppearance(null);
             } catch {
               setSaveError(true);
             } finally {

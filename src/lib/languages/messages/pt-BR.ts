@@ -213,10 +213,23 @@ const messages = {
 
   settingsTitle: "Configurações gerais",
   settingsDescription:
-    "Escolha a cor de destaque e o idioma. Os modos claro e escuro ficam disponíveis no cabeçalho.",
+    "Defina a cor e o fundo para toda a organização. Idioma e contraste são preferências pessoais de cada usuário.",
   accentTitle: "Cor de destaque",
   accentDescription:
     "A cor escolhida aparece imediatamente na área de trabalho. Clique em “Salvar alterações” para mantê-la; sair sem salvar restaura a cor anterior.",
+  organizationAppearanceTitle: "Aparência da organização",
+  organizationAppearanceDescription: "A cor, o fundo, o calendário e o fuso horário são compartilhados por toda a organização.",
+  organizationAppearanceSharedNotice: "Estas configurações valem para todos. Somente um administrador autorizado pode alterá-las.",
+  organizationAppearanceReadOnly: "Estas configurações são iguais para todos. Fale com o administrador para alterá-las.",
+  accentLightColor: "Cor do modo claro",
+  accentDarkColor: "Cor do modo escuro",
+  backgroundStyleTitle: "Fundo do espaço de trabalho",
+  backgroundStyleDescription: "Use um fundo com a cor de destaque ou um fundo cinza.",
+  backgroundTheme: "Combinar com a cor de destaque",
+  backgroundGray: "Cinza",
+  timezoneTitle: "Fuso horário da organização",
+  timezoneDescription: "Horários e datas dependentes de hora usam este fuso para todos.",
+  timezoneLabel: "Fuso horário",
   preview: "Pré-visualização",
   primaryAction: "Ação principal",
   selectedItem: "Item selecionado",
@@ -486,7 +499,7 @@ const messages = {
   databaseNoOrganization: "Nenhuma organização ativa foi encontrada.",
   calendarTitle: "Calendário de datas",
   calendarDescription:
-    "O calendário escolhido será usado para exibir datas no ERP; os dados continuam armazenados no formato padrão.",
+    "O calendário escolhido vale para as datas de todos os membros; os dados continuam no formato padrão.",
   calendarLabel: "Calendário",
   calendarPersian: "Persa (Hégira solar)",
   calendarIslamic: "Islâmico (Hégira lunar)",

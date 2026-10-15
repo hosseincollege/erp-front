@@ -210,10 +210,23 @@ const messages = {
 
   settingsTitle: "一般設定",
   settingsDescription:
-    "アクセントカラーと言語を選択します。ライト・ダークモードは上部ヘッダーから切り替えられます。",
+    "組織全体のアクセントカラーと背景を設定します。表示言語とコントラストはユーザーごとの設定です。",
   accentTitle: "アクセントカラー",
   accentDescription:
     "選択した色はワークスペースにすぐ反映されます。「変更を保存」で保持し、保存せずに移動すると元の色に戻ります。",
+  organizationAppearanceTitle: "組織の表示設定",
+  organizationAppearanceDescription: "アクセントカラー、背景、カレンダー、タイムゾーンは組織内で共有されます。",
+  organizationAppearanceSharedNotice: "設定は全メンバーに適用され、変更できるのは権限を持つ管理者だけです。",
+  organizationAppearanceReadOnly: "設定は全メンバーで共通です。変更するには組織の管理者にお問い合わせください。",
+  accentLightColor: "ライトモードの色",
+  accentDarkColor: "ダークモードの色",
+  backgroundStyleTitle: "ワークスペースの背景",
+  backgroundStyleDescription: "アクセントカラーに合わせた背景またはグレーを選択します。",
+  backgroundTheme: "アクセントカラーに合わせる",
+  backgroundGray: "グレー",
+  timezoneTitle: "組織のタイムゾーン",
+  timezoneDescription: "時刻と時刻に関係する日付は全員このタイムゾーンを使用します。",
+  timezoneLabel: "タイムゾーン",
   preview: "プレビュー",
   primaryAction: "主な操作",
   selectedItem: "選択中の項目",
@@ -471,7 +484,7 @@ const messages = {
   databaseNoOrganization: "有効な組織が見つかりません。",
   calendarTitle: "日付表示カレンダー",
   calendarDescription:
-    "選択した暦でERPの日付を表示します。データは標準形式で保存されます。",
+    "選択した暦は組織内の全メンバーの日付表示に適用されます。データは標準形式で保存されます。",
   calendarLabel: "カレンダー",
   calendarPersian: "ペルシャ暦（太陽ヒジュラ暦）",
   calendarIslamic: "イスラム暦（太陰ヒジュラ暦）",

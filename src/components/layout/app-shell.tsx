@@ -9,7 +9,7 @@ import React, { useEffect, useState } from 'react';
 import { Sidebar } from './sidebar';
 import { TopHeader } from './top-header';
 import { ImpersonationBanner } from './impersonation-banner';
-import { getCustomAccentStyle, getLocaleDirection, isCustomAccentColor, usePreferences } from '@/components/preferences-provider';
+import { getLocaleDirection, getOrganizationAccentStyle, usePreferences } from '@/components/preferences-provider';
 
 const SIDEBAR_COLLAPSED_KEY = 'erp-sidebar-collapsed';
 const SIDEBAR_LOCKED_KEY = 'erp-sidebar-locked';
@@ -20,7 +20,14 @@ interface AppShellProps {
 }
 
 export function AppShell({ children }: AppShellProps) {
-  const { locale, accentColor, contrastPreferences, contrastPreview } = usePreferences();
+  const {
+    locale,
+    organizationAppearance,
+    appearancePreview,
+    contrastPreferences,
+    contrastPreview,
+  } = usePreferences();
+  const activeAppearance = appearancePreview ?? organizationAppearance;
   const activeContrast = contrastPreview ?? contrastPreferences;
   const direction = getLocaleDirection(locale);
   const [isCollapsed, setIsCollapsed] = useState(true);
@@ -142,10 +149,11 @@ export function AppShell({ children }: AppShellProps) {
   return (
     <div
       dir={direction}
-      data-accent={isCustomAccentColor(accentColor) ? 'custom' : accentColor}
+      data-accent={activeAppearance.accentPreset === 'custom' ? 'custom' : activeAppearance.accentPreset}
+      data-background-style={activeAppearance.backgroundStyle}
       data-light-contrast={activeContrast.light}
       data-dark-contrast={activeContrast.dark}
-      style={getCustomAccentStyle(accentColor)}
+      style={getOrganizationAccentStyle(activeAppearance)}
       className="erp-app-shell flex h-screen min-h-0 flex-col overflow-hidden bg-[color:var(--background)] text-[color:var(--foreground)] transition-colors duration-200"
     >
       <TopHeader

@@ -212,10 +212,23 @@ const messages = {
 
   settingsTitle: "Configuración general",
   settingsDescription:
-    "Elige el color principal y el idioma. El modo claro u oscuro está disponible en el encabezado.",
+    "Configura el color y el fondo para toda la organización. El idioma y el contraste son personales para cada usuario.",
   accentTitle: "Color principal",
   accentDescription:
     "El color elegido se previsualiza al instante. Pulsa «Guardar cambios» para conservarlo; si sales sin guardar, se restaura el color anterior.",
+  organizationAppearanceTitle: "Apariencia de la organización",
+  organizationAppearanceDescription: "El color, el fondo, el calendario y la zona horaria se comparten con toda la organización.",
+  organizationAppearanceSharedNotice: "Estos ajustes se aplican a todos los miembros. Solo puede cambiarlos un administrador autorizado.",
+  organizationAppearanceReadOnly: "Estos ajustes son comunes para todos. Contacta con el administrador para cambiarlos.",
+  accentLightColor: "Color del modo claro",
+  accentDarkColor: "Color del modo oscuro",
+  backgroundStyleTitle: "Fondo del espacio de trabajo",
+  backgroundStyleDescription: "Usa un fondo con el tono del color principal o un fondo gris.",
+  backgroundTheme: "A juego con el color principal",
+  backgroundGray: "Gris",
+  timezoneTitle: "Zona horaria de la organización",
+  timezoneDescription: "Las horas y fechas dependientes de la hora usan esta zona para todos.",
+  timezoneLabel: "Zona horaria",
   preview: "Vista previa",
   primaryAction: "Acción principal",
   selectedItem: "Elemento seleccionado",
@@ -483,7 +496,7 @@ const messages = {
   databaseNoOrganization: "No se encontró una organización activa.",
   calendarTitle: "Calendario de fechas",
   calendarDescription:
-    "El calendario elegido se usa para mostrar las fechas en el ERP; los datos se guardan en el formato estándar.",
+    "El calendario elegido muestra las fechas para todos los miembros; los datos se guardan en el formato estándar.",
   calendarLabel: "Calendario",
   calendarPersian: "Persa (Hégira solar)",
   calendarIslamic: "Islámico (Hégira lunar)",

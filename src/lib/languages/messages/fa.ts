@@ -209,10 +209,23 @@ const messages = {
 
   settingsTitle: "تنظیمات عمومی",
   settingsDescription:
-    "رنگ اصلی و زبان نمایش برنامه را انتخاب کنید. حالت روشن و تیره از هدر بالا در دسترس است.",
+    "رنگ و پس‌زمینهٔ سازمانی را برای همه تنظیم کنید؛ زبان و کنتراست نمایش برای هر کاربر شخصی است.",
   accentTitle: "رنگ تم",
   accentDescription:
     "با انتخاب هر رنگ، پیش‌نمایش آن فوراً در محیط داخلی اعمال می‌شود. برای نگه‌داشتن آن «ذخیره تغییرات» را بزنید؛ با خروج بدون ذخیره، رنگ قبلی برمی‌گردد.",
+  organizationAppearanceTitle: "تنظیمات نمایشی سازمان",
+  organizationAppearanceDescription: "رنگ اصلی، پس‌زمینه، تقویم و منطقهٔ زمانی برای همهٔ اعضای سازمان یکسان است.",
+  organizationAppearanceSharedNotice: "این تنظیمات برای همهٔ اعضای سازمان اعمال می‌شود و فقط مدیر دارای مجوز می‌تواند آن‌ها را تغییر دهد.",
+  organizationAppearanceReadOnly: "این تنظیمات برای همهٔ اعضا یکسان است. برای تغییر آن‌ها با مدیر سازمان تماس بگیرید.",
+  accentLightColor: "رنگ حالت روشن",
+  accentDarkColor: "رنگ حالت تیره",
+  backgroundStyleTitle: "پس‌زمینهٔ پوسته",
+  backgroundStyleDescription: "پس‌زمینه از رنگ اصلی پوسته هماهنگ شود یا خاکستری باشد.",
+  backgroundTheme: "هماهنگ با رنگ پوسته",
+  backgroundGray: "خاکستری",
+  timezoneTitle: "منطقهٔ زمانی سازمان",
+  timezoneDescription: "ساعت و تاریخ‌های وابسته به زمان برای همهٔ اعضا بر اساس این منطقه تنظیم می‌شود.",
+  timezoneLabel: "منطقهٔ زمانی",
   preview: "پیش‌نمایش",
   primaryAction: "دکمهٔ اصلی",
   selectedItem: "گزینهٔ فعال",
@@ -471,7 +484,7 @@ const messages = {
   databaseNoOrganization: "سازمان فعالی یافت نشد.",
   calendarTitle: "تقویم نمایش تاریخ",
   calendarDescription:
-    "تقویم انتخابی برای نمایش تاریخ‌ها در ERP استفاده می‌شود؛ داده‌ها با قالب استاندارد ذخیره می‌شوند.",
+    "تقویم انتخابی برای همهٔ اعضای سازمان در نمایش تاریخ‌ها استفاده می‌شود؛ داده‌ها با قالب استاندارد ذخیره می‌شوند.",
   calendarLabel: "تقویم",
   calendarPersian: "هجری شمسی",
   calendarIslamic: "هجری قمری",
