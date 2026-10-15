@@ -153,6 +153,7 @@ const navigation: NavigationItem[] = [
     icon: Code2,
     href: '/development',
     sub: [
+      { titleKey: 'developmentSiteVisits', href: '/development/site-visits' },
       { titleKey: 'sidebarTestData', href: '/development/test-data' },
       { titleKey: 'developmentAccountSwitching', href: '/development/account-switching' },
     ],

@@ -7,6 +7,7 @@ import type { Metadata, Viewport } from "next";
 import { Vazirmatn } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { PreferencesProvider } from "@/components/preferences-provider";
+import { VisitorPresenceTracker } from "@/components/home/visitor-presence-tracker";
 import "./globals.css";
 
 const vazirmatn = Vazirmatn({
@@ -43,7 +44,7 @@ export default function RootLayout({
     >
       <body className="font-sans antialiased h-screen overflow-hidden bg-[color:var(--background)] text-[color:var(--foreground)]">
         <ThemeProvider>
-          <PreferencesProvider>{children}</PreferencesProvider>
+          <PreferencesProvider><VisitorPresenceTracker />{children}</PreferencesProvider>
         </ThemeProvider>
       </body>
     </html>

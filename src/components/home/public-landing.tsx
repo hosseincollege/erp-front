@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 
 import { PublicHeader } from '@/components/layout/public-header';
+import { visitorStatsApi } from '@/lib/api/shared/visitor-stats-api';
 
 type VisitStats = {
   daily: number;
@@ -38,45 +39,30 @@ export function PublicLanding() {
     yearly: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [statsFailed, setStatsFailed] = useState(false);
 
   // واکشی داده‌های آمار بازدید و ثبت بازدید
   useEffect(() => {
     let isMounted = true;
 
-    const backendUrl = (
-      process.env.NEXT_PUBLIC_API_URL ||
-      process.env.NEXT_PUBLIC_API_BASE_URL ||
-      'http://localhost:3006'
-    ).replace(/\/+$/, '');
-
     const trackAndFetchStats = async () => {
       try {
-        // ثبت بازدید کاربر در پس‌زمینه
-        fetch(`${backendUrl}/settings/public-track`, {
-          method: 'POST',
-        }).catch(() => null);
+        await visitorStatsApi.recordPageVisit();
+        const data = await visitorStatsApi.get();
 
-        // واکشی آمار
-        const response = await fetch(`${backendUrl}/settings/public-stats`, {
-          cache: 'no-store',
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const resData = await response.json();
-        const data = resData?.data || resData;
-
-        if (isMounted && data) {
+        if (isMounted && data?.enabled) {
+          setStatsFailed(false);
           setStats({
-            daily: Number(data.daily ?? data.today ?? 0),
-            weekly: Number(data.weekly ?? data.week ?? 0),
-            monthly: Number(data.monthly ?? data.month ?? 0),
-            yearly: Number(data.yearly ?? data.year ?? 0),
+            daily: Number(data.daily ?? 0),
+            weekly: Number(data.weekly ?? 0),
+            monthly: Number(data.monthly ?? 0),
+            yearly: Number(data.yearly ?? 0),
           });
+        } else if (isMounted) {
+          setStatsFailed(true);
         }
       } catch (error) {
+        if (isMounted) setStatsFailed(true);
         console.warn('عدم برقراری ارتباط با سرویس آمار:', error);
       } finally {
         if (isMounted) setIsLoading(false);
@@ -281,6 +267,8 @@ export function PublicLanding() {
                 <div className="mt-5 text-2xl font-black text-foreground sm:text-3xl">
                   {isLoading ? (
                     <div className="h-8 w-16 animate-pulse rounded-lg bg-muted" />
+                  ) : statsFailed ? (
+                    '—'
                   ) : (
                     Number(item.value || 0).toLocaleString('fa-IR')
                   )}
