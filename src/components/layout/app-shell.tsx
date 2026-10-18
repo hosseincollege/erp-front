@@ -26,9 +26,12 @@ export function AppShell({ children }: AppShellProps) {
     appearancePreview,
     contrastPreferences,
     contrastPreview,
+    brightnessPreferences,
+    brightnessPreview,
   } = usePreferences();
   const activeAppearance = appearancePreview ?? organizationAppearance;
   const activeContrast = contrastPreview ?? contrastPreferences;
+  const activeBrightness = brightnessPreview ?? brightnessPreferences;
   const direction = getLocaleDirection(locale);
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [isSidebarLocked, setIsSidebarLocked] = useState(false);
@@ -149,10 +152,12 @@ export function AppShell({ children }: AppShellProps) {
   return (
     <div
       dir={direction}
-      data-accent={activeAppearance.accentPreset === 'custom' ? 'custom' : activeAppearance.accentPreset}
+      data-accent={activeAppearance.accentPreset}
       data-background-style={activeAppearance.backgroundStyle}
       data-light-contrast={activeContrast.light}
       data-dark-contrast={activeContrast.dark}
+      data-light-brightness={activeBrightness.light}
+      data-dark-brightness={activeBrightness.dark}
       style={getOrganizationAccentStyle(activeAppearance)}
       className="erp-app-shell flex h-screen min-h-0 flex-col overflow-hidden bg-[color:var(--background)] text-[color:var(--foreground)] transition-colors duration-200"
     >

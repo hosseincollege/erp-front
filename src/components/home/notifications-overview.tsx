@@ -71,7 +71,7 @@ export function NotificationsOverview() {
         // The dashboard remains navigable if read-state synchronization is temporarily unavailable.
       }
     }
-    router.push(getSafeNotificationHref(item.href, '/dashboard/notifications'));
+    router.push(getSafeNotificationHref(item.href, '/dashboard/events'));
   };
 
   return (
@@ -84,7 +84,7 @@ export function NotificationsOverview() {
             <p className="text-xs text-muted-foreground">{unreadCount} {message('notificationsUnreadCount')}</p>
           </div>
         </div>
-        <Link href="/dashboard/notifications" className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary/10">
+        <Link href="/dashboard/events" className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary/10">
           {message('notificationsViewAll')}<ChevronRight size={14} className={direction === 'rtl' ? 'rotate-180' : undefined} />
         </Link>
       </div>
@@ -93,7 +93,7 @@ export function NotificationsOverview() {
           {items.map((item) => (
             <li key={item.id}>
               <Link
-                href={getSafeNotificationHref(item.href, '/dashboard/notifications')}
+                href={getSafeNotificationHref(item.href, '/dashboard/events')}
                 onClick={(event) => void openNotification(event, item)}
                 className="flex items-start gap-3 px-4 py-3 transition hover:bg-muted/40 sm:px-5"
               >

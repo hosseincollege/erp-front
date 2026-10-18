@@ -16,6 +16,7 @@ export type AppNotification = {
 export type NotificationsResult = {
   items: AppNotification[];
   unreadCount: number;
+  unreadBySource?: Record<string, number>;
   nextCursor?: string | null;
 };
 
@@ -23,9 +24,13 @@ export type Announcement = {
   id: string; title: string; summary: string | null; body: string; locale: string;
   category: string; priority: string; isPinned: boolean; createdAt: string;
   notificationId: string | null; readAt: string | null;
+  allowLikes: boolean; allowReactions: boolean; allowComments: boolean; allowMentions: boolean;
+  branchId: string | null; branch?: { id: string; name: string } | null;
+  reactions: Array<{ emoji: string; count: number; reacted: boolean }>;
+  comments: Array<{ id: string; body: string; createdAt: string; user: { firstName: string; lastName: string }; mentions: Array<{ userId: string }> }>;
 };
 export type AnnouncementDraft = Pick<Announcement, 'title' | 'body' | 'locale'> &
-  Partial<Pick<Announcement, 'summary' | 'category' | 'priority' | 'isPinned'>>;
+  Partial<Pick<Announcement, 'summary' | 'category' | 'priority' | 'isPinned' | 'allowLikes' | 'allowReactions' | 'allowComments' | 'allowMentions' | 'branchId'>>;
 
 export const notificationsApi = {
   getList(filter: 'all' | 'unread' = 'all', cursor?: string | null): Promise<NotificationsResult> {
@@ -42,17 +47,29 @@ export const notificationsApi = {
   markAllRead(): Promise<{ updated: number }> {
     return apiClient.post<{ updated: number }>('/notifications/read-all');
   },
-  getAnnouncements(): Promise<Announcement[]> {
-    return apiClient.get<Announcement[]>('/notifications/announcements');
+  getAnnouncements(management = false): Promise<Announcement[]> {
+    return apiClient.get<Announcement[]>(`/notifications/announcements${management ? '?management=true' : ''}`);
   },
-  getAnnouncementAccess(): Promise<{ canManage: boolean }> {
-    return apiClient.get<{ canManage: boolean }>('/notifications/announcements/access');
+  getAnnouncementAccess(): Promise<{ canManage: boolean; branches?: Array<{id:string;name:string}>; mentionUsers?: Array<{id:string;username:string;firstName:string;lastName:string}> }> {
+    return apiClient.get('/notifications/announcements/access');
   },
   createAnnouncement(draft: AnnouncementDraft): Promise<Announcement & { recipientCount: number }> {
     return apiClient.post('/notifications/announcements', draft);
   },
   archiveAnnouncement(id: string): Promise<Announcement> {
     return apiClient.patch(`/notifications/announcements/${encodeURIComponent(id)}/archive`);
+  },
+  updateAnnouncement(id: string, draft: AnnouncementDraft): Promise<Announcement> {
+    return apiClient.patch(`/notifications/announcements/${encodeURIComponent(id)}`, draft);
+  },
+  toggleReaction(id: string, emoji: string): Promise<{ active: boolean }> {
+    return apiClient.post(`/notifications/announcements/${encodeURIComponent(id)}/reactions`, { emoji });
+  },
+  addComment(id: string, body: string, mentionedUserIds: string[]): Promise<Announcement['comments'][number]> {
+    return apiClient.post(`/notifications/announcements/${encodeURIComponent(id)}/comments`, { body, mentionedUserIds });
+  },
+  deleteComment(id: string, commentId: string): Promise<{ deleted: boolean }> {
+    return apiClient.delete(`/notifications/announcements/${encodeURIComponent(id)}/comments/${encodeURIComponent(commentId)}`);
   },
 };
 

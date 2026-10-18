@@ -1,5 +1,5 @@
 import { apiClient } from '@/lib/api-client';
-import type { CalendarSystem, ContrastPreferences } from '@/components/preferences-provider';
+import type { BrightnessPreferences, CalendarSystem, ContrastPreferences } from '@/components/preferences-provider';
 import type { Locale } from '@/lib/languages';
 import { getCurrentOrganizationId } from '@/lib/api/shared/auth-api';
 
@@ -7,11 +7,14 @@ export type UserPreferences = {
   locale: Locale;
   lightContrast: ContrastPreferences['light'];
   darkContrast: ContrastPreferences['dark'];
+  lightBrightness: BrightnessPreferences['light'];
+  darkBrightness: BrightnessPreferences['dark'];
 };
 
 export type SaveUserPreferences = {
   locale: Locale;
   contrastPreferences: ContrastPreferences;
+  brightnessPreferences: BrightnessPreferences;
 };
 
 export type OrganizationAppearance = {
@@ -28,9 +31,9 @@ export type SaveOrganizationAppearance = Omit<OrganizationAppearance, 'canEdit'>
 
 const defaultOrganizationAppearance: OrganizationAppearance = {
   accentPreset: 'blue',
-  accentLightColor: '#2563eb',
-  accentDarkColor: '#1d4ed8',
-  backgroundStyle: 'THEME',
+  accentLightColor: '#60a5fa',
+  accentDarkColor: '#3b82f6',
+  backgroundStyle: 'GRAY',
   timezone: 'Asia/Tehran',
   calendar: 'persian',
   canEdit: false,
@@ -46,6 +49,8 @@ export const preferencesApi = {
       locale: preferences.locale,
       lightContrast: preferences.contrastPreferences.light,
       darkContrast: preferences.contrastPreferences.dark,
+      lightBrightness: preferences.brightnessPreferences.light,
+      darkBrightness: preferences.brightnessPreferences.dark,
     });
   },
 

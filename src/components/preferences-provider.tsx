@@ -30,33 +30,39 @@ export type { Locale } from '@/lib/languages';
 
 export type ContrastLevel = 'soft' | 'balanced' | 'strong';
 export type ContrastPreferences = { light: ContrastLevel; dark: ContrastLevel };
+export type BrightnessPreferences = { light: ContrastLevel; dark: ContrastLevel };
 export type CalendarSystem = 'persian' | 'islamic' | 'gregorian';
 
 type PreferencesContextValue = {
   locale: Locale;
   contrastPreferences: ContrastPreferences;
+  brightnessPreferences: BrightnessPreferences;
   organizationAppearance: OrganizationAppearance;
   appearancePreview: SaveOrganizationAppearance | null;
   calendar: CalendarSystem;
   timezone: string;
   canEditOrganizationAppearance: boolean;
   contrastPreview: ContrastPreferences | null;
+  brightnessPreview: BrightnessPreferences | null;
   previewContrastPreferences: (preferences: ContrastPreferences | null) => void;
+  previewBrightnessPreferences: (preferences: BrightnessPreferences | null) => void;
   previewOrganizationAppearance: (appearance: SaveOrganizationAppearance | null) => void;
   savePreferences: (preferences: SaveUserPreferences) => Promise<void>;
   saveOrganizationAppearance: (appearance: SaveOrganizationAppearance) => Promise<void>;
 };
 
 const LOCALE_KEY = 'erp-locale';
-const CONTRAST_KEY = 'erp-shell-contrast';
+const CONTRAST_KEY = 'erp-shell-contrast-v2';
+const BRIGHTNESS_KEY = 'erp-shell-brightness';
+const LEGACY_BRIGHTNESS_KEY = 'erp-shell-contrast';
 const ORGANIZATION_APPEARANCE_KEY = 'erp-organization-appearance';
 const DEFAULT_CONTRAST = { light: 'balanced', dark: 'balanced' } as const satisfies ContrastPreferences;
 const DEFAULT_CONTRAST_SNAPSHOT = JSON.stringify(DEFAULT_CONTRAST);
 const DEFAULT_ORGANIZATION_APPEARANCE: OrganizationAppearance = {
   accentPreset: 'blue',
-  accentLightColor: '#2563eb',
-  accentDarkColor: '#1d4ed8',
-  backgroundStyle: 'THEME',
+  accentLightColor: '#60a5fa',
+  accentDarkColor: '#3b82f6',
+  backgroundStyle: 'GRAY',
   timezone: 'Asia/Tehran',
   calendar: 'persian',
   canEdit: false,
@@ -81,21 +87,32 @@ function isContrastLevel(value: unknown): value is ContrastLevel {
   return value === 'soft' || value === 'balanced' || value === 'strong';
 }
 
-function parseContrastPreferences(value: string): ContrastPreferences {
+function parsePreferenceLevels<T extends { light: ContrastLevel; dark: ContrastLevel }>(value: string, defaults: T): T {
   try {
-    const parsed = JSON.parse(value) as Partial<ContrastPreferences>;
+    const parsed = JSON.parse(value) as Partial<T>;
     return {
-      light: isContrastLevel(parsed.light) ? parsed.light : DEFAULT_CONTRAST.light,
-      dark: isContrastLevel(parsed.dark) ? parsed.dark : DEFAULT_CONTRAST.dark,
-    };
+      ...defaults,
+      light: isContrastLevel(parsed.light) ? parsed.light : defaults.light,
+      dark: isContrastLevel(parsed.dark) ? parsed.dark : defaults.dark,
+    } as T;
   } catch {
-    return { ...DEFAULT_CONTRAST };
+    return { ...defaults };
   }
 }
 
 function readContrastSnapshot(): string {
   try {
     return window.localStorage.getItem(CONTRAST_KEY) ?? DEFAULT_CONTRAST_SNAPSHOT;
+  } catch {
+    return DEFAULT_CONTRAST_SNAPSHOT;
+  }
+}
+
+function readBrightnessSnapshot(): string {
+  try {
+    return window.localStorage.getItem(BRIGHTNESS_KEY)
+      ?? window.localStorage.getItem(LEGACY_BRIGHTNESS_KEY)
+      ?? DEFAULT_CONTRAST_SNAPSHOT;
   } catch {
     return DEFAULT_CONTRAST_SNAPSHOT;
   }
@@ -128,7 +145,7 @@ function parseOrganizationAppearance(value: string): OrganizationAppearance {
       accentDarkColor: isHexColor(parsed.accentDarkColor ?? null)
         ? parsed.accentDarkColor!
         : DEFAULT_ORGANIZATION_APPEARANCE.accentDarkColor,
-      backgroundStyle: parsed.backgroundStyle === 'GRAY' ? 'GRAY' : 'THEME',
+      backgroundStyle: parsed.backgroundStyle === 'THEME' ? 'THEME' : 'GRAY',
       calendar: parsed.calendar === 'islamic' || parsed.calendar === 'gregorian'
         ? parsed.calendar
         : 'persian',
@@ -189,6 +206,11 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     readContrastSnapshot,
     () => DEFAULT_CONTRAST_SNAPSHOT,
   );
+  const brightnessSnapshot = useSyncExternalStore(
+    subscribePreferences,
+    readBrightnessSnapshot,
+    () => DEFAULT_CONTRAST_SNAPSHOT,
+  );
   const organizationAppearanceSnapshot = useSyncExternalStore(
     subscribePreferences,
     readOrganizationAppearanceSnapshot,
@@ -199,10 +221,15 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     [organizationAppearanceSnapshot],
   );
   const contrastPreferences = useMemo(
-    () => parseContrastPreferences(contrastSnapshot),
+    () => parsePreferenceLevels(contrastSnapshot, DEFAULT_CONTRAST),
     [contrastSnapshot],
   );
+  const brightnessPreferences = useMemo(
+    () => parsePreferenceLevels(brightnessSnapshot, DEFAULT_CONTRAST),
+    [brightnessSnapshot],
+  );
   const [contrastPreview, setContrastPreview] = useState<ContrastPreferences | null>(null);
+  const [brightnessPreview, setBrightnessPreview] = useState<BrightnessPreferences | null>(null);
   const [appearancePreview, setAppearancePreview] = useState<SaveOrganizationAppearance | null>(null);
 
   useEffect(() => {
@@ -220,6 +247,10 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       window.localStorage.setItem(CONTRAST_KEY, JSON.stringify({
         light: saved.lightContrast,
         dark: saved.darkContrast,
+      }));
+      window.localStorage.setItem(BRIGHTNESS_KEY, JSON.stringify({
+        light: saved.lightBrightness,
+        dark: saved.darkBrightness,
       }));
       window.dispatchEvent(new Event('erp-preferences-changed'));
     } catch (error) {
@@ -240,6 +271,8 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     const resetPreferences = () => {
       window.localStorage.removeItem(LOCALE_KEY);
       window.localStorage.removeItem(CONTRAST_KEY);
+      window.localStorage.removeItem(BRIGHTNESS_KEY);
+      window.localStorage.removeItem(LEGACY_BRIGHTNESS_KEY);
       setAppearancePreview(null);
       window.dispatchEvent(new Event('erp-preferences-changed'));
     };
@@ -263,6 +296,10 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     setContrastPreview(nextPreferences);
   }, []);
 
+  const previewBrightnessPreferences = useCallback((nextPreferences: BrightnessPreferences | null) => {
+    setBrightnessPreview(nextPreferences);
+  }, []);
+
   const previewOrganizationAppearance = useCallback((appearance: SaveOrganizationAppearance | null) => {
     setAppearancePreview(appearance);
   }, []);
@@ -273,6 +310,10 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     window.localStorage.setItem(CONTRAST_KEY, JSON.stringify({
       light: saved.lightContrast,
       dark: saved.darkContrast,
+    }));
+    window.localStorage.setItem(BRIGHTNESS_KEY, JSON.stringify({
+      light: saved.lightBrightness,
+      dark: saved.darkBrightness,
     }));
     window.dispatchEvent(new Event('erp-preferences-changed'));
   }, []);
@@ -290,13 +331,16 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     () => ({
       locale,
       contrastPreferences,
+      brightnessPreferences,
       organizationAppearance,
       appearancePreview,
       calendar: organizationAppearance.calendar,
       timezone: organizationAppearance.timezone ?? 'Asia/Tehran',
       canEditOrganizationAppearance: organizationAppearance.canEdit,
       contrastPreview,
+      brightnessPreview,
       previewContrastPreferences,
+      previewBrightnessPreferences,
       previewOrganizationAppearance,
       savePreferences,
       saveOrganizationAppearance,
@@ -304,10 +348,13 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     [
       locale,
       contrastPreferences,
+      brightnessPreferences,
       organizationAppearance,
       appearancePreview,
       contrastPreview,
+      brightnessPreview,
       previewContrastPreferences,
+      previewBrightnessPreferences,
       previewOrganizationAppearance,
       savePreferences,
       saveOrganizationAppearance,

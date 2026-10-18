@@ -3,6 +3,10 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   async redirects() {
     return [
+      { source: '/dashboard/notifications', destination: '/dashboard/events', permanent: true },
+      { source: '/dashboard/messages', destination: '/dashboard/events?tab=announcements', permanent: true },
+      { source: '/dashboard/history', destination: '/dashboard/events?tab=history', permanent: true },
+      { source: '/dashboard/activity', destination: '/dashboard/events?tab=activity', permanent: true },
       { source: '/commercial/:path*', destination: '/commerce/:path*', permanent: true },
       { source: '/hr/:path*', destination: '/human-resources/:path*', permanent: true },
       { source: '/tickets/:path*', destination: '/support/:path*', permanent: true },

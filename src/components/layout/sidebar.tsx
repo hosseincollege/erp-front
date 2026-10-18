@@ -18,6 +18,7 @@ import { humanResourcesApi } from '@/lib/api/hr/human-resources-api';
 import type { HrAccess } from '@/types/human-resources';
 import { accountingApi } from '@/lib/api/accounting/accounting-api';
 import type { AccountingAccess } from '@/types/accounting';
+import { notificationsApi } from '@/lib/api/shared/notifications-api';
 
 import {
   BarChart3,
@@ -56,15 +57,13 @@ const navigation: NavigationItem[] = [
     icon: LayoutDashboard,
     href: '/dashboard',
     sub: [
-      { titleKey: 'dashboardNotifications', href: '/dashboard/notifications' },
-      { titleKey: 'dashboardMessages', href: '/dashboard/messages' },
+      { titleKey: 'dashboardNotifications', href: '/dashboard/events' },
       { titleKey: 'dashboardConversation', href: '/dashboard/conversations' },
       { titleKey: 'dashboardPlanning', href: '/dashboard/planning' },
-      { titleKey: 'dashboardHistory', href: '/dashboard/history' },
-      { titleKey: 'dashboardActivities', href: '/dashboard/activity' },
       { titleKey: 'dashboardHelp', href: '/dashboard/help' },
       { titleKey: 'dashboardSearch', href: '/dashboard/search' },
       { titleKey: 'dashboardAccount', href: '/dashboard/profile' },
+      { titleKey: 'dashboardOrganization', href: '/dashboard/organization' },
     ],
   },
   {
@@ -191,9 +190,10 @@ export function Sidebar({
   const [supportProjects, setSupportProjects] = useState<SupportProjectItem[]>([]);
   const [hrAccess, setHrAccess] = useState<HrAccess | null>(null);
   const [accountingAccess, setAccountingAccess] = useState<AccountingAccess | null>(null);
+  const [dashboardUnreadCount, setDashboardUnreadCount] = useState(0);
 
   const isProfileRoute = pathname === '/dashboard/profile' || pathname.startsWith('/dashboard/profile/');
-  const isHomeRoute = pathname === '/' || pathname === '/dashboard' || pathname.startsWith('/dashboard/') || ['/dashboard/notifications', '/dashboard/messages', '/dashboard/conversations', '/dashboard/planning', '/dashboard/activity', '/dashboard/help', '/dashboard/search', '/dashboard/profile'].some((route) => pathname === route || pathname.startsWith(`${route}/`));
+  const isHomeRoute = pathname === '/' || pathname === '/dashboard' || pathname.startsWith('/dashboard/');
 
   useEffect(() => {
     const refreshUser = () => {
@@ -219,11 +219,34 @@ export function Sidebar({
     refreshUser();
     window.addEventListener('auth:logout', refreshUser);
     window.addEventListener('auth:login', refreshUser);
+    window.addEventListener('auth:user-updated', refreshUser);
     window.addEventListener('storage', refreshUser);
     return () => {
       window.removeEventListener('auth:logout', refreshUser);
       window.removeEventListener('auth:login', refreshUser);
+      window.removeEventListener('auth:user-updated', refreshUser);
       window.removeEventListener('storage', refreshUser);
+    };
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    const refreshUnreadCount = () => {
+      void notificationsApi.getSummary().then((summary) => {
+        if (mounted) setDashboardUnreadCount(summary.unreadCount);
+      }).catch(() => {
+        if (mounted) setDashboardUnreadCount(0);
+      });
+    };
+    refreshUnreadCount();
+    window.addEventListener('notifications-updated', refreshUnreadCount);
+    window.addEventListener('auth:login', refreshUnreadCount);
+    window.addEventListener('auth:logout', refreshUnreadCount);
+    return () => {
+      mounted = false;
+      window.removeEventListener('notifications-updated', refreshUnreadCount);
+      window.removeEventListener('auth:login', refreshUnreadCount);
+      window.removeEventListener('auth:logout', refreshUnreadCount);
     };
   }, []);
 
@@ -314,7 +337,7 @@ export function Sidebar({
     onSetProfileActive?.(false);
     setActiveTab(item.id);
 
-    if (navigateOnClick && item.href) {
+    if (item.href && (navigateOnClick || item.id === 'dashboard')) {
       router.push(item.href);
     }
   };
@@ -344,9 +367,11 @@ export function Sidebar({
         : item.sub?.map((subItem) => ({ ...subItem, title: subItem.titleKey ? message(subItem.titleKey) : subItem.title })),
   }));
   const activeGroup = localizedNavigation.find((item) => item.id === activeTab);
+  const activePath = pathname;
+  const isModuleLandingActive = Boolean(activeGroup && activePath === activeGroup.href);
   const activeSubItemPath = activeGroup?.sub
     ?.map((subItem) => subItem.href.split(/[?#]/)[0])
-    .filter((href) => pathname === href || pathname.startsWith(`${href}/`))
+    .filter((href) => activePath === href || activePath.startsWith(`${href}/`))
     .sort((left, right) => right.length - left.length)[0];
 
   return (
@@ -356,7 +381,7 @@ export function Sidebar({
       id="erp-mobile-navigation"
       data-mobile-open={isMobileOpen}
       className="
-        erp-sidebar-drawer fixed inset-y-16 start-0 z-40 flex h-auto max-w-[calc(100vw-0.5rem)]
+        erp-sidebar-drawer fixed bottom-0 start-0 top-16 z-40 flex min-h-0 max-w-[calc(100vw-0.5rem)]
         md:sticky md:inset-auto md:top-16 md:z-40 md:h-[calc(100vh-4rem)] md:max-w-none
         shrink-0 select-none
         transition-all duration-300
@@ -365,7 +390,7 @@ export function Sidebar({
       {/* ستون اول: لیست آیکون‌های ماژول‌ها */}
       <div
         className={`
-          flex flex-col
+          flex min-h-0 flex-col
           border-e border-[var(--border)]
           bg-[var(--surface)]
           py-3
@@ -373,7 +398,7 @@ export function Sidebar({
           ${isMainCollapsed ? 'w-14 items-center px-2' : 'w-38 px-1.5'}
         `}
       >
-        <div className="flex w-full flex-col gap-1.5 overflow-y-auto no-scrollbar">
+        <div className="flex min-h-0 w-full flex-1 flex-col gap-1.5 overflow-y-auto overscroll-contain no-scrollbar">
           {localizedNavigation.map((item, index) => {
             const Icon = item.icon;
             const isSelected = !isProfileActive && activeTab === item.id;
@@ -399,11 +424,16 @@ export function Sidebar({
                 <Icon size={20} className="shrink-0" />
                 {!isMainCollapsed && (
                   <>
-                    <span className="shrink-0 text-xs font-medium tabular-nums text-current" dir="ltr">{index + 1}</span>
+                    <span className="hidden shrink-0 text-xs font-medium tabular-nums text-current md:inline" dir="ltr">{index + 1}</span>
                     <span className="truncate leading-none">{item.title}</span>
                   </>
                 )}
-                {isMainCollapsed && <span className="absolute end-0.5 top-0.5 text-[8px] font-medium leading-none tabular-nums text-current" dir="ltr">{index + 1}</span>}
+                <span
+                  className={`absolute end-0.5 top-0.5 text-[8px] font-medium leading-none tabular-nums text-current ${isMainCollapsed ? '' : 'md:hidden'}`}
+                  dir="ltr"
+                >
+                  {index + 1}
+                </span>
               </button>
             );
           })}
@@ -413,7 +443,7 @@ export function Sidebar({
       {/* ستون دوم: اولویت رندر: پنل پروفایل | زیرمنوی ماژول فعال | پیشخوان خانه */}
       <div
         className="
-          flex w-50 shrink-0 flex-col
+          flex min-h-0 w-50 shrink-0 flex-col
           border-e border-[var(--border)]
           bg-[var(--surface)]/95
           p-4 shadow-sm backdrop-blur
@@ -421,7 +451,7 @@ export function Sidebar({
       >
         {isProfileActive || (isProfileRoute && !activeTab) ? (
           /* حالت اول: پنل پروفایل کاربر */
-          <div className="flex flex-col gap-3">
+          <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain">
             <Link
               href="/dashboard/profile"
               onClick={() => {
@@ -474,8 +504,18 @@ export function Sidebar({
           </div>
         ) : activeGroup ? (
           /* حالت دوم: زیرمنوهای ماژول انتخاب شده */
-          <>
-            <div className="flex flex-col gap-1 overflow-y-auto">
+          <div className="flex min-h-0 flex-1 flex-col">
+            <h2 className={`shrink-0 overflow-hidden border-b text-sm font-bold transition-[max-height,opacity,transform,margin,padding,color,border-color] duration-200 ease-out motion-reduce:transition-none ${isMainCollapsed ? 'mb-2 border-[var(--border)] pb-3 md:max-h-12 md:translate-y-0 md:opacity-100' : 'mb-2 border-[var(--border)] pb-3 md:mb-0 md:max-h-0 md:translate-y-1 md:border-transparent md:pb-0 md:opacity-0'} ${isModuleLandingActive ? 'text-[var(--primary)]' : 'text-[var(--foreground)]'}`}>
+              <Link
+                href={activeGroup.href}
+                onClick={onMobileClose}
+                aria-current={isModuleLandingActive ? 'page' : undefined}
+                className="block rounded-sm text-start transition-colors hover:text-[var(--primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]"
+              >
+                {activeGroup.title}
+              </Link>
+            </h2>
+            <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overscroll-contain">
               {activeGroup.sub && activeGroup.sub.length > 0 ? (
                 activeGroup.sub.map((subItem, index) => {
                   const isActive = activeSubItemPath === subItem.href.split(/[?#]/)[0];
@@ -498,6 +538,11 @@ export function Sidebar({
                     >
                       <span className="shrink-0 text-xs font-medium tabular-nums text-current" dir="ltr">{index + 1}</span>
                       <span className="truncate leading-none">{subItem.title}</span>
+                      {subItem.href === '/dashboard/events' && dashboardUnreadCount > 0 && (
+                        <span className="ms-auto inline-flex min-w-5 items-center justify-center rounded-full bg-[var(--primary)] px-1.5 py-0.5 text-[10px] font-bold leading-none text-[var(--primary-foreground)]" dir="ltr">
+                          {dashboardUnreadCount > 99 ? '99+' : dashboardUnreadCount}
+                        </span>
+                      )}
                     </Link>
                   );
                 })
@@ -507,7 +552,7 @@ export function Sidebar({
                 </p>
               )}
             </div>
-          </>
+          </div>
         ) : null}
       </div>
     </aside>

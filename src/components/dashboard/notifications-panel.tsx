@@ -18,7 +18,7 @@ import { uiMessage } from '@/lib/ui-messages';
 
 type NotificationFilter = 'all' | 'unread';
 
-export default function NotificationsPage() {
+export function NotificationsPanel() {
   const router = useRouter();
   const { locale } = usePreferences();
   const direction = getLocaleDirection(locale);
@@ -71,6 +71,7 @@ export default function NotificationsPage() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- load synchronizes this panel with its API.
     void loadNotifications();
   }, [loadNotifications]);
 

@@ -9,9 +9,9 @@ import type { UiMessage } from '@/lib/languages/types';
 
 const destinations: Array<{ href: string; title: UiMessage }> = [
   { href: '/dashboard', title: 'sidebarDashboard' },
-  { href: '/dashboard/notifications', title: 'notificationsTitle' },
-  { href: '/dashboard/messages', title: 'messagesTitle' },
-  { href: '/dashboard/history', title: 'activityHistoryTitle' },
+  { href: '/dashboard/events', title: 'notificationsTitle' },
+  { href: '/dashboard/events?tab=announcements', title: 'messagesTitle' },
+  { href: '/dashboard/events?tab=history', title: 'activityHistoryTitle' },
   { href: '/dashboard/help', title: 'userGuideTitle' },
   { href: '/accounting', title: 'sidebarAccounting' },
   { href: '/accounting/accounts', title: 'accountingChartOfAccounts' },

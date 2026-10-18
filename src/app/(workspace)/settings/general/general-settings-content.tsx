@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { localeOptions, usePreferences, type ContrastLevel, type ContrastPreferences, type Locale } from '@/components/preferences-provider';
+import { localeOptions, usePreferences, type BrightnessPreferences, type ContrastLevel, type ContrastPreferences, type Locale } from '@/components/preferences-provider';
 import { uiMessage } from '@/lib/ui-messages';
 import { useTheme } from '@/components/theme-provider';
 import type { OrganizationAppearance, SaveOrganizationAppearance } from '@/lib/api/shared/preferences-api';
@@ -12,22 +12,35 @@ const accentOptions: Array<{
   dark: `#${string}`;
   message: 'blue' | 'green' | 'red' | 'yellow' | 'purple';
 }> = [
-  { id: 'blue', light: '#2563eb', dark: '#1d4ed8', message: 'blue' },
-  { id: 'green', light: '#16a34a', dark: '#15803d', message: 'green' },
-  { id: 'red', light: '#ef4444', dark: '#b91c1c', message: 'red' },
-  { id: 'amber', light: '#facc15', dark: '#a16207', message: 'yellow' },
-  { id: 'violet', light: '#8b5cf6', dark: '#6d28d9', message: 'purple' },
+  { id: 'blue', light: '#60a5fa', dark: '#3b82f6', message: 'blue' },
+  { id: 'green', light: '#4ade80', dark: '#22c55e', message: 'green' },
+  { id: 'red', light: '#f87171', dark: '#ef4444', message: 'red' },
+  { id: 'amber', light: '#fde047', dark: '#facc15', message: 'yellow' },
+  { id: 'violet', light: '#a78bfa', dark: '#8b5cf6', message: 'purple' },
 ];
 
-const contrastModes = [
+const brightnessModes = [
   { id: 'light', message: 'lightContrast' },
   { id: 'dark', message: 'darkContrast' },
 ] as const;
 
-const contrastOptions: Array<{
+const brightnessOptions: Record<'light' | 'dark', Array<{
   id: ContrastLevel;
-  message: 'contrastSoft' | 'contrastBalanced' | 'contrastStrong';
-}> = [
+  message: 'brightnessSoft' | 'brightnessBalanced' | 'brightnessStrong';
+}>> = {
+  light: [
+    { id: 'strong', message: 'brightnessSoft' },
+    { id: 'balanced', message: 'brightnessBalanced' },
+    { id: 'soft', message: 'brightnessStrong' },
+  ],
+  dark: [
+    { id: 'soft', message: 'brightnessSoft' },
+    { id: 'balanced', message: 'brightnessBalanced' },
+    { id: 'strong', message: 'brightnessStrong' },
+  ],
+};
+
+const contrastOptions: Array<{ id: ContrastLevel; message: 'contrastSoft' | 'contrastBalanced' | 'contrastStrong' }> = [
   { id: 'soft', message: 'contrastSoft' },
   { id: 'balanced', message: 'contrastBalanced' },
   { id: 'strong', message: 'contrastStrong' },
@@ -55,9 +68,11 @@ export function GeneralSettingsContent() {
   const {
     locale,
     contrastPreferences,
+    brightnessPreferences,
     organizationAppearance,
     canEditOrganizationAppearance,
     previewContrastPreferences,
+    previewBrightnessPreferences,
     previewOrganizationAppearance,
     savePreferences,
     saveOrganizationAppearance,
@@ -65,6 +80,7 @@ export function GeneralSettingsContent() {
   const { resolvedTheme } = useTheme();
   const [draftLocale, setDraftLocale] = useState<Locale>(locale);
   const [draftContrast, setDraftContrast] = useState<ContrastPreferences>(contrastPreferences);
+  const [draftBrightness, setDraftBrightness] = useState<BrightnessPreferences>(brightnessPreferences);
   const [draftAppearance, setDraftAppearance] = useState<SaveOrganizationAppearance>(
     toSaveAppearance(organizationAppearance),
   );
@@ -74,11 +90,16 @@ export function GeneralSettingsContent() {
 
   useEffect(() => setDraftLocale(locale), [locale]);
   useEffect(() => setDraftContrast(contrastPreferences), [contrastPreferences]);
+  useEffect(() => setDraftBrightness(brightnessPreferences), [brightnessPreferences]);
   useEffect(() => setDraftAppearance(toSaveAppearance(organizationAppearance)), [organizationAppearance]);
   useEffect(() => {
     previewContrastPreferences(draftContrast);
     return () => previewContrastPreferences(null);
   }, [draftContrast, previewContrastPreferences]);
+  useEffect(() => {
+    previewBrightnessPreferences(draftBrightness);
+    return () => previewBrightnessPreferences(null);
+  }, [draftBrightness, previewBrightnessPreferences]);
   useEffect(() => {
     if (!canEditOrganizationAppearance) return;
     previewOrganizationAppearance(draftAppearance);
@@ -137,41 +158,37 @@ export function GeneralSettingsContent() {
                 type="button"
                 aria-pressed={draftAppearance.accentPreset === 'custom'}
                 onClick={() => setDraftAppearance((current) => ({ ...current, accentPreset: 'custom' }))}
-                className={`rounded-xl border px-3.5 py-2.5 text-sm font-semibold transition ${draftAppearance.accentPreset === 'custom' ? 'border-primary bg-primary-soft ring-2 ring-primary/20' : 'border-border bg-background hover:border-primary/50'}`}
+                className={`rounded-xl border px-3.5 py-2.5 text-sm font-semibold transition ${draftAppearance.accentPreset === 'custom' ? 'border-primary bg-primary-soft text-foreground ring-2 ring-primary/20' : 'border-border bg-background text-foreground hover:border-primary/50'}`}
               >
                 {message('customColor')}
               </button>
             </div>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="flex items-center justify-between gap-3 rounded-xl border border-border bg-background p-3 text-sm font-medium text-foreground">
-              <span>{message('accentLightColor')}</span>
-              <input
-                type="color"
-                aria-label={message('accentLightColor')}
-                value={draftAppearance.accentLightColor}
-                onChange={(event) => setDraftAppearance((current) => ({ ...current, accentPreset: 'custom', accentLightColor: event.target.value as `#${string}` }))}
-                className="size-9 cursor-pointer rounded-lg border-0 bg-transparent p-0"
-              />
-            </label>
-            <label className="flex items-center justify-between gap-3 rounded-xl border border-border bg-background p-3 text-sm font-medium text-foreground">
-              <span>{message('accentDarkColor')}</span>
-              <input
-                type="color"
-                aria-label={message('accentDarkColor')}
-                value={draftAppearance.accentDarkColor}
-                onChange={(event) => setDraftAppearance((current) => ({ ...current, accentPreset: 'custom', accentDarkColor: event.target.value as `#${string}` }))}
-                className="size-9 cursor-pointer rounded-lg border-0 bg-transparent p-0"
-              />
-            </label>
+            {draftAppearance.accentPreset === 'custom' && (
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                {([
+                  ['accentLightColor', 'accentLightColor'],
+                  ['accentDarkColor', 'accentDarkColor'],
+                ] as const).map(([field, label]) => (
+                  <label key={field} className="flex items-center justify-between gap-3 rounded-xl border border-border bg-background p-3 text-sm font-medium text-foreground">
+                    <span>{message(label)}</span>
+                    <input
+                      type="color"
+                      aria-label={message(label)}
+                      value={draftAppearance[field]}
+                      onChange={(event) => setDraftAppearance((current) => ({ ...current, [field]: event.target.value as `#${string}` }))}
+                      className="size-9 cursor-pointer rounded-lg border-0 bg-transparent p-0"
+                    />
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
 
           <div>
             <h3 className="text-sm font-bold text-foreground">{message('backgroundStyleTitle')}</h3>
             <p className="mt-1 text-xs leading-6 text-muted-foreground">{message('backgroundStyleDescription')}</p>
             <div className="mt-3 grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label={message('backgroundStyleTitle')}>
-              {(['THEME', 'GRAY'] as const).map((style) => (
+              {(['GRAY', 'THEME'] as const).map((style) => (
                 <button
                   key={style}
                   type="button"
@@ -227,11 +244,41 @@ export function GeneralSettingsContent() {
 
       <section className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
         <div className="mb-5">
+          <h2 className="text-base font-bold text-foreground">{message('brightnessTitle')}</h2>
+          <p className="mt-1 text-xs leading-6 text-muted-foreground">{message('brightnessDescription')}</p>
+        </div>
+        <div className="grid gap-5 md:grid-cols-2">
+          {brightnessModes.map((mode) => (
+            <div key={mode.id}>
+              <h3 className="mb-2 text-sm font-semibold text-foreground">{message(mode.message)}</h3>
+              <div className="flex flex-wrap gap-2" role="group" aria-label={message(mode.message)}>
+                {brightnessOptions[mode.id].map((option) => {
+                  const selected = draftBrightness[mode.id] === option.id;
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      aria-pressed={selected}
+                      onClick={() => setDraftBrightness((current) => ({ ...current, [mode.id]: option.id }))}
+                      className={`rounded-xl border px-3.5 py-2 text-sm font-semibold transition-colors ${selected ? 'border-primary bg-primary-soft text-primary ring-2 ring-primary/20' : 'border-border bg-background text-foreground hover:border-primary/50'}`}
+                    >
+                      {message(option.message)}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+        <div className="mb-5">
           <h2 className="text-base font-bold text-foreground">{message('contrastTitle')}</h2>
           <p className="mt-1 text-xs leading-6 text-muted-foreground">{message('contrastDescription')}</p>
         </div>
         <div className="grid gap-5 md:grid-cols-2">
-          {contrastModes.map((mode) => (
+          {brightnessModes.map((mode) => (
             <div key={mode.id}>
               <h3 className="mb-2 text-sm font-semibold text-foreground">{message(mode.message)}</h3>
               <div className="flex flex-wrap gap-2" role="group" aria-label={message(mode.message)}>
@@ -278,7 +325,7 @@ export function GeneralSettingsContent() {
             setIsSaving(true);
             setSaveError(false);
             try {
-              await savePreferences({ locale: draftLocale, contrastPreferences: draftContrast });
+              await savePreferences({ locale: draftLocale, contrastPreferences: draftContrast, brightnessPreferences: draftBrightness });
               if (canEditOrganizationAppearance) await saveOrganizationAppearance(draftAppearance);
               previewContrastPreferences(null);
               previewOrganizationAppearance(null);

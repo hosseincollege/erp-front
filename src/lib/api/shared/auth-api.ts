@@ -24,6 +24,67 @@ export interface AuthUser {
   organizationId?: string | null;
 }
 
+export interface MyProfile {
+  id: string;
+  username: string;
+  firstName: string;
+  lastName: string;
+  email: string | null;
+  phone: string | null;
+  organizationId?: string | null;
+}
+
+export interface OrganizationDirectoryEmployee {
+  id: string;
+  employeeCode: string;
+  firstName: string;
+  lastName: string;
+  jobTitle: string | null;
+  status: 'ACTIVE' | 'ON_LEAVE';
+  branchId: string | null;
+  departmentId: string | null;
+  managerId: string | null;
+  branch: { id: string; name: string } | null;
+  department: { id: string; name: string } | null;
+  manager: Pick<OrganizationDirectoryEmployee, 'id' | 'firstName' | 'lastName' | 'jobTitle'> | null;
+}
+
+export interface OrganizationDirectory {
+  organization: {
+    id: string;
+    name: string;
+    legalName: string | null;
+    phone: string | null;
+    email: string | null;
+    website: string | null;
+    address: string | null;
+    branches: Array<{
+      id: string;
+      name: string;
+      code: string;
+      address: string | null;
+      phone: string | null;
+      email: string | null;
+      isMain: boolean;
+    }>;
+    departments: Array<{
+      id: string;
+      name: string;
+      code: string;
+      branchId: string | null;
+      branch: { id: string; name: string } | null;
+      manager: Pick<OrganizationDirectoryEmployee, 'id' | 'firstName' | 'lastName' | 'jobTitle'> | null;
+    }>;
+  };
+  employees: OrganizationDirectoryEmployee[];
+}
+
+export interface UpdateMyProfile {
+  firstName: string;
+  lastName: string;
+  phone: string | null;
+}
+
 export interface LoginPayload {
   email: string;
   password: string;
@@ -167,6 +228,35 @@ export function getCurrentUser(): AuthUser | null {
     clearUser();
     return null;
   }
+}
+
+export async function getMyProfile(): Promise<MyProfile> {
+  const response = await apiClient.get<{ user: MyProfile }>('/auth/me');
+  return response.user;
+}
+
+export async function updateMyProfile(data: UpdateMyProfile): Promise<MyProfile> {
+  const response = await apiClient.patch<{ user: MyProfile }, UpdateMyProfile>('/auth/me', data);
+  const cached = getCurrentUser();
+  if (cached) {
+    saveUser({
+      ...cached,
+      id: response.user.id,
+      username: response.user.username,
+      firstName: response.user.firstName,
+      lastName: response.user.lastName,
+      name: getUserDisplayName(response.user),
+      email: response.user.email ?? undefined,
+      phone: response.user.phone ?? undefined,
+      organizationId: response.user.organizationId ?? cached.organizationId ?? null,
+    });
+    if (isBrowser()) window.dispatchEvent(new Event('auth:user-updated'));
+  }
+  return response.user;
+}
+
+export async function getOrganizationDirectory(): Promise<OrganizationDirectory | null> {
+  return apiClient.get<OrganizationDirectory | null>('/auth/organization-directory');
 }
 
 export function getCurrentOrganizationId(): string | null {
