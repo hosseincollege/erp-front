@@ -24,9 +24,10 @@ import {
 import {
   ArrowLeftRight,
   Bot,
-  BriefcaseBusiness,
-  Code2,
+  FilePlus2,
+  SquareTerminal,
   ChevronLeft,
+  ChevronDown,
   LogOut,
   Lock,
   Menu,
@@ -42,7 +43,7 @@ import { useTheme } from '@/components/theme-provider';
 import { getLocaleDirection, usePreferences } from '@/components/preferences-provider';
 import { uiMessage } from '@/lib/ui-messages';
 import { HeaderAccountSwitcher } from './header-account-switcher';
-import { MissionQuickActions, type MissionEntryMode } from './mission-quick-actions';
+import type { MissionEntryMode } from './mission-quick-actions';
 
 interface TopHeaderProps {
   isCollapsed?: boolean;
@@ -53,6 +54,8 @@ interface TopHeaderProps {
   onToggleMobileMenu?: () => void;
   onToggleSidebarLock?: () => void;
   onToggleNavigateOnClick?: () => void;
+  onSelectMissionMode?: (mode: MissionEntryMode) => void;
+  activeMissionMode?: MissionEntryMode;
 }
 
 export function TopHeader({
@@ -64,11 +67,14 @@ export function TopHeader({
   onToggleMobileMenu,
   onToggleSidebarLock,
   onToggleNavigateOnClick,
+  onSelectMissionMode,
+  activeMissionMode = 'form',
 }: TopHeaderProps) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
-  const [missionMode, setMissionMode] = useState<MissionEntryMode | null>(null);
   const accountMenuRef = useRef<HTMLDivElement>(null);
+  const missionMenuRef = useRef<HTMLDivElement>(null);
+  const [isMissionMenuOpen, setIsMissionMenuOpen] = useState(false);
   const router = useRouter();
   const [organizationBranding, setOrganizationBranding] =
     useState<OrganizationBranding | null>(null);
@@ -95,6 +101,24 @@ export function TopHeader({
       document.removeEventListener('keydown', closeOnEscape);
     };
   }, [isAccountMenuOpen]);
+
+  useEffect(() => {
+    if (!isMissionMenuOpen) return;
+    const closeOnOutsideClick = (event: MouseEvent) => {
+      if (missionMenuRef.current && !missionMenuRef.current.contains(event.target as Node)) {
+        setIsMissionMenuOpen(false);
+      }
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsMissionMenuOpen(false);
+    };
+    document.addEventListener('mousedown', closeOnOutsideClick);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('mousedown', closeOnOutsideClick);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [isMissionMenuOpen]);
 
   const handleSignOut = async () => {
     setIsAccountMenuOpen(false);
@@ -251,12 +275,12 @@ export function TopHeader({
       <div
         dir={direction}
         className="
-          pointer-events-none absolute inset-x-2 top-1/2 z-10 w-[calc(100%-1rem)] -translate-y-1/2
-          flex items-center justify-between gap-2
+          pointer-events-none absolute inset-x-3 top-1/2 z-10 w-[calc(100%-1.5rem)] -translate-y-1/2
+          flex min-w-0 items-center justify-between gap-1.5
           md:inset-x-auto md:start-5 md:w-auto md:justify-start
         "
       >
-        <div className="order-1 flex shrink-0 items-center gap-1.5">
+        <div className="order-1 flex shrink-0 items-center gap-1">
         {/* ۱. دکمه کنترل سایدبار (فلش باز/بستن/قفل) */}
         {onToggleSidebar && (
           <div id="sidebar-controls">
@@ -319,10 +343,6 @@ export function TopHeader({
           </button>
         )}
 
-        <button type="button" onClick={() => setMissionMode('form')} title={message('missionShortcutTitle')} aria-label={message('missionShortcutTitle')} className="pointer-events-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--border)] text-[var(--foreground)] lg:hidden">
-          <BriefcaseBusiness size={17}/>
-        </button>
-
         <button
           type="button"
           onClick={cycleTheme}
@@ -336,7 +356,8 @@ export function TopHeader({
 
         {/* کپسول حساب کاربری در سوی مقابل کنترل‌ها */}
         <div className="pointer-events-none order-2 flex shrink-0 items-center gap-1.5">
-        <div ref={accountMenuRef} className="pointer-events-none relative shrink-0">
+        <div className="pointer-events-auto flex shrink-0 items-center gap-1.5" dir="ltr">
+        <div ref={accountMenuRef} dir={direction} className="pointer-events-none relative shrink-0">
           <button
             id="user-profile-header-btn"
             type="button"
@@ -398,6 +419,20 @@ export function TopHeader({
               </button>
             </div>
           )}
+        </div>
+        <div ref={missionMenuRef} className="pointer-events-auto relative lg:hidden">
+          <button type="button" onClick={() => setIsMissionMenuOpen((open) => !open)} title={message('missionShortcutTitle')} aria-label={message('missionShortcutTitle')} aria-haspopup="menu" aria-expanded={isMissionMenuOpen} aria-pressed="true" className="flex size-10 min-w-10 shrink-0 items-center justify-center gap-1 rounded-xl border border-[var(--primary)] bg-[var(--primary-soft)] px-1 text-[var(--primary)]">
+            {activeMissionMode === 'form' ? <FilePlus2 className="size-[17px] shrink-0"/> : activeMissionMode === 'command' ? <SquareTerminal className="size-[17px] shrink-0"/> : <Bot className="size-[17px] shrink-0"/>}
+            <ChevronDown className="size-3 shrink-0"/>
+          </button>
+          {isMissionMenuOpen && <div role="menu" dir={direction} className="absolute start-0 top-full z-[70] mt-2 min-w-48 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-1.5 shadow-xl">
+            {([
+              ['form', FilePlus2, 'missionModeForm'],
+              ['command', SquareTerminal, 'missionModeCommand'],
+              ['ai', Bot, 'missionModeAI'],
+            ] as const).filter(([mode]) => mode !== activeMissionMode).map(([mode, Icon, label]) => <button key={mode} type="button" role="menuitem" onClick={() => { setIsMissionMenuOpen(false); onSelectMissionMode?.(mode); }} className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 py-2.5 text-start text-sm font-medium hover:bg-[var(--primary-soft)] hover:text-[var(--primary)]"><Icon className="size-4 shrink-0"/>{message(label)}</button>)}
+          </div>}
+        </div>
         </div>
         <div className="hidden md:block">
           <HeaderAccountSwitcher userId={user?.id} />
@@ -461,17 +496,16 @@ export function TopHeader({
 
       <div className="pointer-events-none absolute end-5 top-1/2 hidden -translate-y-1/2 items-center gap-1.5 lg:flex" aria-label={message('missionShortcutTitle')}>
         {([
-          ['form', BriefcaseBusiness, 'missionModeForm'],
-          ['command', Code2, 'missionModeCommand'],
           ['ai', Bot, 'missionModeAI'],
+          ['command', SquareTerminal, 'missionModeCommand'],
+          ['form', FilePlus2, 'missionModeForm'],
         ] as const).map(([mode, Icon, label]) => (
-          <button key={mode} type="button" onClick={() => setMissionMode(mode)} title={message(label)} aria-label={message(label)} className="pointer-events-auto flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border)] text-[var(--foreground)] transition-colors hover:border-[var(--primary)] hover:text-[var(--primary)]">
+          <button key={mode} type="button" onClick={() => onSelectMissionMode?.(mode)} title={message(label)} aria-label={message(label)} aria-pressed={activeMissionMode === mode} className={`pointer-events-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition-colors ${activeMissionMode === mode ? 'border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]' : 'border-[var(--border)] text-[var(--foreground)] hover:border-[var(--primary)] hover:text-[var(--primary)]'}`}>
             <Icon size={17}/>
           </button>
         ))}
       </div>
 
-      {missionMode && <MissionQuickActions key={missionMode} initialMode={missionMode} onClose={() => setMissionMode(null)} />}
 
     </header>
   );

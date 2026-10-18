@@ -113,11 +113,11 @@ function NotificationsCenterContent({ initialTab }: { initialTab: DashboardCente
                 tabIndex={activeTab === id ? 0 : -1}
                 onClick={() => selectTab(id)}
                 onKeyDown={handleTabKeyDown}
-                className={`min-h-11 border-b-2 px-3 text-sm font-semibold transition-colors sm:px-4 ${activeTab === id ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                className={`min-h-11 border-b-2 px-3 text-sm font-semibold transition-colors sm:px-4 ${activeTab === id ? 'border-blue-600 text-blue-600' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
               >
                 {message(label)}
                 {unreadCount > 0 && (
-                  <span className="ms-2 inline-flex min-w-5 items-center justify-center rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold leading-none text-primary-foreground" dir="ltr">
+                  <span className="ms-2 inline-flex min-w-5 items-center justify-center rounded-full bg-blue-600 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white" dir="ltr">
                     {unreadCount > 99 ? '99+' : unreadCount}
                   </span>
                 )}

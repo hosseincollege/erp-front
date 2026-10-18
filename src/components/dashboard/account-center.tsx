@@ -35,7 +35,8 @@ function AccountCenter({ view }: { view: 'profile' | 'organization' }) {
 
 function AccountCenterContent({ view }: { view: 'profile' | 'organization' }) {
   const searchParams = useSearchParams();
-  const selectedPersonId = view === 'organization' ? searchParams.get('person') : null;
+  const activeView = view;
+  const selectedPersonId = activeView === 'organization' ? searchParams.get('person') : null;
   const { locale } = usePreferences();
   const direction = getLocaleDirection(locale);
   const t = (key: Parameters<typeof uiMessage>[1]) => uiMessage(locale, key);
@@ -55,7 +56,7 @@ function AccountCenterContent({ view }: { view: 'profile' | 'organization' }) {
     setLoadFailed(false);
     setDirectoryLoadFailed(false);
     try {
-      if (view === 'profile') {
+      if (activeView === 'profile') {
         const currentProfile = await getMyProfile();
         setProfile(currentProfile);
         setDraft({
@@ -67,12 +68,12 @@ function AccountCenterContent({ view }: { view: 'profile' | 'organization' }) {
         setDirectory(await getOrganizationDirectory());
       }
     } catch {
-      if (view === 'profile') setLoadFailed(true);
+      if (activeView === 'profile') setLoadFailed(true);
       else setDirectoryLoadFailed(true);
     } finally {
       setLoading(false);
     }
-  }, [view]);
+  }, [activeView]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- load retrieves account and directory data from the API.
@@ -108,10 +109,10 @@ function AccountCenterContent({ view }: { view: 'profile' | 'organization' }) {
     <div dir={direction} className="mx-auto max-w-5xl space-y-5">
       <header className="rounded-2xl border border-border bg-card p-5">
         <div className="flex items-center gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">{view === 'profile' ? <UserRound size={21} /> : <Building2 size={21} />}</span>
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">{activeView === 'profile' ? <UserRound size={21} /> : <Building2 size={21} />}</span>
           <div className="min-w-0">
-            <h1 className="text-lg font-bold text-foreground">{t(view === 'profile' ? 'accountProfileTab' : 'accountOrganizationTab')}</h1>
-            <p className="mt-1 text-sm text-muted-foreground">{t(view === 'organization' ? 'accountOrganizationDescription' : 'accountProfileDescription')}</p>
+            <h1 className="text-lg font-bold text-foreground">{t(activeView === 'profile' ? 'accountProfileTab' : 'accountOrganizationTab')}</h1>
+            <p className="mt-1 text-sm text-muted-foreground">{t(activeView === 'organization' ? 'accountOrganizationDescription' : 'accountProfileDescription')}</p>
           </div>
         </div>
       </header>
@@ -120,7 +121,7 @@ function AccountCenterContent({ view }: { view: 'profile' | 'organization' }) {
         <div role="status" className="rounded-2xl border border-border bg-card p-10 text-center text-sm text-muted-foreground"><RefreshCw size={19} className="mx-auto mb-3 animate-spin" />{t('notificationsLoading')}</div>
       ) : loadFailed ? (
         <div role="alert" className="rounded-2xl border border-destructive/30 bg-card p-8 text-center text-sm text-destructive"><AlertCircle size={20} className="mx-auto mb-3" />{t('notificationsLoadFailed')}<button type="button" onClick={() => void load()} className="ms-2 underline">{t('notificationsRetry')}</button></div>
-      ) : view === 'profile' ? (
+      ) : activeView === 'profile' ? (
         <ProfilePanel
           profile={profile}
           draft={draft}
@@ -178,7 +179,10 @@ function ProfilePanel({
           <h2 className="text-base font-bold text-foreground">{t('accountProfileTab')}</h2>
           <p className="mt-1 text-sm text-muted-foreground">{t('accountProfileDescription')}</p>
         </div>
-        {!editing && <button type="button" onClick={() => setEditing(true)} className="rounded-xl border border-border px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted">{t('accountEdit')}</button>}
+        <div className="flex flex-wrap gap-2">
+          <Link href="/dashboard/organization" className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-primary/40 px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/5"><Building2 size={16} />{t('accountOrganizationTab')}</Link>
+          {!editing && <button type="button" onClick={() => setEditing(true)} className="rounded-xl border border-border px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted">{t('accountEdit')}</button>}
+        </div>
       </div>
       {saved && <p role="status" className="mb-4 rounded-lg bg-emerald-500/10 p-3 text-sm text-emerald-700 dark:text-emerald-300">{t('accountProfileSaved')}</p>}
       {saveFailed && <p role="alert" className="mb-4 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{t('accountProfileSaveFailed')}</p>}
@@ -249,6 +253,8 @@ function OrganizationPanel({
           <dl className="mt-6 grid gap-4 border-t border-border pt-5 sm:grid-cols-2">
             <InfoRow label={t('accountBranch')} value={person.branch?.name ?? '—'} icon={<MapPin size={16} />} />
             <InfoRow label={t('accountDepartments')} value={department?.name ?? person.department?.name ?? '—'} icon={<BriefcaseBusiness size={16} />} />
+            <InfoRow label={t('usersDetailEmail')} value={person.email ?? '—'} icon={<Mail size={16} />} ltr />
+            <InfoRow label={t('accountPhone')} value={person.phone ?? '—'} icon={<Phone size={16} />} ltr />
             <div className="flex items-center gap-2 text-sm"><span className="text-muted-foreground">{t('usersDetailStatus')}:</span><span className="text-foreground">{person.status === 'ON_LEAVE' ? t('accountOnLeave') : t('usersActive')}</span></div>
             {person.manager && <div className="flex flex-wrap items-center gap-1 text-sm"><span className="text-muted-foreground">{t('accountReportsTo')}:</span><Link href={personHref(person.manager.id)} className="font-semibold text-primary hover:underline">{person.manager.firstName} {person.manager.lastName}</Link></div>}
           </dl>

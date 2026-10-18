@@ -10,6 +10,7 @@ import { Sidebar } from './sidebar';
 import { TopHeader } from './top-header';
 import { ImpersonationBanner } from './impersonation-banner';
 import { getLocaleDirection, getOrganizationAccentStyle, usePreferences } from '@/components/preferences-provider';
+import { MissionQuickActions, type MissionEntryMode } from './mission-quick-actions';
 
 const SIDEBAR_COLLAPSED_KEY = 'erp-sidebar-collapsed';
 const SIDEBAR_LOCKED_KEY = 'erp-sidebar-locked';
@@ -22,6 +23,8 @@ interface AppShellProps {
 export function AppShell({ children }: AppShellProps) {
   const {
     locale,
+    workspaceMode,
+    saveWorkspaceMode,
     organizationAppearance,
     appearancePreview,
     contrastPreferences,
@@ -29,6 +32,7 @@ export function AppShell({ children }: AppShellProps) {
     brightnessPreferences,
     brightnessPreview,
   } = usePreferences();
+  const missionMode: MissionEntryMode | null = workspaceMode === 'form' ? null : workspaceMode;
   const activeAppearance = appearancePreview ?? organizationAppearance;
   const activeContrast = contrastPreview ?? contrastPreferences;
   const activeBrightness = brightnessPreview ?? brightnessPreferences;
@@ -162,6 +166,8 @@ export function AppShell({ children }: AppShellProps) {
       className="erp-app-shell flex h-screen min-h-0 flex-col overflow-hidden bg-[color:var(--background)] text-[color:var(--foreground)] transition-colors duration-200"
     >
       <TopHeader
+        onSelectMissionMode={(mode) => { void saveWorkspaceMode(mode).catch((error) => console.error('Could not save workspace mode:', error)); }}
+        activeMissionMode={workspaceMode}
         isCollapsed={isCollapsed}
         isMobileMenuOpen={isMobileNavOpen}
         isSidebarLocked={isSidebarLocked}
@@ -200,7 +206,7 @@ export function AppShell({ children }: AppShellProps) {
           className="erp-scrollbar min-h-0 min-w-0 flex-1 bg-[color:var(--background)]"
         >
           <div dir={direction} className="min-h-full w-full p-3 text-right sm:p-4 lg:p-6">
-            {children}
+            {missionMode ? <div className="grid min-h-full min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(20rem,0.42fr)]"><div className="min-w-0">{children}</div><MissionQuickActions key={missionMode} initialMode={missionMode} onSelectMode={(mode) => { void saveWorkspaceMode(mode).catch((error) => console.error('Could not save workspace mode:', error)); }} onClose={() => { void saveWorkspaceMode('form').catch((error) => console.error('Could not save workspace mode:', error)); }} /></div> : children}
           </div>
         </main>
       </div>

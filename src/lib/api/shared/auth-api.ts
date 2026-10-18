@@ -39,6 +39,8 @@ export interface OrganizationDirectoryEmployee {
   employeeCode: string;
   firstName: string;
   lastName: string;
+  email: string | null;
+  phone: string | null;
   jobTitle: string | null;
   status: 'ACTIVE' | 'ON_LEAVE';
   branchId: string | null;

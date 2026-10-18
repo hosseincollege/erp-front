@@ -9,6 +9,7 @@ export type UserPreferences = {
   darkContrast: ContrastPreferences['dark'];
   lightBrightness: BrightnessPreferences['light'];
   darkBrightness: BrightnessPreferences['dark'];
+  workspaceMode: 'FORM' | 'COMMAND' | 'AI';
 };
 
 export type SaveUserPreferences = {
@@ -52,6 +53,10 @@ export const preferencesApi = {
       lightBrightness: preferences.brightnessPreferences.light,
       darkBrightness: preferences.brightnessPreferences.dark,
     });
+  },
+
+  saveWorkspaceMode(workspaceMode: 'FORM' | 'COMMAND' | 'AI'): Promise<{ workspaceMode: 'FORM' | 'COMMAND' | 'AI' }> {
+    return apiClient.put('/auth/preferences/workspace-mode', { workspaceMode });
   },
 
   async getOrganizationAppearance(): Promise<OrganizationAppearance> {

@@ -60,10 +60,9 @@ const navigation: NavigationItem[] = [
       { titleKey: 'dashboardNotifications', href: '/dashboard/events' },
       { titleKey: 'dashboardConversation', href: '/dashboard/conversations' },
       { titleKey: 'dashboardPlanning', href: '/dashboard/planning' },
-      { titleKey: 'dashboardHelp', href: '/dashboard/help' },
       { titleKey: 'dashboardSearch', href: '/dashboard/search' },
+      { titleKey: 'dashboardHelp', href: '/dashboard/help' },
       { titleKey: 'dashboardAccount', href: '/dashboard/profile' },
-      { titleKey: 'dashboardOrganization', href: '/dashboard/organization' },
     ],
   },
   {
@@ -337,7 +336,7 @@ export function Sidebar({
     onSetProfileActive?.(false);
     setActiveTab(item.id);
 
-    if (item.href && (navigateOnClick || item.id === 'dashboard')) {
+    if (item.href && navigateOnClick) {
       router.push(item.href);
     }
   };

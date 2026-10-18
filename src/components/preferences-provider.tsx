@@ -32,9 +32,12 @@ export type ContrastLevel = 'soft' | 'balanced' | 'strong';
 export type ContrastPreferences = { light: ContrastLevel; dark: ContrastLevel };
 export type BrightnessPreferences = { light: ContrastLevel; dark: ContrastLevel };
 export type CalendarSystem = 'persian' | 'islamic' | 'gregorian';
+export type WorkspaceMode = 'form' | 'command' | 'ai';
 
 type PreferencesContextValue = {
   locale: Locale;
+  workspaceMode: WorkspaceMode;
+  saveWorkspaceMode: (mode: WorkspaceMode) => Promise<void>;
   contrastPreferences: ContrastPreferences;
   brightnessPreferences: BrightnessPreferences;
   organizationAppearance: OrganizationAppearance;
@@ -193,6 +196,7 @@ function applyOrganizationDisplay(appearance: OrganizationAppearance) {
 }
 
 export function PreferencesProvider({ children }: { children: ReactNode }) {
+  const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>('form');
   const locale = useSyncExternalStore<Locale>(
     subscribePreferences,
     () => {
@@ -243,6 +247,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     if (!getAccessToken()) return;
     try {
       const saved = await preferencesApi.get();
+      setWorkspaceMode(saved.workspaceMode.toLowerCase() as WorkspaceMode);
       window.localStorage.setItem(LOCALE_KEY, saved.locale);
       window.localStorage.setItem(CONTRAST_KEY, JSON.stringify({
         light: saved.lightContrast,
@@ -270,6 +275,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const resetPreferences = () => {
       window.localStorage.removeItem(LOCALE_KEY);
+      setWorkspaceMode('form');
       window.localStorage.removeItem(CONTRAST_KEY);
       window.localStorage.removeItem(BRIGHTNESS_KEY);
       window.localStorage.removeItem(LEGACY_BRIGHTNESS_KEY);
@@ -318,6 +324,17 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     window.dispatchEvent(new Event('erp-preferences-changed'));
   }, []);
 
+  const saveWorkspaceMode = useCallback(async (mode: WorkspaceMode) => {
+    const previous = workspaceMode;
+    setWorkspaceMode(mode);
+    try {
+      await preferencesApi.saveWorkspaceMode(mode.toUpperCase() as 'FORM' | 'COMMAND' | 'AI');
+    } catch (error) {
+      setWorkspaceMode(previous);
+      throw error;
+    }
+  }, [workspaceMode]);
+
   const saveOrganizationAppearance = useCallback(async (appearance: SaveOrganizationAppearance) => {
     const saved = await preferencesApi.saveOrganizationAppearance(appearance);
     const key = `${ORGANIZATION_APPEARANCE_KEY}:${getCurrentOrganizationId() ?? 'none'}`;
@@ -330,6 +347,8 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   const value = useMemo(
     () => ({
       locale,
+      workspaceMode,
+      saveWorkspaceMode,
       contrastPreferences,
       brightnessPreferences,
       organizationAppearance,
@@ -347,6 +366,8 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     }),
     [
       locale,
+      workspaceMode,
+      saveWorkspaceMode,
       contrastPreferences,
       brightnessPreferences,
       organizationAppearance,
