@@ -529,25 +529,6 @@ const messages = {
   accountingNotConfigured:
     "برای این بخش هنوز داده یا سرویس حسابداری ثبت نشده است.",
   accountingManageDenied: "مجوز مدیریت و ثبت اطلاعات حسابداری را ندارید.",
-  sidebarDatabase: "پایگاه داده",
-  databaseTitle: "پایگاه داده",
-  databaseDescription: "مدیریت فایل‌های داده سازمان",
-  databaseScopeNotice:
-    "این ابزار فقط اطلاعات سازمان، شعبه‌ها و دپارتمان‌ها را وارد یا صادر می‌کند؛ پشتیبان کامل ERP نیست.",
-  databaseExport: "خروجی گرفتن",
-  databaseImport: "وارد کردن",
-  databaseExportHelp: "فایل JSON از اطلاعات فعلی سازمان دریافت کنید.",
-  databaseImportHelp:
-    "فایل JSON پشتیبان سازمان را انتخاب کنید؛ رکوردها بر اساس کد به‌روزرسانی یا اضافه می‌شوند و رکوردهای حذف‌شده از فایل پاک نمی‌شوند.",
-  databaseChooseFile: "انتخاب فایل JSON",
-  databaseImportConfirm:
-    "با وارد کردن این فایل، اطلاعات سازمان و ساختار آن به‌روزرسانی می‌شود. ادامه می‌دهید؟",
-  databaseExportSuccess: "خروجی با موفقیت آماده شد.",
-  databaseImportSuccess: "اطلاعات با موفقیت وارد شد.",
-  databaseError: "عملیات ناموفق بود.",
-  databaseInvalidFile: "قالب فایل معتبر نیست.",
-  databaseLoading: "در حال انجام…",
-  databaseNoOrganization: "سازمان فعالی یافت نشد.",
   calendarTitle: "تقویم نمایش تاریخ",
   calendarDescription:
     "تقویم انتخابی برای همهٔ اعضای سازمان در نمایش تاریخ‌ها استفاده می‌شود؛ داده‌ها با قالب استاندارد ذخیره می‌شوند.",
@@ -639,6 +620,7 @@ const messages = {
   developmentShowSwitcherInHeaderDescription: "با فعال‌کردن این گزینه، منوی انتخاب حساب کنار کپسول حساب کاربری نمایش داده می‌شود.",
   testDataLoadFailed: "بارگذاری وضعیت داده‌های تست انجام نشد.",
   testDataApply: "اعمال داده‌های تست",
+  testDataApplyAll: "اعمال همه داده‌ها",
   testDataApplied: "اعمال شده",
   testDataApplying: "در حال اعمال…",
   testDataPending: "هنوز اعمال نشده",

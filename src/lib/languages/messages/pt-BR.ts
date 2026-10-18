@@ -544,25 +544,6 @@ const messages = {
     "Esta seção ainda não possui dados ou serviço contábil disponível.",
   accountingManageDenied:
     "Você não tem permissão para gerenciar os registros contábeis.",
-  sidebarDatabase: "Banco de dados",
-  databaseTitle: "Banco de dados",
-  databaseDescription: "Gerenciar arquivos de dados da organização",
-  databaseScopeNotice:
-    "Esta ferramenta importa ou exporta apenas organização, filiais e departamentos; não é um backup completo do ERP.",
-  databaseExport: "Exportar",
-  databaseImport: "Importar",
-  databaseExportHelp: "Baixe um arquivo JSON com os dados atuais.",
-  databaseImportHelp:
-    "Selecione um backup JSON da organização. Os registros são adicionados ou atualizados pelo código; os ausentes no arquivo não são excluídos.",
-  databaseChooseFile: "Escolher arquivo JSON",
-  databaseImportConfirm:
-    "A importação atualizará os dados e a estrutura da organização. Continuar?",
-  databaseExportSuccess: "A exportação está pronta.",
-  databaseImportSuccess: "Dados importados com sucesso.",
-  databaseError: "A operação falhou.",
-  databaseInvalidFile: "O formato do arquivo é inválido.",
-  databaseLoading: "Processando…",
-  databaseNoOrganization: "Nenhuma organização ativa foi encontrada.",
   calendarTitle: "Calendário de datas",
   calendarDescription:
     "O calendário escolhido vale para as datas de todos os membros; os dados continuam no formato padrão.",
@@ -656,6 +637,7 @@ const messages = {
   developmentShowSwitcherInHeaderDescription: "Quando ativada, a seleção de conta aparece ao lado da cápsula da conta.",
   testDataLoadFailed: "Não foi possível carregar o status dos dados de teste.",
   testDataApply: "Aplicar dados de teste",
+  testDataApplyAll: "Aplicar todos os dados",
   testDataApplied: "Aplicados",
   testDataApplying: "Aplicando…",
   testDataPending: "Ainda não aplicados",

@@ -536,25 +536,6 @@ const messages = {
     "No accounting data or service is available for this section yet.",
   accountingManageDenied:
     "You do not have permission to manage accounting records.",
-  sidebarDatabase: "Database",
-  databaseTitle: "Database",
-  databaseDescription: "Manage organization data files",
-  databaseScopeNotice:
-    "This tool imports or exports organization, branch, and department data only; it is not a full ERP backup.",
-  databaseExport: "Export",
-  databaseImport: "Import",
-  databaseExportHelp: "Download a JSON file of the current organization data.",
-  databaseImportHelp:
-    "Choose an organization JSON backup. Records are added or updated by code; records omitted from the file are not deleted.",
-  databaseChooseFile: "Choose JSON file",
-  databaseImportConfirm:
-    "Importing this file will update organization details and structure. Continue?",
-  databaseExportSuccess: "Export is ready.",
-  databaseImportSuccess: "Data imported successfully.",
-  databaseError: "The operation failed.",
-  databaseInvalidFile: "The file format is invalid.",
-  databaseLoading: "Working…",
-  databaseNoOrganization: "No active organization was found.",
   calendarTitle: "Calendar display",
   calendarDescription:
     "The selected calendar displays dates for everyone in the organization; dates remain stored in the standard format.",
@@ -647,6 +628,7 @@ const messages = {
   developmentShowSwitcherInHeaderDescription: "When enabled, the account picker appears beside the account capsule.",
   testDataLoadFailed: "Could not load test data status.",
   testDataApply: "Apply test data",
+  testDataApplyAll: "Apply all data",
   testDataApplied: "Applied",
   testDataApplying: "Applying…",
   testDataPending: "Not applied yet",

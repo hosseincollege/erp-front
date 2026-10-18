@@ -537,25 +537,6 @@ const messages = {
     "Для этого раздела пока нет бухгалтерских данных или сервиса.",
   accountingManageDenied:
     "У вас нет разрешения на управление бухгалтерскими записями.",
-  sidebarDatabase: "База данных",
-  databaseTitle: "База данных",
-  databaseDescription: "Управление файлами данных организации",
-  databaseScopeNotice:
-    "Этот инструмент импортирует или экспортирует только организацию, филиалы и отделы; это не полная резервная копия ERP.",
-  databaseExport: "Экспорт",
-  databaseImport: "Импорт",
-  databaseExportHelp: "Скачайте JSON-файл текущих данных организации.",
-  databaseImportHelp:
-    "Выберите JSON-копию. Записи добавляются или обновляются по коду; отсутствующие в файле записи не удаляются.",
-  databaseChooseFile: "Выбрать JSON-файл",
-  databaseImportConfirm:
-    "Импорт обновит данные и структуру организации. Продолжить?",
-  databaseExportSuccess: "Экспорт готов.",
-  databaseImportSuccess: "Данные успешно импортированы.",
-  databaseError: "Не удалось выполнить операцию.",
-  databaseInvalidFile: "Неверный формат файла.",
-  databaseLoading: "Выполняется…",
-  databaseNoOrganization: "Активная организация не найдена.",
   calendarTitle: "Календарь отображения дат",
   calendarDescription:
     "Выбранный календарь применяется для отображения дат всем участникам; данные сохраняются в стандартном формате.",
@@ -648,6 +629,7 @@ const messages = {
   developmentShowSwitcherInHeaderDescription: "После включения выбор аккаунта появится рядом с капсулой аккаунта.",
   testDataLoadFailed: "Не удалось загрузить состояние тестовых данных.",
   testDataApply: "Применить тестовые данные",
+  testDataApplyAll: "Применить все данные",
   testDataApplied: "Применено",
   testDataApplying: "Применение…",
   testDataPending: "Ещё не применено",

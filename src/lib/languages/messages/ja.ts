@@ -529,25 +529,6 @@ const messages = {
   accountingNotConfigured:
     "このセクションの会計データまたはサービスはまだ利用できません。",
   accountingManageDenied: "会計記録を管理する権限がありません。",
-  sidebarDatabase: "データベース",
-  databaseTitle: "データベース",
-  databaseDescription: "組織データファイルを管理",
-  databaseScopeNotice:
-    "この機能でインポートまたはエクスポートできるのは組織、支店、部署のデータのみです。ERP全体のバックアップではありません。",
-  databaseExport: "エクスポート",
-  databaseImport: "インポート",
-  databaseExportHelp: "現在の組織データをJSONでダウンロードします。",
-  databaseImportHelp:
-    "組織のJSONバックアップを選択します。コードでレコードを追加・更新し、ファイルにないレコードは削除しません。",
-  databaseChooseFile: "JSONファイルを選択",
-  databaseImportConfirm:
-    "インポートすると組織情報と構成が更新されます。続行しますか？",
-  databaseExportSuccess: "エクスポートの準備ができました。",
-  databaseImportSuccess: "データをインポートしました。",
-  databaseError: "処理に失敗しました。",
-  databaseInvalidFile: "ファイル形式が無効です。",
-  databaseLoading: "処理中…",
-  databaseNoOrganization: "有効な組織が見つかりません。",
   calendarTitle: "日付表示カレンダー",
   calendarDescription:
     "選択した暦は組織内の全メンバーの日付表示に適用されます。データは標準形式で保存されます。",
@@ -638,6 +619,7 @@ const messages = {
   developmentShowSwitcherInHeaderDescription: "有効にすると、アカウント選択がアカウントカプセルの横に表示されます。",
   testDataLoadFailed: "テストデータの状態を読み込めませんでした。",
   testDataApply: "テストデータを適用",
+  testDataApplyAll: "すべてのデータを適用",
   testDataApplied: "適用済み",
   testDataApplying: "適用中…",
   testDataPending: "未適用",

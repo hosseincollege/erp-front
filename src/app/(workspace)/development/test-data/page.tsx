@@ -18,7 +18,7 @@ const modules: Array<{
   { key: 'statistics', title: 'sidebarStatistics', countLabels: { invoices: 'accountingInvoices', leads: 'testDataLeads', opportunities: 'sidebarSalesOpportunities', employees: 'sidebarEmployeeRecords', leaveRequests: 'sidebarLeaveRequests', products: 'sidebarInventory', movements: 'testDataMovements', tickets: 'sidebarAllTickets' } },
   { key: 'settings', title: 'sidebarSettings', countLabels: { branches: 'sidebarOrganizationStructure', departments: 'sidebarOrganizationStructure', announcements: 'sidebarAnnouncements' } },
   { key: 'supply', title: 'sidebarSupplyChain', countLabels: { warehouses: 'testDataWarehouses', products: 'sidebarInventory', balances: 'testDataStockBalances', movements: 'testDataMovements' } },
-  { key: 'support', title: 'sidebarSupport', countLabels: { tickets: 'sidebarAllTickets' } },
+  { key: 'support', title: 'sidebarSupport', countLabels: { projects: 'sidebarProjectManagement', tickets: 'sidebarAllTickets' } },
 ];
 
 export default function TestDataPage() {
@@ -28,6 +28,7 @@ export default function TestDataPage() {
   const [denied, setDenied] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
   const [workingKey, setWorkingKey] = useState<TestDataModuleKey | null>(null);
+  const [applyingAll, setApplyingAll] = useState(false);
   const [failedKey, setFailedKey] = useState<TestDataModuleKey | null>(null);
   const t = (key: Parameters<typeof uiMessage>[1]) => uiMessage(locale, key);
   const appliedCount = statuses.filter((item) => item.applied).length;
@@ -63,6 +64,25 @@ export default function TestDataPage() {
     }
   };
 
+  const applyAllModules = async () => {
+    setApplyingAll(true);
+    setFailedKey(null);
+    const order: TestDataModuleKey[] = ['settings', 'human-resources', 'accounting', 'commerce', 'supply', 'support', 'statistics'];
+    for (const moduleKey of order) {
+      setWorkingKey(moduleKey);
+      try {
+        const result = await developmentApi.applyTestData(moduleKey);
+        setStatuses((current) => current.map((item) => item.moduleKey === moduleKey ? result : item));
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 403) setDenied(true);
+        else setFailedKey(moduleKey);
+        break;
+      }
+    }
+    setWorkingKey(null);
+    setApplyingAll(false);
+  };
+
   const countLabel = (count: number) => t('testDataRecordCount').replace('{count}', new Intl.NumberFormat(locale).format(count));
 
   return (
@@ -84,9 +104,15 @@ export default function TestDataPage() {
         </div>
       ) : (
         <>
-          <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-card px-4 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
             <span className="text-sm font-semibold text-foreground">{t('testDataProgress')}</span>
-            <span className="text-sm tabular-nums text-muted-foreground">{new Intl.NumberFormat(locale).format(appliedCount)} / {modules.length}</span>
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-sm tabular-nums text-muted-foreground">{new Intl.NumberFormat(locale).format(appliedCount)} / {modules.length}</span>
+              <button type="button" onClick={() => void applyAllModules()} disabled={loading || applyingAll || workingKey !== null || denied} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50">
+                {applyingAll && <LoaderCircle size={16} className="animate-spin" />}
+                {applyingAll ? t('testDataApplying') : t('testDataApplyAll')}
+              </button>
+            </div>
           </div>
           {loading ? (
             <p className="rounded-xl border border-border bg-card p-5 text-sm text-muted-foreground">{t('testDataLoading')}</p>
@@ -117,7 +143,7 @@ export default function TestDataPage() {
                         {failedKey === key && <p role="alert" className="mt-1 text-sm text-red-600 dark:text-red-300">{t('testDataApplyFailed')}</p>}
                       </div>
                     </div>
-                    <button type="button" onClick={() => void applyModule(key)} disabled={loading || busy || denied} className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50">
+                    <button type="button" onClick={() => void applyModule(key)} disabled={loading || busy || workingKey !== null || applyingAll || denied} className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50">
                       {busy && <LoaderCircle size={16} className="animate-spin" />}
                       {busy ? t('testDataApplying') : applied ? t('testDataApplyAgain') : t('testDataApply')}
                     </button>

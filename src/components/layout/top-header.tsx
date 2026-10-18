@@ -27,7 +27,6 @@ import {
   FilePlus2,
   SquareTerminal,
   ChevronLeft,
-  ChevronDown,
   LogOut,
   Lock,
   Menu,
@@ -421,16 +420,15 @@ export function TopHeader({
           )}
         </div>
         <div ref={missionMenuRef} className="pointer-events-auto relative lg:hidden">
-          <button type="button" onClick={() => setIsMissionMenuOpen((open) => !open)} title={message('missionShortcutTitle')} aria-label={message('missionShortcutTitle')} aria-haspopup="menu" aria-expanded={isMissionMenuOpen} aria-pressed="true" className="flex size-10 min-w-10 shrink-0 items-center justify-center gap-1 rounded-xl border border-[var(--primary)] bg-[var(--primary-soft)] px-1 text-[var(--primary)]">
+          <button type="button" onClick={() => setIsMissionMenuOpen((open) => !open)} title={message('missionShortcutTitle')} aria-label={message('missionShortcutTitle')} aria-haspopup="menu" aria-expanded={isMissionMenuOpen} aria-pressed="true" className="flex size-10 min-w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]">
             {activeMissionMode === 'form' ? <FilePlus2 className="size-[17px] shrink-0"/> : activeMissionMode === 'command' ? <SquareTerminal className="size-[17px] shrink-0"/> : <Bot className="size-[17px] shrink-0"/>}
-            <ChevronDown className="size-3 shrink-0"/>
           </button>
-          {isMissionMenuOpen && <div role="menu" dir={direction} className="absolute start-0 top-full z-[70] mt-2 min-w-48 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-1.5 shadow-xl">
+          {isMissionMenuOpen && <div role="menu" dir={direction} className={`absolute ${direction === 'rtl' ? 'end-0' : 'start-0'} top-full z-[70] mt-2 w-max min-w-40 max-w-[calc(100vw-1rem)] rounded-xl border border-[var(--border)] bg-[var(--surface)] p-1 shadow-xl`}>
             {([
               ['form', FilePlus2, 'missionModeForm'],
               ['command', SquareTerminal, 'missionModeCommand'],
               ['ai', Bot, 'missionModeAI'],
-            ] as const).filter(([mode]) => mode !== activeMissionMode).map(([mode, Icon, label]) => <button key={mode} type="button" role="menuitem" onClick={() => { setIsMissionMenuOpen(false); onSelectMissionMode?.(mode); }} className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 py-2.5 text-start text-sm font-medium hover:bg-[var(--primary-soft)] hover:text-[var(--primary)]"><Icon className="size-4 shrink-0"/>{message(label)}</button>)}
+            ] as const).map(([mode, Icon, label]) => <button key={mode} type="button" role="menuitemradio" aria-checked={activeMissionMode === mode} onClick={() => { setIsMissionMenuOpen(false); onSelectMissionMode?.(mode); }} className={`flex min-h-10 w-full items-center gap-2 rounded-lg px-2.5 py-2 text-start text-sm font-medium ${activeMissionMode === mode ? 'bg-[var(--primary-soft)] text-[var(--primary)]' : 'text-[var(--foreground)] hover:bg-[var(--primary-soft)] hover:text-[var(--primary)]'}`}><Icon className="size-4 shrink-0"/>{message(label)}</button>)}
           </div>}
         </div>
         </div>

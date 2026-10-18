@@ -513,18 +513,13 @@ export const settingsApi = {
     return apiClient.put<RoleItem[], RoleItem[]>(`/settings/roles/${id}`, roles);
   },
 
-  async exportOrganization(orgId: string): Promise<unknown> {
-    const id = assertOrgId(orgId);
-    return apiClient.get<unknown>(`/settings/export/${id}`);
-  },
-
   async importOrganization(
     orgId: string,
     data: OrganizationImportPayload,
   ): Promise<CompanySettings> {
-    const id = assertOrgId(orgId);
+    assertOrgId(orgId);
     return apiClient.post<CompanySettings, OrganizationImportPayload>(
-      `/settings/import/${id}`,
+      '/settings/organization/import',
       data,
     );
   },

@@ -540,25 +540,6 @@ const messages = {
     "Aucune donnée ni aucun service comptable n’est encore disponible pour cette section.",
   accountingManageDenied:
     "Vous n’avez pas l’autorisation de gérer les écritures comptables.",
-  sidebarDatabase: "Base de données",
-  databaseTitle: "Base de données",
-  databaseDescription: "Gérer les fichiers de données de l’organisation",
-  databaseScopeNotice:
-    "Cet outil importe ou exporte uniquement l’organisation, les agences et les services ; ce n’est pas une sauvegarde ERP complète.",
-  databaseExport: "Exporter",
-  databaseImport: "Importer",
-  databaseExportHelp: "Téléchargez un fichier JSON des données actuelles.",
-  databaseImportHelp:
-    "Choisissez une sauvegarde JSON. Les enregistrements sont ajoutés ou mis à jour par code ; ceux absents du fichier ne sont pas supprimés.",
-  databaseChooseFile: "Choisir un fichier JSON",
-  databaseImportConfirm:
-    "L’import mettra à jour les informations et la structure de l’organisation. Continuer ?",
-  databaseExportSuccess: "L’export est prêt.",
-  databaseImportSuccess: "Données importées avec succès.",
-  databaseError: "L’opération a échoué.",
-  databaseInvalidFile: "Le format du fichier est invalide.",
-  databaseLoading: "Traitement…",
-  databaseNoOrganization: "Aucune organisation active trouvée.",
   calendarTitle: "Calendrier des dates",
   calendarDescription:
     "Le calendrier choisi s’applique aux dates de tous les membres ; les données restent stockées au format standard.",
@@ -653,6 +634,7 @@ const messages = {
   developmentShowSwitcherInHeaderDescription: "Une fois activé, le sélecteur apparaît à côté de la capsule du compte.",
   testDataLoadFailed: "Impossible de charger l’état des données d’essai.",
   testDataApply: "Appliquer les données d’essai",
+  testDataApplyAll: "Appliquer toutes les données",
   testDataApplied: "Appliquées",
   testDataApplying: "Application…",
   testDataPending: "Pas encore appliquées",

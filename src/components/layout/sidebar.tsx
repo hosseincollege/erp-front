@@ -135,7 +135,6 @@ const navigation: NavigationItem[] = [
       { titleKey: 'sidebarRolesPermissions', href: '/settings/roles' },
       { titleKey: 'sidebarUserAccounts', href: '/settings/accounts' },
       { titleKey: 'sidebarProjectManagement', href: '/settings/projects' },
-      { titleKey: 'sidebarDatabase', href: '/settings/database' },
     ],
   },
   {

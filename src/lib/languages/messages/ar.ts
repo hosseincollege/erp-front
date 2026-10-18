@@ -524,25 +524,6 @@ const messages = {
   accountingOverdue: "متأخر",
   accountingNotConfigured: "لا تتوفر بيانات أو خدمة محاسبية لهذا القسم بعد.",
   accountingManageDenied: "ليست لديك صلاحية لإدارة السجلات المحاسبية.",
-  sidebarDatabase: "قاعدة البيانات",
-  databaseTitle: "قاعدة البيانات",
-  databaseDescription: "إدارة ملفات بيانات المؤسسة",
-  databaseScopeNotice:
-    "تستورد هذه الأداة بيانات المؤسسة والفروع والأقسام أو تصدرها فقط؛ وهي ليست نسخة احتياطية كاملة للنظام.",
-  databaseExport: "تصدير",
-  databaseImport: "استيراد",
-  databaseExportHelp: "نزّل ملف JSON لبيانات المؤسسة الحالية.",
-  databaseImportHelp:
-    "اختر نسخة JSON للمؤسسة. تُضاف السجلات أو تُحدّث حسب الرمز، ولا تُحذف السجلات غير الموجودة في الملف.",
-  databaseChooseFile: "اختيار ملف JSON",
-  databaseImportConfirm:
-    "سيؤدي الاستيراد إلى تحديث بيانات المؤسسة وهيكلها. هل تريد المتابعة؟",
-  databaseExportSuccess: "أصبح التصدير جاهزًا.",
-  databaseImportSuccess: "تم استيراد البيانات بنجاح.",
-  databaseError: "تعذرت العملية.",
-  databaseInvalidFile: "تنسيق الملف غير صالح.",
-  databaseLoading: "جارٍ التنفيذ…",
-  databaseNoOrganization: "لم يتم العثور على مؤسسة نشطة.",
   calendarTitle: "تقويم عرض التواريخ",
   calendarDescription:
     "يُستخدم التقويم المحدد لعرض التواريخ لجميع أعضاء المؤسسة؛ وتظل البيانات محفوظة بالتنسيق القياسي.",
@@ -633,6 +614,7 @@ const messages = {
   developmentShowSwitcherInHeaderDescription: "عند التفعيل، يظهر اختيار الحساب بجانب كبسولة الحساب.",
   testDataLoadFailed: "تعذر تحميل حالة البيانات التجريبية.",
   testDataApply: "تطبيق البيانات التجريبية",
+  testDataApplyAll: "تطبيق جميع البيانات",
   testDataApplied: "تم التطبيق",
   testDataApplying: "جارٍ التطبيق…",
   testDataPending: "لم تُطبق بعد",

@@ -542,26 +542,6 @@ const messages = {
     "Für diesen Bereich sind noch keine Buchhaltungsdaten oder Dienste verfügbar.",
   accountingManageDenied:
     "Sie haben keine Berechtigung, Buchhaltungsdaten zu verwalten.",
-  sidebarDatabase: "Datenbank",
-  databaseTitle: "Datenbank",
-  databaseDescription: "Datendateien der Organisation verwalten",
-  databaseScopeNotice:
-    "Dieses Werkzeug importiert oder exportiert nur Organisation, Niederlassungen und Abteilungen; es ist keine vollständige ERP-Sicherung.",
-  databaseExport: "Exportieren",
-  databaseImport: "Importieren",
-  databaseExportHelp:
-    "Lade eine JSON-Datei der aktuellen Organisationsdaten herunter.",
-  databaseImportHelp:
-    "Wähle eine JSON-Sicherung. Datensätze werden anhand des Codes ergänzt oder aktualisiert; fehlende Datensätze werden nicht gelöscht.",
-  databaseChooseFile: "JSON-Datei auswählen",
-  databaseImportConfirm:
-    "Der Import aktualisiert Organisationsdaten und Struktur. Fortfahren?",
-  databaseExportSuccess: "Der Export ist bereit.",
-  databaseImportSuccess: "Daten erfolgreich importiert.",
-  databaseError: "Der Vorgang ist fehlgeschlagen.",
-  databaseInvalidFile: "Das Dateiformat ist ungültig.",
-  databaseLoading: "Wird verarbeitet…",
-  databaseNoOrganization: "Keine aktive Organisation gefunden.",
   calendarTitle: "Kalenderdarstellung",
   calendarDescription:
     "Der gewählte Kalender gilt für die Datumsanzeige aller Mitglieder; gespeichert werden die Daten weiterhin im Standardformat.",
@@ -655,6 +635,7 @@ const messages = {
   developmentShowSwitcherInHeaderDescription: "Wenn aktiviert, erscheint die Kontauswahl neben der Kontokapsel.",
   testDataLoadFailed: "Der Status der Testdaten konnte nicht geladen werden.",
   testDataApply: "Testdaten anwenden",
+  testDataApplyAll: "Alle Daten anwenden",
   testDataApplied: "Angewendet",
   testDataApplying: "Wird angewendet…",
   testDataPending: "Noch nicht angewendet",
