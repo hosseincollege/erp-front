@@ -4,19 +4,24 @@ import { Suspense, useEffect, useState, type KeyboardEvent } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { usePreferences, getLocaleDirection } from '@/components/preferences-provider';
 import { uiMessage } from '@/lib/ui-messages';
+import { Activity, Bell, BookOpen, History, Megaphone, Search } from 'lucide-react';
 import { ActivityPanel } from './activity-panel';
 import { AnnouncementsPanel } from './announcements-panel';
 import { HistoryPanel } from './history-panel';
 import { NotificationsPanel } from './notifications-panel';
+import { SystemSearchPage } from './system-search';
+import { UserGuidePage } from './user-guide';
 import { notificationsApi } from '@/lib/api/shared/notifications-api';
 
-export type DashboardCenterTab = 'notifications' | 'announcements' | 'history' | 'activity';
+export type DashboardCenterTab = 'notifications' | 'announcements' | 'history' | 'activity' | 'search' | 'help';
 
-const tabs: Array<{ id: DashboardCenterTab; label: 'notifications' | 'dashboardMessages' | 'dashboardHistory' | 'dashboardActivities' }> = [
-  { id: 'notifications', label: 'notifications' },
-  { id: 'announcements', label: 'dashboardMessages' },
-  { id: 'history', label: 'dashboardHistory' },
-  { id: 'activity', label: 'dashboardActivities' },
+const tabs: Array<{ id: DashboardCenterTab; label: 'notifications' | 'dashboardMessages' | 'dashboardHistory' | 'dashboardActivities' | 'dashboardSearch' | 'dashboardHelp'; icon: typeof Bell }> = [
+  { id: 'notifications', label: 'notifications', icon: Bell },
+  { id: 'announcements', label: 'dashboardMessages', icon: Megaphone },
+  { id: 'search', label: 'dashboardSearch', icon: Search },
+  { id: 'history', label: 'dashboardHistory', icon: History },
+  { id: 'activity', label: 'dashboardActivities', icon: Activity },
+  { id: 'help', label: 'dashboardHelp', icon: BookOpen },
 ];
 
 const validTabs = new Set<DashboardCenterTab>(tabs.map(({ id }) => id));
@@ -28,7 +33,7 @@ function readTabFromLocation(fallback: DashboardCenterTab): DashboardCenterTab {
 
 export function NotificationsCenter({ initialTab = 'notifications' }: { initialTab?: DashboardCenterTab }) {
   return (
-    <Suspense fallback={<div className="mx-auto min-h-32 max-w-5xl" aria-hidden="true" />}>
+    <Suspense fallback={<div className="min-h-32 w-full" aria-hidden="true" />}>
       <NotificationsCenterContent initialTab={initialTab} />
     </Suspense>
   );
@@ -90,15 +95,17 @@ function NotificationsCenterContent({ initialTab }: { initialTab: DashboardCente
       case 'announcements': return <AnnouncementsPanel />;
       case 'history': return <HistoryPanel />;
       case 'activity': return <ActivityPanel />;
+      case 'search': return <SystemSearchPage />;
+      case 'help': return <UserGuidePage />;
       default: return <NotificationsPanel />;
     }
   };
 
   return (
-    <div dir={direction} className="mx-auto max-w-5xl space-y-4">
+    <div dir={direction} className="w-full space-y-4">
       <div className="overflow-x-auto border-b border-border">
         <div role="tablist" aria-label={message('notificationsTitle')} className="flex min-w-max gap-1">
-          {tabs.map(({ id, label }) => {
+          {tabs.map(({ id, label, icon: Icon }) => {
             const unreadCount = id === 'notifications'
               ? Object.entries(unreadBySource).filter(([source]) => source !== 'announcements').reduce((total, [, count]) => total + count, 0)
               : id === 'announcements' ? unreadBySource.announcements ?? 0 : 0;
@@ -113,11 +120,13 @@ function NotificationsCenterContent({ initialTab }: { initialTab: DashboardCente
                 tabIndex={activeTab === id ? 0 : -1}
                 onClick={() => selectTab(id)}
                 onKeyDown={handleTabKeyDown}
-                className={`min-h-11 border-b-2 px-3 text-sm font-semibold transition-colors sm:px-4 ${activeTab === id ? 'border-blue-600 text-blue-600' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                style={activeTab === id ? { color: 'var(--primary)', borderBottomColor: 'var(--primary)' } : undefined}
+                className={`inline-flex min-h-11 items-center gap-2 border-b-2 px-3 text-sm font-semibold transition-colors sm:px-4 ${activeTab === id ? 'border-[var(--primary)] text-[var(--primary)]' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
               >
+                <Icon size={16} />
                 {message(label)}
                 {unreadCount > 0 && (
-                  <span className="ms-2 inline-flex min-w-5 items-center justify-center rounded-full bg-blue-600 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white" dir="ltr">
+                  <span className="ms-2 inline-flex min-w-5 items-center justify-center rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold leading-none text-primary-foreground" dir="ltr">
                     {unreadCount > 99 ? '99+' : unreadCount}
                   </span>
                 )}

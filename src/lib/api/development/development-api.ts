@@ -16,7 +16,7 @@ export type ImpersonationContext =
     };
 
 type AccessTokenResponse = { access_token: string };
-export type TestDataModuleKey = 'accounting' | 'commerce' | 'human-resources' | 'statistics' | 'settings' | 'supply' | 'support';
+export type TestDataModuleKey = 'accounting' | 'commerce' | 'human-resources' | 'statistics' | 'settings' | 'support';
 export type TestDataModuleStatus = {
   moduleKey: TestDataModuleKey;
   applied: boolean;

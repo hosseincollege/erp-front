@@ -2,13 +2,15 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ShoppingBag, UsersRound } from 'lucide-react';
+import { Package, ShoppingBag, ShoppingCart, UsersRound } from 'lucide-react';
 import { getLocaleDirection, usePreferences } from '@/components/preferences-provider';
 import { uiMessage } from '@/lib/ui-messages';
 
 const sections = [
   { href: '/commerce/customers', key: 'sidebarCustomers' as const, icon: UsersRound },
   { href: '/commerce/sales', key: 'sidebarSales' as const, icon: ShoppingBag },
+  { href: '/commerce/inventory', key: 'sidebarInventory' as const, icon: Package },
+  { href: '/commerce/purchasing', key: 'sidebarPurchases' as const, icon: ShoppingCart },
 ];
 
 export function CommercialModuleNav() {

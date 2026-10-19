@@ -1,4 +1,4 @@
-// Path: frontend/src/lib/api/supply/inventory-api.ts
+// Path: frontend/src/lib/api/commercial/inventory-api.ts
 // Frontend - API client helpers for inventory module
 
 import { apiClient } from '@/lib/api-client';

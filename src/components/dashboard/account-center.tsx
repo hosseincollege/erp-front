@@ -180,7 +180,7 @@ function ProfilePanel({
           <p className="mt-1 text-sm text-muted-foreground">{t('accountProfileDescription')}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link href="/dashboard/organization" className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-primary/40 px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/5"><Building2 size={16} />{t('accountOrganizationTab')}</Link>
+          <Link href="/settings/organization" className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-primary/40 px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/5"><Building2 size={16} />{t('accountOrganizationTab')}</Link>
           {!editing && <button type="button" onClick={() => setEditing(true)} className="rounded-xl border border-border px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted">{t('accountEdit')}</button>}
         </div>
       </div>

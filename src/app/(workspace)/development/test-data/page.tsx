@@ -13,11 +13,10 @@ const modules: Array<{
   countLabels: Record<string, Parameters<typeof uiMessage>[1]>;
 }> = [
   { key: 'accounting', title: 'sidebarAccounting', countLabels: { accounts: 'accountingChartOfAccounts', invoices: 'accountingInvoices', vouchers: 'sidebarAccountingEntries' } },
-  { key: 'commerce', title: 'sidebarCommercial', countLabels: { accounts: 'sidebarCustomers', contacts: 'testDataContacts', leads: 'testDataLeads', opportunities: 'sidebarSalesOpportunities' } },
+  { key: 'commerce', title: 'sidebarCommercial', countLabels: { accounts: 'sidebarCustomers', contacts: 'testDataContacts', leads: 'testDataLeads', opportunities: 'sidebarSalesOpportunities', warehouses: 'testDataWarehouses', products: 'sidebarInventory', balances: 'testDataStockBalances', movements: 'testDataMovements' } },
   { key: 'human-resources', title: 'sidebarHumanResources', countLabels: { employees: 'sidebarEmployeeRecords', leaveRequests: 'sidebarLeaveRequests', attendanceRecords: 'sidebarAttendance', payrollRecords: 'sidebarPayroll' } },
   { key: 'statistics', title: 'sidebarStatistics', countLabels: { invoices: 'accountingInvoices', leads: 'testDataLeads', opportunities: 'sidebarSalesOpportunities', employees: 'sidebarEmployeeRecords', leaveRequests: 'sidebarLeaveRequests', products: 'sidebarInventory', movements: 'testDataMovements', tickets: 'sidebarAllTickets' } },
   { key: 'settings', title: 'sidebarSettings', countLabels: { branches: 'sidebarOrganizationStructure', departments: 'sidebarOrganizationStructure', announcements: 'sidebarAnnouncements' } },
-  { key: 'supply', title: 'sidebarSupplyChain', countLabels: { warehouses: 'testDataWarehouses', products: 'sidebarInventory', balances: 'testDataStockBalances', movements: 'testDataMovements' } },
   { key: 'support', title: 'sidebarSupport', countLabels: { projects: 'sidebarProjectManagement', tickets: 'sidebarAllTickets' } },
 ];
 
@@ -29,9 +28,14 @@ export default function TestDataPage() {
   const [loadFailed, setLoadFailed] = useState(false);
   const [workingKey, setWorkingKey] = useState<TestDataModuleKey | null>(null);
   const [applyingAll, setApplyingAll] = useState(false);
-  const [failedKey, setFailedKey] = useState<TestDataModuleKey | null>(null);
+  const [failedKeys, setFailedKeys] = useState<TestDataModuleKey[]>([]);
   const t = (key: Parameters<typeof uiMessage>[1]) => uiMessage(locale, key);
-  const appliedCount = statuses.filter((item) => item.applied).length;
+  const visibleStatuses = modules.map(({ key }) => statuses.find((item) => item.moduleKey === key));
+  const appliedCount = visibleStatuses.filter((item) => item?.applied).length;
+
+  const updateModuleStatus = (result: TestDataModuleStatus) => {
+    setStatuses((current) => current.map((item) => item.moduleKey === result.moduleKey ? result : item));
+  };
 
   const loadStatuses = useCallback(async () => {
     setLoading(true);
@@ -52,13 +56,13 @@ export default function TestDataPage() {
 
   const applyModule = async (moduleKey: TestDataModuleKey) => {
     setWorkingKey(moduleKey);
-    setFailedKey(null);
+    setFailedKeys((current) => current.filter((key) => key !== moduleKey));
     try {
       const result = await developmentApi.applyTestData(moduleKey);
-      setStatuses((current) => current.map((item) => item.moduleKey === moduleKey ? result : item));
+      updateModuleStatus(result);
     } catch (error) {
       if (error instanceof ApiError && error.status === 403) setDenied(true);
-      else setFailedKey(moduleKey);
+      else setFailedKeys((current) => current.includes(moduleKey) ? current : [...current, moduleKey]);
     } finally {
       setWorkingKey(null);
     }
@@ -66,17 +70,19 @@ export default function TestDataPage() {
 
   const applyAllModules = async () => {
     setApplyingAll(true);
-    setFailedKey(null);
-    const order: TestDataModuleKey[] = ['settings', 'human-resources', 'accounting', 'commerce', 'supply', 'support', 'statistics'];
+    setFailedKeys([]);
+    const order: TestDataModuleKey[] = ['settings', 'human-resources', 'accounting', 'commerce', 'support', 'statistics'];
     for (const moduleKey of order) {
       setWorkingKey(moduleKey);
       try {
         const result = await developmentApi.applyTestData(moduleKey);
-        setStatuses((current) => current.map((item) => item.moduleKey === moduleKey ? result : item));
+        updateModuleStatus(result);
       } catch (error) {
-        if (error instanceof ApiError && error.status === 403) setDenied(true);
-        else setFailedKey(moduleKey);
-        break;
+        if (error instanceof ApiError && error.status === 403) {
+          setDenied(true);
+          break;
+        }
+        setFailedKeys((current) => current.includes(moduleKey) ? current : [...current, moduleKey]);
       }
     }
     setWorkingKey(null);
@@ -118,8 +124,8 @@ export default function TestDataPage() {
             <p className="rounded-xl border border-border bg-card p-5 text-sm text-muted-foreground">{t('testDataLoading')}</p>
           ) : (
             <div className="space-y-3">
-              {modules.map(({ key, title, countLabels }) => {
-                const status = statuses.find((item) => item.moduleKey === key);
+              {modules.map(({ key, title, countLabels }, index) => {
+                const status = visibleStatuses[index];
                 const applied = Boolean(status?.applied);
                 const busy = workingKey === key;
                 return (
@@ -140,7 +146,7 @@ export default function TestDataPage() {
                           </ul>
                         )}
                         {key === 'statistics' && <p className="mt-1 text-xs leading-5 text-muted-foreground">{t('testDataStatisticsNote')}</p>}
-                        {failedKey === key && <p role="alert" className="mt-1 text-sm text-red-600 dark:text-red-300">{t('testDataApplyFailed')}</p>}
+                        {failedKeys.includes(key) && <p role="alert" className="mt-1 text-sm text-red-600 dark:text-red-300">{t('testDataApplyFailed')}</p>}
                       </div>
                     </div>
                     <button type="button" onClick={() => void applyModule(key)} disabled={loading || busy || workingKey !== null || applyingAll || denied} className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50">

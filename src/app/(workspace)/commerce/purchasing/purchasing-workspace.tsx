@@ -1,6 +1,6 @@
 /**
  * مسیر فایل:
- * src/app/(workspace)/supply/purchasing/purchasing-workspace.tsx
+ * src/app/(workspace)/commerce/purchasing/purchasing-workspace.tsx
  *
  * هدف:
  * داشبورد بهینه‌شده مدیریت تدارکات و زنجیره تأمین بدون هدر سنگین مقدماتی:

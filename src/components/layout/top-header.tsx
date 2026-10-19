@@ -356,6 +356,9 @@ export function TopHeader({
         {/* کپسول حساب کاربری در سوی مقابل کنترل‌ها */}
         <div className="pointer-events-none order-2 flex shrink-0 items-center gap-1.5">
         <div className="pointer-events-auto flex shrink-0 items-center gap-1.5" dir="ltr">
+        <div className="hidden md:block">
+          <HeaderAccountSwitcher userId={user?.id} />
+        </div>
         <div ref={accountMenuRef} dir={direction} className="pointer-events-none relative shrink-0">
           <button
             id="user-profile-header-btn"
@@ -365,8 +368,9 @@ export function TopHeader({
             aria-haspopup="menu"
             aria-expanded={isAccountMenuOpen}
             className={`
-              pointer-events-auto flex cursor-pointer select-none items-center gap-2.5
-              rounded-2xl border p-1.5 pe-4 ps-1.5 transition-all
+              pointer-events-auto flex size-10 cursor-pointer select-none items-center justify-center
+              rounded-full border p-0 transition-all sm:h-auto sm:w-auto sm:justify-start
+              sm:gap-2.5 sm:rounded-2xl sm:p-1.5 sm:pe-4 sm:ps-1.5
               ${isAccountMenuOpen ? 'border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]' : 'border-[var(--border)] text-[var(--foreground)]'}
               focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]/40
             `}
@@ -376,7 +380,7 @@ export function TopHeader({
             className="
               pointer-events-none
               flex h-7 w-7 items-center
-              justify-center rounded-xl
+              justify-center rounded-full
               font-black text-white shadow-inner text-xs
             "
             style={{ backgroundColor: 'var(--primary)' }}
@@ -384,7 +388,7 @@ export function TopHeader({
             {user?.name ? (
               user.name.charAt(0).toUpperCase()
             ) : (
-              <User size={16} />
+              <User size={17} />
             )}
           </div>
 
@@ -405,13 +409,16 @@ export function TopHeader({
           </div>
           </button>
           {isAccountMenuOpen && (
-            <div role="menu" className="pointer-events-auto absolute end-0 top-full z-[60] mt-2 min-w-44 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-1.5 shadow-lg md:start-full md:top-1/2 md:mt-0 md:ms-2 md:end-auto md:-translate-y-1/2">
-              <HeaderAccountSwitcher userId={user?.id} embedded />
+            <div role="menu" className={`pointer-events-auto absolute end-0 top-full z-[60] mt-2 min-w-48 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-1.5 shadow-lg md:top-1/2 md:mt-0 md:min-w-36 md:p-1 md:-translate-y-1/2 ${direction === 'rtl' ? 'md:right-full md:left-auto md:me-2' : 'md:left-full md:right-auto md:ms-2'}`}>
+              <div className="md:hidden">
+                <HeaderAccountSwitcher userId={user?.id} embedded />
+                <div className="my-1 border-t border-[var(--border)]" />
+              </div>
               <button
                 type="button"
                 role="menuitem"
                 onClick={handleSignOut}
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-start text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-start text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30 md:min-h-8 md:gap-1.5 md:px-2 md:text-xs"
               >
                 <LogOut size={16} />
                 {message('sidebarSignOut')}
@@ -431,9 +438,6 @@ export function TopHeader({
             ] as const).map(([mode, Icon, label]) => <button key={mode} type="button" role="menuitemradio" aria-checked={activeMissionMode === mode} onClick={() => { setIsMissionMenuOpen(false); onSelectMissionMode?.(mode); }} className={`flex min-h-10 w-full items-center gap-2 rounded-lg px-2.5 py-2 text-start text-sm font-medium ${activeMissionMode === mode ? 'bg-[var(--primary-soft)] text-[var(--primary)]' : 'text-[var(--foreground)] hover:bg-[var(--primary-soft)] hover:text-[var(--primary)]'}`}><Icon className="size-4 shrink-0"/>{message(label)}</button>)}
           </div>}
         </div>
-        </div>
-        <div className="hidden md:block">
-          <HeaderAccountSwitcher userId={user?.id} />
         </div>
         </div>
       </div>

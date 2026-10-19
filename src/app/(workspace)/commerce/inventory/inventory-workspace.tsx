@@ -1,6 +1,6 @@
 /**
  * مسیر فایل:
- * src/app/(workspace)/supply/inventory/inventory-workspace.tsx
+ * src/app/(workspace)/commerce/inventory/inventory-workspace.tsx
  *
  * هدف:
  * داشبورد جامع مدیریت انبار و موجودی کالا هماهنگ با طراحی مینیمال و یکپارچه:
@@ -29,7 +29,7 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 
-import { inventoryApi } from "@/lib/api/supply/inventory-api";
+import { inventoryApi } from "@/lib/api/commercial/inventory-api";
 import { DemoJsonToolbar } from "@/components/demo-json-toolbar";
 import { usePreferences } from "@/components/preferences-provider";
 import { uiMessage } from "@/lib/ui-messages";

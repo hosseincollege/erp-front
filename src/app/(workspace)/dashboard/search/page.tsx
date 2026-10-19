@@ -1,5 +1,5 @@
-import { SystemSearchPage } from '@/components/dashboard/system-search';
+import { redirect } from 'next/navigation';
 
 export default function SearchPage() {
-  return <SystemSearchPage />;
+  redirect('/dashboard/events?tab=search');
 }

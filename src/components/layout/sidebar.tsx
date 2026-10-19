@@ -28,7 +28,6 @@ import {
   ExternalLink,
   LayoutDashboard,
   LogOut,
-  Package,
   Settings,
   Ticket,
   User,
@@ -39,6 +38,7 @@ type NavigationSubItem = {
   titleKey?: UiMessage;
   title?: string;
   href: string;
+  activeHrefs?: string[];
 };
 
 type NavigationItem = {
@@ -57,11 +57,8 @@ const navigation: NavigationItem[] = [
     icon: LayoutDashboard,
     href: '/dashboard',
     sub: [
-      { titleKey: 'dashboardNotifications', href: '/dashboard/events' },
+      { titleKey: 'dashboardTools', href: '/dashboard/events' },
       { titleKey: 'dashboardConversation', href: '/dashboard/conversations' },
-      { titleKey: 'dashboardPlanning', href: '/dashboard/planning' },
-      { titleKey: 'dashboardSearch', href: '/dashboard/search' },
-      { titleKey: 'dashboardHelp', href: '/dashboard/help' },
       { titleKey: 'dashboardAccount', href: '/dashboard/profile' },
     ],
   },
@@ -88,6 +85,8 @@ const navigation: NavigationItem[] = [
     sub: [
       { titleKey: 'sidebarCustomers', href: '/commerce/customers' },
       { titleKey: 'sidebarSales', href: '/commerce/sales' },
+      { titleKey: 'sidebarInventory', href: '/commerce/inventory' },
+      { titleKey: 'sidebarPurchases', href: '/commerce/purchasing' },
     ],
   },
   {
@@ -100,16 +99,6 @@ const navigation: NavigationItem[] = [
       { titleKey: 'sidebarAttendance', href: '/human-resources/attendance' },
       { titleKey: 'sidebarLeaveRequests', href: '/human-resources/leaves' },
       { titleKey: 'sidebarPayroll', href: '/human-resources/payroll' },
-    ],
-  },
-  {
-    id: 'supply-chain',
-    titleKey: 'sidebarSupplyChain',
-    icon: Package,
-    href: '/supply',
-    sub: [
-      { titleKey: 'sidebarInventory', href: '/supply/inventory' },
-      { titleKey: 'sidebarPurchases', href: '/supply/purchasing' },
     ],
   },
   {
@@ -130,11 +119,8 @@ const navigation: NavigationItem[] = [
     sub: [
       { titleKey: 'sidebarGeneral', href: '/settings/general' },
       { titleKey: 'sidebarAnnouncementManagement', href: '/settings/announcements' },
-      { titleKey: 'sidebarCompanyInformation', href: '/settings/company' },
-      { titleKey: 'sidebarOrganizationStructure', href: '/settings/organization' },
-      { titleKey: 'sidebarRolesPermissions', href: '/settings/roles' },
-      { titleKey: 'sidebarUserAccounts', href: '/settings/accounts' },
-      { titleKey: 'sidebarProjectManagement', href: '/settings/projects' },
+      { titleKey: 'settingsOrganizationWorkspace', href: '/settings/company', activeHrefs: ['/settings/company', '/settings/organization', '/settings/projects'] },
+      { titleKey: 'settingsAccessWorkspace', href: '/settings/roles', activeHrefs: ['/settings/roles', '/settings/accounts'] },
     ],
   },
   {
@@ -352,7 +338,7 @@ export function Sidebar({
     ...item,
     title: message(item.titleKey),
     sub: item.id === 'support'
-      ? supportProjects.map((project) => ({ title: project.name, href: `/support/projects/${encodeURIComponent(project.id)}` }))
+      ? supportProjects.map((project) => ({ title: project.name, href: `/support/projects/${encodeURIComponent(project.id)}`, activeHrefs: undefined }))
       : item.id === 'human-resources'
         ? item.sub?.filter((subItem) => subItem.href === '/human-resources/employees'
           ? Boolean(hrAccess?.canViewEmployees || hrAccess?.employeeId)
@@ -368,7 +354,7 @@ export function Sidebar({
   const activePath = pathname;
   const isModuleLandingActive = Boolean(activeGroup && activePath === activeGroup.href);
   const activeSubItemPath = activeGroup?.sub
-    ?.map((subItem) => subItem.href.split(/[?#]/)[0])
+    ?.flatMap((subItem) => (subItem.activeHrefs ?? [subItem.href]).map((href) => href.split(/[?#]/)[0]))
     .filter((href) => activePath === href || activePath.startsWith(`${href}/`))
     .sort((left, right) => right.length - left.length)[0];
 
@@ -516,7 +502,7 @@ export function Sidebar({
             <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto overscroll-contain">
               {activeGroup.sub && activeGroup.sub.length > 0 ? (
                 activeGroup.sub.map((subItem, index) => {
-                  const isActive = activeSubItemPath === subItem.href.split(/[?#]/)[0];
+                  const isActive = (subItem.activeHrefs ?? [subItem.href]).some((href) => activeSubItemPath === href.split(/[?#]/)[0]);
 
                   return (
                     <Link

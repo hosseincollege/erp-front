@@ -22,7 +22,7 @@ export type OrganizationAppearance = {
   accentPreset: 'blue' | 'green' | 'red' | 'amber' | 'violet' | 'custom';
   accentLightColor: `#${string}`;
   accentDarkColor: `#${string}`;
-  backgroundStyle: 'THEME' | 'GRAY';
+  backgroundStyle: 'NAVY' | 'GRAY' | 'THEME';
   timezone: string;
   calendar: CalendarSystem;
   canEdit: boolean;

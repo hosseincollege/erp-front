@@ -10,7 +10,7 @@ import type { UiMessage } from '@/lib/languages/types';
 
 const moduleLabels: Record<string, UiMessage> = {
   dashboard: 'sidebarDashboard', accounting: 'sidebarAccounting', commerce: 'sidebarCommercial',
-  'human-resources': 'sidebarHumanResources', supply: 'sidebarSupplyChain', statistics: 'sidebarStatistics',
+  'human-resources': 'sidebarHumanResources', supply: 'testDataInventoryPurchases', statistics: 'sidebarStatistics',
   settings: 'sidebarSettings', support: 'sidebarSupport', development: 'sidebarDevelopment', home: 'sidebarDashboard',
 };
 

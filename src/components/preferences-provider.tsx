@@ -58,7 +58,7 @@ const LOCALE_KEY = 'erp-locale';
 const CONTRAST_KEY = 'erp-shell-contrast-v2';
 const BRIGHTNESS_KEY = 'erp-shell-brightness';
 const LEGACY_BRIGHTNESS_KEY = 'erp-shell-contrast';
-const ORGANIZATION_APPEARANCE_KEY = 'erp-organization-appearance';
+const ORGANIZATION_APPEARANCE_KEY = 'erp-organization-appearance-v2';
 const DEFAULT_CONTRAST = { light: 'balanced', dark: 'balanced' } as const satisfies ContrastPreferences;
 const DEFAULT_CONTRAST_SNAPSHOT = JSON.stringify(DEFAULT_CONTRAST);
 const DEFAULT_ORGANIZATION_APPEARANCE: OrganizationAppearance = {
@@ -148,7 +148,9 @@ function parseOrganizationAppearance(value: string): OrganizationAppearance {
       accentDarkColor: isHexColor(parsed.accentDarkColor ?? null)
         ? parsed.accentDarkColor!
         : DEFAULT_ORGANIZATION_APPEARANCE.accentDarkColor,
-      backgroundStyle: parsed.backgroundStyle === 'THEME' ? 'THEME' : 'GRAY',
+      backgroundStyle: parsed.backgroundStyle === 'THEME' || parsed.backgroundStyle === 'GRAY'
+        ? parsed.backgroundStyle
+        : 'GRAY',
       calendar: parsed.calendar === 'islamic' || parsed.calendar === 'gregorian'
         ? parsed.calendar
         : 'persian',

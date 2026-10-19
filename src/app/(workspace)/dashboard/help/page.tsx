@@ -1,5 +1,5 @@
-import { UserGuidePage } from '@/components/dashboard/user-guide';
+import { redirect } from 'next/navigation';
 
 export default function HelpPage() {
-  return <UserGuidePage />;
+  redirect('/dashboard/events?tab=help');
 }

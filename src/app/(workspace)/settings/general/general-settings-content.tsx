@@ -187,8 +187,8 @@ export function GeneralSettingsContent() {
           <div>
             <h3 className="text-sm font-bold text-foreground">{message('backgroundStyleTitle')}</h3>
             <p className="mt-1 text-xs leading-6 text-muted-foreground">{message('backgroundStyleDescription')}</p>
-            <div className="mt-3 grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label={message('backgroundStyleTitle')}>
-              {(['GRAY', 'THEME'] as const).map((style) => (
+            <div className="mt-3 grid gap-3 sm:grid-cols-3" role="radiogroup" aria-label={message('backgroundStyleTitle')}>
+              {(['GRAY', 'NAVY', 'THEME'] as const).map((style) => (
                 <button
                   key={style}
                   type="button"
@@ -197,7 +197,7 @@ export function GeneralSettingsContent() {
                   onClick={() => setDraftAppearance((current) => ({ ...current, backgroundStyle: style }))}
                   className={`rounded-xl border p-3 text-start text-sm font-semibold transition ${draftAppearance.backgroundStyle === style ? 'border-primary bg-primary-soft text-foreground ring-2 ring-primary/20' : 'border-border bg-background text-foreground hover:border-primary/50'}`}
                 >
-                  {message(style === 'THEME' ? 'backgroundTheme' : 'backgroundGray')}
+                  {message(style === 'THEME' ? 'backgroundTheme' : style === 'NAVY' ? 'backgroundNavy' : 'backgroundGray')}
                 </button>
               ))}
             </div>
