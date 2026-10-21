@@ -182,6 +182,7 @@ export interface UserItem {
   lastName?: string;
   email?: string | null;
   phone?: string | null;
+  nationalId?: string | null;
   status?: string;
   isSystemUser?: boolean;
   role?: string | null;

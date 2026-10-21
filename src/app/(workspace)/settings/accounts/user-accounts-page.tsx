@@ -31,6 +31,8 @@ const emptyFormData: UserFormData = {
   username: '',
   password: '',
   email: '',
+  nationalId: '',
+  isSystemUser: false,
   role: 'USER',
   department: '',
   isActive: true,
@@ -161,6 +163,8 @@ export function UserAccountsPage() {
       username: user.username ?? '',
       password: '',
       email: user.email ?? '',
+      nationalId: user.nationalId ?? '',
+      isSystemUser: Boolean(user.isSystemUser),
       role: user.role ?? user.roleKey ?? 'USER',
       department: user.department ?? '',
       isActive: user.isActive ?? user.status === 'ACTIVE',
@@ -176,6 +180,11 @@ export function UserAccountsPage() {
     const department = data.department.trim();
     const password = data.password?.trim() ? data.password.trim() : undefined;
     const { firstName, lastName } = getNameParts(name);
+
+    if (!editingUserId && (!password || password.length < 8)) {
+      setErrorMessage(uiMessage(locale, 'accountPasswordCreateHint'));
+      return;
+    }
 
     if (!name || !email) {
       setErrorMessage('نام و ایمیل کاربر الزامی است.');
@@ -212,6 +221,7 @@ export function UserAccountsPage() {
             firstName,
             lastName,
             email,
+            nationalId: data.nationalId.trim() || null,
             role,
             roleKey: role,
             department: department || undefined,
@@ -229,6 +239,7 @@ export function UserAccountsPage() {
           firstName,
           lastName,
           email,
+          nationalId: data.nationalId.trim() || null,
           phone: null,
           status: data.isActive ? 'ACTIVE' : 'DISABLED',
           isSystemUser: false,
@@ -306,6 +317,7 @@ export function UserAccountsPage() {
           lastName: item.lastName || lastName,
           email: email || null,
           phone: item.phone ?? null,
+          nationalId: item.nationalId,
           status: isActive ? 'ACTIVE' : 'DISABLED',
           isSystemUser: Boolean(item.isSystemUser),
           role,

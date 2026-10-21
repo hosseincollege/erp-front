@@ -13,6 +13,8 @@ import {
   type FormEvent,
 } from 'react';
 import Link from 'next/link';
+import { usePreferences } from '@/components/preferences-provider';
+import { uiMessage } from '@/lib/ui-messages';
 import {
   Building,
   Building2,
@@ -80,6 +82,7 @@ const INITIAL_DEPARTMENT_FORM: DepartmentFormState = {
 };
 
 export function OrganizationStructurePage() {
+  const { locale } = usePreferences();
   const [branches, setBranches] = useState<BranchItem[]>([]);
   const [departments, setDepartments] = useState<
     DepartmentWithDisplayFields[]
@@ -661,7 +664,7 @@ export function OrganizationStructurePage() {
           </div>
 
           <p className="mt-1 text-xs text-muted-foreground">
-            مدیریت شعبه‌ها، دفاتر، دپارتمان‌ها و واحدهای سازمانی
+            {uiMessage(locale, 'organizationStructureManagementDescription')}
           </p>
         </div>
 
@@ -741,7 +744,7 @@ export function OrganizationStructurePage() {
           <div className="flex items-center gap-2">
             <Building size={18} className="text-blue-600" />
             <h3 className="text-sm font-bold text-[var(--foreground)]">
-              شعبه‌ها و دفاتر
+              {uiMessage(locale, 'accountBranches')}
             </h3>
             <span className="rounded-md bg-slate-100 px-2 py-0.5 font-mono text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-400">
               {branches.length}
@@ -863,7 +866,7 @@ export function OrganizationStructurePage() {
           <div className="flex items-center gap-2">
             <Layers size={18} className="text-emerald-600" />
             <h3 className="text-sm font-bold text-[var(--foreground)]">
-              دپارتمان‌ها و واحدها
+              {uiMessage(locale, 'accountDepartments')}
             </h3>
             <span className="rounded-md bg-slate-100 px-2 py-0.5 font-mono text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-400">
               {visibleDepartments.length}

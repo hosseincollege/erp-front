@@ -7,14 +7,23 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { getLocaleDirection, usePreferences } from '@/components/preferences-provider';
 import { login } from '@/lib/api/shared/auth-api';
+import { ApiError } from '@/lib/api-client';
+import { uiMessage } from '@/lib/ui-messages';
 import { PublicHeader } from '@/components/layout/public-header';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { locale } = usePreferences();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({ email: '', password: '' });
+
+  const handleFillDemo = () => {
+    setFormData({ email: 'demo', password: 'demo' });
+    setError(null);
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -28,7 +37,9 @@ export default function LoginPage() {
     } catch (err) {
       const message = err instanceof Error ? err.message : 'خطای ناشناخته در ورود';
 
-      if (message.includes('identifier')) {
+      if (err instanceof ApiError && err.status === 429) {
+        setError(uiMessage(locale, 'authRateLimited'));
+      } else if (message.includes('identifier')) {
         setError('نام کاربری یا ایمیل وارد شده یافت نشد.');
       } else {
         setError(message.replace(/\|/g, '، '));
@@ -39,16 +50,9 @@ export default function LoginPage() {
   };
 
   // تابع پر کردن خودکار اطلاعات دمو
-  const handleFillDemo = () => {
-    setFormData({
-      email: 'demo',
-      password: 'demo',
-    });
-    setError(null);
-  };
 
   return (
-    <main dir="rtl" className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
+    <main dir={getLocaleDirection(locale)} className="min-h-screen bg-[var(--background)] text-[var(--foreground)]">
       <style jsx global>{`
         input:-webkit-autofill,
         input:-webkit-autofill:hover,
@@ -69,23 +73,13 @@ export default function LoginPage() {
             ورود به سیستم
           </h1>
 
-          {/* باکس حساب دمو - مرتب و جمع‌وجور */}
-          <div className="mb-6 rounded-xl border border-blue-500/20 bg-blue-500/10 p-3.5 text-xs text-blue-900 dark:border-blue-500/30 dark:bg-blue-950/40 dark:text-blue-200">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[13px]">
-                <div>
-                  نام کاربری: <span className="font-bold text-blue-600 dark:text-blue-400">demo</span>
-                </div>
-                <div>
-                  کلمه عبور: <span className="font-bold text-blue-600 dark:text-blue-400">demo</span>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={handleFillDemo}
-                className="rounded-md bg-blue-600/10 px-2 py-1 text-[11px] font-medium text-blue-600 transition hover:bg-blue-600 hover:text-white dark:bg-blue-400/10 dark:text-blue-300 dark:hover:bg-blue-500 dark:hover:text-white"
-              >
-                پر کردن خودکار
+          <div className="mb-5 rounded-xl border border-blue-500/20 bg-blue-500/10 p-3 text-sm">
+            <p className="font-semibold">{uiMessage(locale, 'loginDemoTitle')}</p>
+            <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">{uiMessage(locale, 'loginDemoCredentials')}</p>
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+              <span dir="ltr" className="font-mono text-xs">demo / demo</span>
+              <button type="button" onClick={handleFillDemo} className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700">
+                {uiMessage(locale, 'loginFillDemo')}
               </button>
             </div>
           </div>

@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -54,8 +54,8 @@ const EMPTY_FORM: RegisterFormData = {
 
 const SAMPLE_JSON: RegisterFormData = {
   username: 'admin',
-  password: 'ChangeMe123!',
-  confirmPassword: 'ChangeMe123!',
+  password: '',
+  confirmPassword: '',
   firstName: 'مدیر',
   lastName: 'سیستم',
   fatherName: '',
@@ -154,11 +154,6 @@ export default function RegisterPage() {
     };
   }, []);
 
-  const sampleJsonText = useMemo(
-    () => JSON.stringify(SAMPLE_JSON, null, 2),
-    [],
-  );
-
   const updateField = (
     key: keyof RegisterFormData,
     value: string,
@@ -170,6 +165,15 @@ export default function RegisterPage() {
   };
 
   const downloadSampleJson = () => {
+    const randomBytes = new Uint8Array(24);
+    window.crypto.getRandomValues(randomBytes);
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+    const samplePassword = Array.from(randomBytes, (byte) => alphabet[byte & 63]).join('');
+    const sampleJsonText = JSON.stringify({
+      ...SAMPLE_JSON,
+      password: samplePassword,
+      confirmPassword: samplePassword,
+    }, null, 2);
     const blob = new Blob([sampleJsonText], {
       type: 'application/json',
     });
