@@ -1,0 +1,46 @@
+cd frontend
+npm run dev
+
+
+
+cd backend
+npm run start:dev
+
+
+
+فرانت
+npm run build
+
+
+git add .
+git commit -m "Final working "
+git push origin main --force
+
+
+
+
+
+
+ریست خودکار و کامل با Prisma
+
+npx prisma migrate reset --force
+
+
+npx prisma validate
+npx prisma migrate deploy   # اگر جداول ساخته نشده‌اند
+npx prisma generate
+
+
+npx prisma validate     # باید OK بدهد
+npx prisma db push      # ساخت جداول
+npx prisma generate     # تولید کلاینت
+npm run start:dev
+
+
+ریست دیتابیس ورسل تو پوشه بکند پاورشل
+
+$env:DATABASE_URL="postgres://a333cc93957b851597481d6abce55f2df35e42d48808a6c8d1511642a4798b35:sk_4Irm0N7J5oOr3q7GhdNr3@db.prisma.io:5432/postgres?sslmode=require"
+npx prisma db push --force-reset --schema=prisma/schema
+
+دیتابیس ورسل تو پوشه بکند پاورشل
+$env:DATABASE_URL="postgres://a333cc93957b851597481d6abce55f2df35e42d48808a6c8d1511642a4798b35:sk_4Irm0N7J5oOr3q7GhdNr3@db.prisma.io:5432/postgres?sslmode=require"; npx prisma db push
