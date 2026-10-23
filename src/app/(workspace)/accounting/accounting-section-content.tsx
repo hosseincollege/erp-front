@@ -3,7 +3,7 @@
 import { BookOpen, FileText, Landmark } from 'lucide-react';
 import { usePreferences, getLocaleDirection } from '@/components/preferences-provider';
 import { uiMessage } from '@/lib/ui-messages';
-import type { UiMessage } from '@/lib/languages/types';
+import type { UiMessage } from '@/languages/types';
 
 const icons: Partial<Record<UiMessage, typeof BookOpen>> = {
   accountingChartOfAccounts: BookOpen,

@@ -3,9 +3,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { CheckCircle2, Circle, Database, LoaderCircle } from 'lucide-react';
 import { getLocaleDirection, usePreferences } from '@/components/preferences-provider';
-import { developmentApi, type TestDataModuleKey, type TestDataModuleStatus } from '@/lib/api/development/development-api';
+import { developmentApi, type TestDataModuleKey, type TestDataModuleStatus } from '@/app/(workspace)/development/development-api';
 import { ApiError } from '@/lib/api-client';
 import { uiMessage } from '@/lib/ui-messages';
+import { isReducedEdition } from '@/lib/product-edition';
+import { readModuleVisibility, type OptionalModuleId } from '@/lib/module-visibility';
 
 const modules: Array<{
   key: TestDataModuleKey;
@@ -17,8 +19,10 @@ const modules: Array<{
   { key: 'human-resources', title: 'sidebarHumanResources', countLabels: { employees: 'sidebarEmployeeRecords', leaveRequests: 'sidebarLeaveRequests', attendanceRecords: 'sidebarAttendance', payrollRecords: 'sidebarPayroll' } },
   { key: 'statistics', title: 'sidebarStatistics', countLabels: { invoices: 'accountingInvoices', leads: 'testDataLeads', opportunities: 'sidebarSalesOpportunities', employees: 'sidebarEmployeeRecords', leaveRequests: 'sidebarLeaveRequests', products: 'sidebarInventory', movements: 'testDataMovements', tickets: 'sidebarAllTickets' } },
   { key: 'settings', title: 'sidebarSettings', countLabels: { branches: 'sidebarOrganizationStructure', departments: 'sidebarOrganizationStructure', announcements: 'sidebarAnnouncements' } },
+  { key: 'rahcom', title: 'sidebarRahkam', countLabels: {} },
   { key: 'support', title: 'sidebarSupport', countLabels: { projects: 'sidebarProjectManagement', tickets: 'sidebarAllTickets' } },
 ];
+const optionalKeys: OptionalModuleId[] = ['accounting', 'commerce', 'human-resources', 'support', 'statistics'];
 
 export default function TestDataPage() {
   const { locale } = usePreferences();
@@ -29,8 +33,17 @@ export default function TestDataPage() {
   const [workingKey, setWorkingKey] = useState<TestDataModuleKey | null>(null);
   const [applyingAll, setApplyingAll] = useState(false);
   const [failedKeys, setFailedKeys] = useState<TestDataModuleKey[]>([]);
+  const [visibility, setVisibility] = useState(() => readModuleVisibility(isReducedEdition));
+  useEffect(() => {
+    const refresh = () => setVisibility(readModuleVisibility(isReducedEdition));
+    refresh();
+    window.addEventListener('erp-module-visibility-change', refresh);
+    window.addEventListener('storage', refresh);
+    return () => { window.removeEventListener('erp-module-visibility-change', refresh); window.removeEventListener('storage', refresh); };
+  }, []);
+  const visibleModules = modules.filter(({ key }) => !optionalKeys.includes(key as OptionalModuleId) || visibility[key as OptionalModuleId]);
   const t = (key: Parameters<typeof uiMessage>[1]) => uiMessage(locale, key);
-  const visibleStatuses = modules.map(({ key }) => statuses.find((item) => item.moduleKey === key));
+  const visibleStatuses = visibleModules.map(({ key }) => statuses.find((item) => item.moduleKey === key));
   const appliedCount = visibleStatuses.filter((item) => item?.applied).length;
 
   const updateModuleStatus = (result: TestDataModuleStatus) => {
@@ -55,11 +68,13 @@ export default function TestDataPage() {
   useEffect(() => { void loadStatuses(); }, [loadStatuses]);
 
   const applyModule = async (moduleKey: TestDataModuleKey) => {
+    if (!visibleModules.some((module) => module.key === moduleKey)) return;
     setWorkingKey(moduleKey);
     setFailedKeys((current) => current.filter((key) => key !== moduleKey));
     try {
       const result = await developmentApi.applyTestData(moduleKey);
       updateModuleStatus(result);
+      if (moduleKey === 'settings') window.dispatchEvent(new Event('organization-branding-changed'));
     } catch (error) {
       if (error instanceof ApiError && error.status === 403) setDenied(true);
       else setFailedKeys((current) => current.includes(moduleKey) ? current : [...current, moduleKey]);
@@ -71,12 +86,13 @@ export default function TestDataPage() {
   const applyAllModules = async () => {
     setApplyingAll(true);
     setFailedKeys([]);
-    const order: TestDataModuleKey[] = ['settings', 'human-resources', 'accounting', 'commerce', 'support', 'statistics'];
-    for (const moduleKey of order) {
+    const order: TestDataModuleKey[] = ['settings', 'rahcom', 'human-resources', 'accounting', 'commerce', 'support', 'statistics'];
+    for (const moduleKey of order.filter((key) => visibleModules.some((module) => module.key === key))) {
       setWorkingKey(moduleKey);
       try {
         const result = await developmentApi.applyTestData(moduleKey);
         updateModuleStatus(result);
+        if (moduleKey === 'settings') window.dispatchEvent(new Event('organization-branding-changed'));
       } catch (error) {
         if (error instanceof ApiError && error.status === 403) {
           setDenied(true);
@@ -113,7 +129,7 @@ export default function TestDataPage() {
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
             <span className="text-sm font-semibold text-foreground">{t('testDataProgress')}</span>
             <div className="flex flex-wrap items-center gap-3">
-              <span className="text-sm tabular-nums text-muted-foreground">{new Intl.NumberFormat(locale).format(appliedCount)} / {modules.length}</span>
+              <span className="text-sm tabular-nums text-muted-foreground">{new Intl.NumberFormat(locale).format(appliedCount)} / {visibleModules.length}</span>
               <button type="button" onClick={() => void applyAllModules()} disabled={loading || applyingAll || workingKey !== null || denied} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50">
                 {applyingAll && <LoaderCircle size={16} className="animate-spin" />}
                 {applyingAll ? t('testDataApplying') : t('testDataApplyAll')}
@@ -124,7 +140,7 @@ export default function TestDataPage() {
             <p className="rounded-xl border border-border bg-card p-5 text-sm text-muted-foreground">{t('testDataLoading')}</p>
           ) : (
             <div className="space-y-3">
-              {modules.map(({ key, title, countLabels }, index) => {
+              {visibleModules.map(({ key, title, countLabels }, index) => {
                 const status = visibleStatuses[index];
                 const applied = Boolean(status?.applied);
                 const busy = workingKey === key;

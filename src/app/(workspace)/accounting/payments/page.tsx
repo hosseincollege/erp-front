@@ -4,9 +4,9 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { RefreshCw } from 'lucide-react';
 import { usePreferences, getLocaleDirection } from '@/components/preferences-provider';
-import { accountingApi } from '@/lib/api/accounting/accounting-api';
+import { accountingApi } from '@/app/(workspace)/accounting/accounting-api';
 import { uiMessage } from '@/lib/ui-messages';
-import type { AccountingPaymentActivity } from '@/types/accounting';
+import type { AccountingPaymentActivity } from '@/app/(workspace)/accounting/types';
 
 export default function AccountingPaymentsPage() {
   const { locale } = usePreferences();

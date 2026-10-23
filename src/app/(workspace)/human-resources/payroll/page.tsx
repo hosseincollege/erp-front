@@ -1,1 +1,1 @@
-export { default } from "../payroll-page";
+export { default } from "./payroll-page";

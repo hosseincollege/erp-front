@@ -67,6 +67,7 @@ function toSaveAppearance(appearance: OrganizationAppearance): SaveOrganizationA
 export function GeneralSettingsContent() {
   const {
     locale,
+    savedLocale,
     contrastPreferences,
     brightnessPreferences,
     organizationAppearance,
@@ -74,11 +75,12 @@ export function GeneralSettingsContent() {
     previewContrastPreferences,
     previewBrightnessPreferences,
     previewOrganizationAppearance,
+    previewLocale,
     savePreferences,
     saveOrganizationAppearance,
   } = usePreferences();
   const { resolvedTheme } = useTheme();
-  const [draftLocale, setDraftLocale] = useState<Locale>(locale);
+  const [draftLocale, setDraftLocale] = useState<Locale>(savedLocale);
   const [draftContrast, setDraftContrast] = useState<ContrastPreferences>(contrastPreferences);
   const [draftBrightness, setDraftBrightness] = useState<BrightnessPreferences>(brightnessPreferences);
   const [draftAppearance, setDraftAppearance] = useState<SaveOrganizationAppearance>(
@@ -88,7 +90,8 @@ export function GeneralSettingsContent() {
   const [isSaving, setIsSaving] = useState(false);
   const message = (key: Parameters<typeof uiMessage>[1]) => uiMessage(locale, key);
 
-  useEffect(() => setDraftLocale(locale), [locale]);
+  useEffect(() => setDraftLocale(savedLocale), [savedLocale]);
+  useEffect(() => () => previewLocale(null), [previewLocale]);
   useEffect(() => setDraftContrast(contrastPreferences), [contrastPreferences]);
   useEffect(() => setDraftBrightness(brightnessPreferences), [brightnessPreferences]);
   useEffect(() => setDraftAppearance(toSaveAppearance(organizationAppearance)), [organizationAppearance]);
@@ -310,7 +313,11 @@ export function GeneralSettingsContent() {
         <select
           id="display-language"
           value={draftLocale}
-          onChange={(event) => setDraftLocale(event.target.value as Locale)}
+          onChange={(event) => {
+            const nextLocale = event.target.value as Locale;
+            setDraftLocale(nextLocale);
+            previewLocale(nextLocale);
+          }}
           className="w-full max-w-sm rounded-xl border border-border bg-background px-3.5 py-2.5 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
         >
           {localeOptions.map((option) => <option key={option.id} value={option.id}>{option.name}</option>)}
@@ -329,6 +336,7 @@ export function GeneralSettingsContent() {
               if (canEditOrganizationAppearance) await saveOrganizationAppearance(draftAppearance);
               previewContrastPreferences(null);
               previewOrganizationAppearance(null);
+              previewLocale(null);
             } catch {
               setSaveError(true);
             } finally {

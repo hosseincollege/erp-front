@@ -7,17 +7,27 @@ import { useParams } from 'next/navigation';
 import { ArrowRight, FolderKanban, Plus, Ticket as TicketIcon } from 'lucide-react';
 import { getLocaleDirection, usePreferences } from '@/components/preferences-provider';
 import { uiMessage } from '@/lib/ui-messages';
+import { isReducedEdition } from '@/lib/product-edition';
+import { readShellVisibility } from '@/lib/module-visibility';
 import { projectsApi, type SupportProjectItem } from '@/lib/api/shared/projects-api';
-import { ticketApi } from '@/lib/api/tickets/ticket-api';
-import type { Ticket } from '@/types/ticket';
+import { ticketApi } from '@/app/(workspace)/support/ticket-api';
+import type { Ticket } from '@/app/(workspace)/support/types';
 
 export default function SupportProjectPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const { locale } = usePreferences();
+  const [navigationVisibility, setNavigationVisibility] = useState(() => readShellVisibility(isReducedEdition).navigationItems ?? {});
   const [project, setProject] = useState<SupportProjectItem | null>(null);
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    const refresh = () => setNavigationVisibility(readShellVisibility(isReducedEdition).navigationItems ?? {});
+    window.addEventListener('erp-module-visibility-change', refresh);
+    window.addEventListener('storage', refresh);
+    return () => { window.removeEventListener('erp-module-visibility-change', refresh); window.removeEventListener('storage', refresh); };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -40,7 +50,7 @@ export default function SupportProjectPage() {
     <Link href="/support" className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-primary"><ArrowRight size={16}/>{uiMessage(locale, 'sidebarSupport')}</Link>
     <header className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-6">
       <div className="flex items-center gap-3"><span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary"><FolderKanban size={21}/></span><div><p className="text-xs text-muted-foreground">{uiMessage(locale, 'supportProjectLabel')}</p><h1 className="mt-1 text-xl font-bold text-foreground">{project?.name ?? (loading ? uiMessage(locale, 'supportLoading') : '')}</h1>{project && <p dir="ltr" className="mt-1 text-start font-mono text-xs text-muted-foreground">{project.code}</p>}</div></div>
-      {project && canCreate && <Link href={`/support/new?projectId=${encodeURIComponent(project.id)}`} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground"><Plus size={17}/>{uiMessage(locale, 'supportNewTicket')}</Link>}
+      {project && canCreate && navigationVisibility['/support/new'] !== false && <Link href={`/support/new?projectId=${encodeURIComponent(project.id)}`} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground"><Plus size={17}/>{uiMessage(locale, 'supportNewTicket')}</Link>}
     </header>
     {error && <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-600">{error}</div>}
     {project?.supportRole === 'VIEWER' && <p className="rounded-xl border border-border bg-muted/30 p-3 text-sm text-muted-foreground">{uiMessage(locale, 'supportProjectViewOnly')}</p>}

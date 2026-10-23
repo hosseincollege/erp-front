@@ -29,8 +29,8 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 
-import { inventoryApi } from "@/lib/api/commercial/inventory-api";
-import { DemoJsonToolbar } from "@/components/demo-json-toolbar";
+import { inventoryApi } from "@/app/(workspace)/commerce/inventory/inventory-api";
+import { DemoJsonToolbar } from "@/app/(workspace)/commerce/components/demo-json-toolbar";
 import { usePreferences } from "@/components/preferences-provider";
 import { uiMessage } from "@/lib/ui-messages";
 import type {
@@ -40,7 +40,7 @@ import type {
   InventoryProduct,
   InventorySummary,
   InventoryWarehouse,
-} from "@/types/inventory";
+} from "@/app/(workspace)/commerce/inventory/types";
 
 type InventoryTab = "inventory" | "products" | "warehouses" | "history";
 

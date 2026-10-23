@@ -1,1 +1,1 @@
-export { default } from "../attendance-page";
+export { default } from "./attendance-page";

@@ -15,7 +15,7 @@ import {
 } from "@/components/preferences-provider";
 import { apiClient } from "@/lib/api-client";
 import { uiMessage } from "@/lib/ui-messages";
-import type { UiMessage } from "@/lib/languages/types";
+import type { UiMessage } from "@/languages/types";
 
 type ReportCategory = "ALL" | "FINANCIAL" | "SALES" | "HR" | "INVENTORY";
 type ReportPeriod = "THIS_MONTH" | "LAST_QUARTER" | "YEAR_TO_DATE";

@@ -5,9 +5,9 @@ import { FileText, Receipt, Wallet, AlertCircle, Clock3, CheckCircle2 } from 'lu
 import Link from 'next/link';
 import { usePreferences, getLocaleDirection } from '@/components/preferences-provider';
 import { uiMessage } from '@/lib/ui-messages';
-import type { UiMessage } from '@/lib/languages/types';
-import { accountingApi } from '@/lib/api/accounting/accounting-api';
-import type { AccountingDashboardSummary, AccountingListItem } from '@/types/accounting';
+import type { UiMessage } from '@/languages/types';
+import { accountingApi } from '@/app/(workspace)/accounting/accounting-api';
+import type { AccountingDashboardSummary, AccountingListItem } from '@/app/(workspace)/accounting/types';
 
 const emptySummary: AccountingDashboardSummary = { totalInvoices: 0, pendingReview: 0, approved: 0, rejected: 0, paid: 0, overdue: 0 };
 

@@ -22,7 +22,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 
-import { createTicket } from '@/lib/api/tickets/ticket-api';
+import { createTicket } from '@/app/(workspace)/support/ticket-api';
 import { projectsApi, type SupportProjectItem } from '@/lib/api/shared/projects-api';
 import { usePreferences } from '@/components/preferences-provider';
 import { uiMessage } from '@/lib/ui-messages';
@@ -31,7 +31,7 @@ import type {
   TicketPriority,
   TicketType,
   TicketVisibility,
-} from '@/types/ticket';
+} from '@/app/(workspace)/support/types';
 import {
   TICKET_TYPE_LABELS,
   TICKET_VISIBILITY_LABELS,

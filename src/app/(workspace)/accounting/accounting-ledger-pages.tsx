@@ -4,9 +4,9 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react
 import { Plus, RefreshCw, X } from 'lucide-react';
 import { usePreferences, getLocaleDirection } from '@/components/preferences-provider';
 import { uiMessage } from '@/lib/ui-messages';
-import type { UiMessage } from '@/lib/languages/types';
-import { accountingApi } from '@/lib/api/accounting/accounting-api';
-import type { AccountingAccount, AccountingAccountType, AccountingLedgerLine, AccountingVoucher } from '@/types/accounting';
+import type { UiMessage } from '@/languages/types';
+import { accountingApi } from '@/app/(workspace)/accounting/accounting-api';
+import type { AccountingAccount, AccountingAccountType, AccountingLedgerLine, AccountingVoucher } from '@/app/(workspace)/accounting/types';
 import { useAccountingAccess } from './accounting-access-context';
 
 type Mode = 'accounts' | 'vouchers' | 'ledger';

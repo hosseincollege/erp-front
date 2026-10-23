@@ -12,6 +12,8 @@ import { usePathname, useRouter } from 'next/navigation'
 
 import { AppShell } from '@/components/layout/app-shell'
 import { getCurrentUser, isUserAuthenticated } from '@/lib/api/shared/auth-api'
+import { isReducedEdition } from '@/lib/product-edition'
+import { OPTIONAL_MODULE_IDS, readModuleVisibility } from '@/lib/module-visibility'
 
 type WorkspaceLayoutProps = {
   children: React.ReactNode
@@ -72,6 +74,14 @@ export default function WorkspaceLayout({
         setIsAllowed(false)
         setIsCheckingAuth(false)
         router.replace('/')
+        return
+      }
+
+      const modulePath = OPTIONAL_MODULE_IDS.find((id) => pathname === `/${id}` || pathname.startsWith(`/${id}/`));
+      if (modulePath && !readModuleVisibility(isReducedEdition)[modulePath]) {
+        setIsCheckingAuth(true)
+        setIsAllowed(false)
+        router.replace('/dashboard')
         return
       }
 

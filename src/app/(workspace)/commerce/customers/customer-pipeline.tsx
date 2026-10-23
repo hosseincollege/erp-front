@@ -18,15 +18,15 @@ import {
   X,
 } from 'lucide-react';
 
-import { crmApi } from '@/lib/api/commercial/crm-api';
-import { DemoJsonToolbar } from '@/components/demo-json-toolbar';
+import { crmApi } from '@/app/(workspace)/commerce/customers/crm-api';
+import { DemoJsonToolbar } from '@/app/(workspace)/commerce/components/demo-json-toolbar';
 import { usePreferences } from '@/components/preferences-provider';
 import { uiMessage } from '@/lib/ui-messages';
 import type {
   CreateCrmLeadInput,
   CrmLead,
   LeadStatus,
-} from '@/types/crm';
+} from '@/app/(workspace)/commerce/customers/types';
 
 const STATUS_LABELS: Record<LeadStatus, string> = {
   NEW: 'سرنخ جدید',

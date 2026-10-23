@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, type ReactNode } from 'react';
-import type { AccountingAccess } from '@/types/accounting';
+import type { AccountingAccess } from '@/app/(workspace)/accounting/types';
 
 const AccountingAccessContext = createContext<AccountingAccess | null>(null);
 

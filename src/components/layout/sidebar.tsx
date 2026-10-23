@@ -9,16 +9,15 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { getCurrentUser, logout, AuthUser } from '@/lib/api/shared/auth-api';
+import { getCurrentOrganizationId, getCurrentUser, logout, AuthUser } from '@/lib/api/shared/auth-api';
 import { getLocaleDirection, usePreferences } from '@/components/preferences-provider';
 import { uiMessage } from '@/lib/ui-messages';
-import type { UiMessage } from '@/lib/languages/types';
+import type { UiMessage } from '@/languages/types';
 import { projectsApi, type SupportProjectItem } from '@/lib/api/shared/projects-api';
-import { humanResourcesApi } from '@/lib/api/hr/human-resources-api';
-import type { HrAccess } from '@/types/human-resources';
-import { accountingApi } from '@/lib/api/accounting/accounting-api';
-import type { AccountingAccess } from '@/types/accounting';
 import { notificationsApi } from '@/lib/api/shared/notifications-api';
+import { settingsApi, type OrganizationAccess } from '@/app/(workspace)/settings/settings-api';
+import { isReducedEdition } from '@/lib/product-edition';
+import { OPTIONAL_MODULE_IDS, readShellVisibility } from '@/lib/module-visibility';
 
 import {
   BarChart3,
@@ -27,6 +26,7 @@ import {
   Code2,
   ExternalLink,
   LayoutDashboard,
+  MapPinned,
   LogOut,
   Settings,
   Ticket,
@@ -60,6 +60,21 @@ const navigation: NavigationItem[] = [
       { titleKey: 'dashboardTools', href: '/dashboard/events' },
       { titleKey: 'dashboardConversation', href: '/dashboard/conversations' },
       { titleKey: 'dashboardAccount', href: '/dashboard/profile' },
+    ],
+  },
+  {
+    id: 'rahcom',
+    titleKey: 'sidebarRahkam',
+    icon: MapPinned,
+    href: '/rahcom',
+    sub: [
+      { titleKey: 'rahcomMap', href: '/rahcom/map' },
+      { titleKey: 'rahcomSystemsList', href: '/rahcom/systems' },
+      { titleKey: 'rahcomSystemData', href: '/rahcom/data' },
+      { titleKey: 'rahcomDailyTraffic', href: '/rahcom/daily-traffic' },
+      { titleKey: 'rahcomSolarDaily', href: '/rahcom/solar-daily' },
+      { titleKey: 'rahcomActions', href: '/rahcom/actions' },
+      { titleKey: 'rahcomTickets', href: '/rahcom/tickets' },
     ],
   },
   {
@@ -118,6 +133,7 @@ const navigation: NavigationItem[] = [
     href: '/settings',
     sub: [
       { titleKey: 'sidebarGeneral', href: '/settings/general' },
+      { titleKey: 'settingsDisplayManagement', href: '/settings/modules' },
       { titleKey: 'sidebarAnnouncementManagement', href: '/settings/announcements' },
       { titleKey: 'settingsOrganizationWorkspace', href: '/settings/company', activeHrefs: ['/settings/company', '/settings/organization', '/settings/projects'] },
       { titleKey: 'settingsAccessWorkspace', href: '/settings/roles', activeHrefs: ['/settings/roles', '/settings/accounts'] },
@@ -138,7 +154,6 @@ const navigation: NavigationItem[] = [
     sub: [
       { titleKey: 'developmentSiteVisits', href: '/development/site-visits' },
       { titleKey: 'sidebarTestData', href: '/development/test-data' },
-      { titleKey: 'developmentAccountSwitching', href: '/development/account-switching' },
     ],
   },
 ];
@@ -172,8 +187,8 @@ export function Sidebar({
   const supportProjectsRequest = useRef(0);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [supportProjects, setSupportProjects] = useState<SupportProjectItem[]>([]);
-  const [hrAccess, setHrAccess] = useState<HrAccess | null>(null);
-  const [accountingAccess, setAccountingAccess] = useState<AccountingAccess | null>(null);
+  const [organizationAccess, setOrganizationAccess] = useState<OrganizationAccess | null>(null);
+  const [moduleVisibility, setModuleVisibility] = useState(() => readShellVisibility(isReducedEdition));
   const [dashboardUnreadCount, setDashboardUnreadCount] = useState(0);
 
   const isProfileRoute = pathname === '/dashboard/profile' || pathname.startsWith('/dashboard/profile/');
@@ -186,19 +201,21 @@ export function Sidebar({
       setUser(currentUser);
       if (!currentUser) {
         setSupportProjects([]);
-        setHrAccess(null);
-        setAccountingAccess(null);
+        setOrganizationAccess(null);
         return;
       }
+      const organizationId = getCurrentOrganizationId();
+      if (!organizationId) {
+        setOrganizationAccess(null);
+        setSupportProjects([]);
+        return;
+      }
+      settingsApi.getOrganizationAccess(organizationId)
+        .then((access) => { if (requestId === supportProjectsRequest.current) setOrganizationAccess(access); })
+        .catch(() => { if (requestId === supportProjectsRequest.current) setOrganizationAccess(null); });
       projectsApi.getSupportProjects()
         .then((items) => { if (requestId === supportProjectsRequest.current) setSupportProjects(items); })
         .catch(() => { if (requestId === supportProjectsRequest.current) setSupportProjects([]); });
-      humanResourcesApi.getAccess()
-        .then((access) => { if (requestId === supportProjectsRequest.current) setHrAccess(access); })
-        .catch(() => { if (requestId === supportProjectsRequest.current) setHrAccess(null); });
-      accountingApi.getAccess()
-        .then((access) => { if (requestId === supportProjectsRequest.current) setAccountingAccess(access); })
-        .catch(() => { if (requestId === supportProjectsRequest.current) setAccountingAccess(null); });
     };
     refreshUser();
     window.addEventListener('auth:logout', refreshUser);
@@ -245,6 +262,17 @@ export function Sidebar({
   };
 
   const [activeTab, setActiveTab] = useState<string | null>(getMatchedModuleId());
+
+  useEffect(() => {
+    const refresh = () => setModuleVisibility(readShellVisibility(isReducedEdition));
+    refresh();
+    window.addEventListener('storage', refresh);
+    window.addEventListener('erp-module-visibility-change', refresh);
+    return () => {
+      window.removeEventListener('storage', refresh);
+      window.removeEventListener('erp-module-visibility-change', refresh);
+    };
+  }, []);
 
   // همگام‌سازی تب فعال هنگام تغییر مسیر (Navigation)
   useEffect(() => {
@@ -332,23 +360,19 @@ export function Sidebar({
   };
 
   const localizedNavigation = navigation
-    .filter((item) => item.id !== 'accounting' || Boolean(accountingAccess?.canView))
-    .filter((item) => item.id !== 'human-resources' || Boolean(hrAccess?.canViewEmployees || hrAccess?.canViewLeaves || hrAccess?.canViewAttendance || hrAccess?.canViewPayroll || hrAccess?.canRequestLeave || hrAccess?.employeeId))
+    // Rahyar keeps the full ERP code, but its five premium modules are off by
+    // default. Keep every other shared module available in the reduced edition.
+    .filter((item) => moduleVisibility.navigationModules?.[item.id as keyof NonNullable<typeof moduleVisibility.navigationModules>] !== false)
+    .filter((item) => !OPTIONAL_MODULE_IDS.includes(item.id as (typeof OPTIONAL_MODULE_IDS)[number]) || moduleVisibility[item.id as (typeof OPTIONAL_MODULE_IDS)[number]])
+    .filter((item) => item.id !== 'rahcom' || Boolean(organizationAccess?.canViewRahcom))
+    .filter((item) => item.id !== 'accounting' || Boolean(organizationAccess?.canViewAccounting))
+    .filter((item) => item.id !== 'human-resources' || Boolean(organizationAccess?.canViewHumanResources))
     .map((item) => ({
     ...item,
     title: message(item.titleKey),
     sub: item.id === 'support'
       ? supportProjects.map((project) => ({ title: project.name, href: `/support/projects/${encodeURIComponent(project.id)}`, activeHrefs: undefined }))
-      : item.id === 'human-resources'
-        ? item.sub?.filter((subItem) => subItem.href === '/human-resources/employees'
-          ? Boolean(hrAccess?.canViewEmployees || hrAccess?.employeeId)
-          : subItem.href === '/human-resources/leaves'
-            ? Boolean(hrAccess?.canViewLeaves || hrAccess?.canRequestLeave)
-            : subItem.href === '/human-resources/attendance'
-              ? Boolean(hrAccess?.canViewAttendance || hrAccess?.employeeId)
-              : Boolean(hrAccess?.canViewPayroll || hrAccess?.employeeId))
-          .map((subItem) => ({ ...subItem, title: subItem.titleKey ? message(subItem.titleKey) : subItem.title }))
-        : item.sub?.map((subItem) => ({ ...subItem, title: subItem.titleKey ? message(subItem.titleKey) : subItem.title })),
+      : item.sub?.filter((subItem) => moduleVisibility.navigationItems?.[subItem.href] !== false).map((subItem) => ({ ...subItem, title: subItem.titleKey ? message(subItem.titleKey) : subItem.title })),
   }));
   const activeGroup = localizedNavigation.find((item) => item.id === activeTab);
   const activePath = pathname;

@@ -19,7 +19,7 @@ import {
   resolveOrganizationLogoUrl,
   settingsApi,
   type OrganizationBranding,
-} from '@/lib/api/settings/settings-api';
+} from '@/app/(workspace)/settings/settings-api';
 
 import {
   ArrowLeftRight,
@@ -33,6 +33,8 @@ import {
   Monitor,
   Moon,
   ShieldCheck,
+  Workflow,
+  Search,
   Sun,
   Unlock,
   User,
@@ -41,7 +43,11 @@ import {
 import { useTheme } from '@/components/theme-provider';
 import { getLocaleDirection, usePreferences } from '@/components/preferences-provider';
 import { uiMessage } from '@/lib/ui-messages';
+import { readShellVisibility } from '@/lib/module-visibility';
+import { isReducedEdition } from '@/lib/product-edition';
+import { saveSearchHistory } from '@/lib/search-history';
 import { HeaderAccountSwitcher } from './header-account-switcher';
+import { HeaderProvinceSelector } from './header-province-selector';
 import type { MissionEntryMode } from './mission-quick-actions';
 
 interface TopHeaderProps {
@@ -74,6 +80,8 @@ export function TopHeader({
   const accountMenuRef = useRef<HTMLDivElement>(null);
   const missionMenuRef = useRef<HTMLDivElement>(null);
   const [isMissionMenuOpen, setIsMissionMenuOpen] = useState(false);
+  const [headerSearchQuery, setHeaderSearchQuery] = useState('');
+  const [shellVisibility, setShellVisibility] = useState(() => readShellVisibility(isReducedEdition));
   const router = useRouter();
   const [organizationBranding, setOrganizationBranding] =
     useState<OrganizationBranding | null>(null);
@@ -82,6 +90,16 @@ export function TopHeader({
   const direction = getLocaleDirection(locale);
   const english = locale !== 'fa';
   const message = (key: Parameters<typeof uiMessage>[1]) => uiMessage(locale, key);
+  const missionVisibilityKey = { form: 'missionForm', command: 'missionCommand', ai: 'missionAI' } as const;
+  const isMissionModeVisible = (mode: MissionEntryMode) => shellVisibility.headerControls?.[missionVisibilityKey[mode]] !== false;
+
+  useEffect(() => {
+    const refresh = () => setShellVisibility(readShellVisibility(isReducedEdition));
+    refresh();
+    window.addEventListener('storage', refresh);
+    window.addEventListener('erp-module-visibility-change', refresh);
+    return () => { window.removeEventListener('storage', refresh); window.removeEventListener('erp-module-visibility-change', refresh); };
+  }, []);
 
   useEffect(() => {
     if (!isAccountMenuOpen) return;
@@ -123,6 +141,13 @@ export function TopHeader({
     setIsAccountMenuOpen(false);
     await logout();
     router.push('/login');
+  };
+
+  const submitHeaderSearch = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const query = headerSearchQuery.trim();
+    if (query) saveSearchHistory(query, isReducedEdition);
+    router.push(query ? `/dashboard/search?q=${encodeURIComponent(query)}` : '/dashboard/search');
   };
 
   /*
@@ -351,14 +376,16 @@ export function TopHeader({
         >
           {themeIcon}
         </button>
+        <button type="button" onClick={() => router.push('/dashboard/search')} title={message('headerSearch')} aria-label={message('headerSearch')} className="pointer-events-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--border)] text-[var(--foreground)] lg:hidden"><Search size={17} /></button>
         </div>
 
         {/* کپسول حساب کاربری در سوی مقابل کنترل‌ها */}
         <div className="pointer-events-none order-2 flex shrink-0 items-center gap-1.5">
         <div className="pointer-events-auto flex shrink-0 items-center gap-1.5" dir="ltr">
-        <div className="hidden md:block">
+        {shellVisibility.headerControls?.accountSwitcher !== false && <div className="hidden md:block">
           <HeaderAccountSwitcher userId={user?.id} />
-        </div>
+        </div>}
+        {shellVisibility.headerControls?.provinceSelector !== false && <HeaderProvinceSelector userId={user?.id} />}
         <div ref={accountMenuRef} dir={direction} className="pointer-events-none relative shrink-0">
           <button
             id="user-profile-header-btn"
@@ -369,7 +396,7 @@ export function TopHeader({
             aria-expanded={isAccountMenuOpen}
             className={`
               pointer-events-auto flex size-10 cursor-pointer select-none items-center justify-center
-              rounded-full border p-0 transition-all sm:h-auto sm:w-auto sm:justify-start
+              rounded-full border p-0 transition-all sm:h-10 sm:w-44 sm:justify-start
               sm:gap-2.5 sm:rounded-2xl sm:p-1.5 sm:pe-4 sm:ps-1.5
               ${isAccountMenuOpen ? 'border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]' : 'border-[var(--border)] text-[var(--foreground)]'}
               focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]/40
@@ -379,39 +406,35 @@ export function TopHeader({
           <div
             className="
               pointer-events-none
-              flex h-7 w-7 items-center
-              justify-center rounded-full
+              flex h-7 w-7 shrink-0 items-center
+              justify-center overflow-hidden rounded-full
               font-black text-white shadow-inner text-xs
             "
             style={{ backgroundColor: 'var(--primary)' }}
           >
-            {user?.name ? (
-              user.name.charAt(0).toUpperCase()
+            {user?.avatarUrl ? (
+              <Image src={user.avatarUrl} alt="" width={28} height={28} unoptimized className="h-full w-full object-cover" />
+            ) : user?.lastName?.trim() ? (
+              user.lastName.trim().charAt(0).toLocaleUpperCase(locale)
+            ) : user?.name ? (
+              user.name.charAt(0).toLocaleUpperCase(locale)
             ) : (
               <User size={17} />
             )}
           </div>
 
           {/* نام و نقش */}
-          <div className="pointer-events-none hidden text-start sm:block">
-            <p className="text-xs font-bold leading-tight">
-              {user?.name || message('admin')}
-            </p>
-
-            <p
-              className="
-                text-[10px] font-medium leading-normal
-                text-primary
-              "
-            >
-              {user?.role || message('user')}
+          <div className="pointer-events-none hidden min-w-0 flex-1 text-start sm:block">
+            <p className="truncate whitespace-nowrap text-xs font-bold leading-tight" title={[user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.name || message('admin')}>
+              {[user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.name || message('admin')}
             </p>
           </div>
           </button>
           {isAccountMenuOpen && (
-            <div role="menu" className={`pointer-events-auto absolute end-0 top-full z-[60] mt-2 min-w-48 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-1.5 shadow-lg md:top-1/2 md:mt-0 md:min-w-36 md:p-1 md:-translate-y-1/2 ${direction === 'rtl' ? 'md:right-full md:left-auto md:me-2' : 'md:left-full md:right-auto md:ms-2'}`}>
+            <div role="menu" className={`pointer-events-auto absolute end-0 top-full z-[60] mt-3 min-w-48 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-1.5 shadow-lg md:top-1/2 md:mt-0 md:min-w-36 md:p-1 md:-translate-y-1/2 ${direction === 'rtl' ? 'md:right-full md:left-auto md:me-3' : 'md:left-full md:right-auto md:ms-3'}`}>
               <div className="md:hidden">
-                <HeaderAccountSwitcher userId={user?.id} embedded />
+                {shellVisibility.headerControls?.accountSwitcher !== false && <HeaderAccountSwitcher userId={user?.id} embedded />}
+                {shellVisibility.headerControls?.provinceSelector !== false && <div className="px-2 py-1"><HeaderProvinceSelector userId={user?.id} /></div>}
                 <div className="my-1 border-t border-[var(--border)]" />
               </div>
               <button
@@ -426,7 +449,7 @@ export function TopHeader({
             </div>
           )}
         </div>
-        <div ref={missionMenuRef} className="pointer-events-auto relative lg:hidden">
+        {(['form', 'command', 'ai'] as MissionEntryMode[]).some(isMissionModeVisible) && <div ref={missionMenuRef} className="pointer-events-auto relative lg:hidden">
           <button type="button" onClick={() => setIsMissionMenuOpen((open) => !open)} title={message('missionShortcutTitle')} aria-label={message('missionShortcutTitle')} aria-haspopup="menu" aria-expanded={isMissionMenuOpen} aria-pressed="true" className="flex size-10 min-w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]">
             {activeMissionMode === 'form' ? <FilePlus2 className="size-[17px] shrink-0"/> : activeMissionMode === 'command' ? <SquareTerminal className="size-[17px] shrink-0"/> : <Bot className="size-[17px] shrink-0"/>}
           </button>
@@ -435,9 +458,9 @@ export function TopHeader({
               ['form', FilePlus2, 'missionModeForm'],
               ['command', SquareTerminal, 'missionModeCommand'],
               ['ai', Bot, 'missionModeAI'],
-            ] as const).map(([mode, Icon, label]) => <button key={mode} type="button" role="menuitemradio" aria-checked={activeMissionMode === mode} onClick={() => { setIsMissionMenuOpen(false); onSelectMissionMode?.(mode); }} className={`flex min-h-10 w-full items-center gap-2 rounded-lg px-2.5 py-2 text-start text-sm font-medium ${activeMissionMode === mode ? 'bg-[var(--primary-soft)] text-[var(--primary)]' : 'text-[var(--foreground)] hover:bg-[var(--primary-soft)] hover:text-[var(--primary)]'}`}><Icon className="size-4 shrink-0"/>{message(label)}</button>)}
+            ] as const).filter(([mode]) => isMissionModeVisible(mode)).map(([mode, Icon, label]) => <button key={mode} type="button" role="menuitemradio" aria-checked={activeMissionMode === mode} onClick={() => { setIsMissionMenuOpen(false); onSelectMissionMode?.(mode); }} className={`flex min-h-10 w-full items-center gap-2 rounded-lg px-2.5 py-2 text-start text-sm font-medium ${activeMissionMode === mode ? 'bg-[var(--primary-soft)] text-[var(--primary)]' : 'text-[var(--foreground)] hover:bg-[var(--primary-soft)] hover:text-[var(--primary)]'}`}><Icon className="size-4 shrink-0"/>{message(label)}</button>)}
           </div>}
-        </div>
+        </div>}
         </div>
         </div>
       </div>
@@ -486,7 +509,7 @@ export function TopHeader({
                 }
               />
             ) : (
-              <ShieldCheck size={23} className="text-primary" />
+              <Workflow size={23} className="text-primary" />
             )}
           </div>
 
@@ -496,16 +519,23 @@ export function TopHeader({
         </Link>
       </div>
 
-      <div className="pointer-events-none absolute end-5 top-1/2 hidden -translate-y-1/2 items-center gap-1.5 lg:flex" aria-label={message('missionShortcutTitle')}>
+      <div className="pointer-events-none absolute end-5 top-1/2 hidden -translate-y-1/2 flex-row-reverse items-center gap-1.5 lg:flex" aria-label={message('missionShortcutTitle')}>
         {([
-          ['ai', Bot, 'missionModeAI'],
-          ['command', SquareTerminal, 'missionModeCommand'],
           ['form', FilePlus2, 'missionModeForm'],
-        ] as const).map(([mode, Icon, label]) => (
+          ['command', SquareTerminal, 'missionModeCommand'],
+          ['ai', Bot, 'missionModeAI'],
+        ] as const).filter(([mode]) => isMissionModeVisible(mode)).map(([mode, Icon, label]) => (
           <button key={mode} type="button" onClick={() => onSelectMissionMode?.(mode)} title={message(label)} aria-label={message(label)} aria-pressed={activeMissionMode === mode} className={`pointer-events-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition-colors ${activeMissionMode === mode ? 'border-[var(--primary)] bg-[var(--primary-soft)] text-[var(--primary)]' : 'border-[var(--border)] text-[var(--foreground)] hover:border-[var(--primary)] hover:text-[var(--primary)]'}`}>
             <Icon size={17}/>
           </button>
         ))}
+        <form onSubmit={submitHeaderSearch} role="search" className="pointer-events-auto hidden xl:flex">
+          <label className="relative block">
+            <Search size={16} aria-hidden="true" className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <input type="search" value={headerSearchQuery} onChange={(event) => setHeaderSearchQuery(event.target.value)} aria-label={message('headerSearch')} placeholder={message('headerSearch')} className="h-9 w-48 rounded-xl border border-[var(--border)] bg-[var(--surface)] ps-9 pe-3 text-sm text-[var(--foreground)] outline-none placeholder:text-muted-foreground focus:border-[var(--primary)] 2xl:w-56" />
+          </label>
+        </form>
+        <button type="button" onClick={() => router.push('/dashboard/search')} title={message('headerSearch')} aria-label={message('headerSearch')} className="pointer-events-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--border)] text-[var(--foreground)] xl:hidden"><Search size={17} /></button>
       </div>
 
 

@@ -30,7 +30,7 @@ import {
   XCircle,
 } from 'lucide-react';
 
-import { ticketApi } from '@/lib/api/tickets/ticket-api';
+import { ticketApi } from '@/app/(workspace)/support/ticket-api';
 import { usePreferences } from '@/components/preferences-provider';
 import { uiMessage } from '@/lib/ui-messages';
 

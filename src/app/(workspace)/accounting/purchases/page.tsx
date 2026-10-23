@@ -4,9 +4,9 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Plus, RefreshCw } from 'lucide-react';
 import { usePreferences, getLocaleDirection } from '@/components/preferences-provider';
-import { accountingApi } from '@/lib/api/accounting/accounting-api';
+import { accountingApi } from '@/app/(workspace)/accounting/accounting-api';
 import { uiMessage } from '@/lib/ui-messages';
-import type { AccountingListItem } from '@/types/accounting';
+import type { AccountingListItem } from '@/app/(workspace)/accounting/types';
 import { useAccountingAccess } from '../accounting-access-context';
 
 export default function AccountingPurchasesPage() {

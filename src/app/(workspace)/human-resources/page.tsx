@@ -32,7 +32,7 @@ import {
   XCircle,
 } from "lucide-react";
 
-import { ApiClientError, humanResourcesApi } from "@/lib/api/hr/human-resources-api";
+import { ApiClientError, humanResourcesApi } from "@/app/(workspace)/human-resources/human-resources-api";
 import type {
   CreateEmployeePayload,
   CreateLeaveRequestPayload,
@@ -49,20 +49,20 @@ import type {
   LeaveRequestListQuery,
   LeaveRequestStatus,
   LeaveType,
-} from "@/types/human-resources";
+} from "@/app/(workspace)/human-resources/types";
 
 import {
   employeeStatusLabels,
   employmentTypeLabels,
   getEmployeeName,
-} from "./hr-utils";
-import { HrEmployeeStatusBadge, HrLeaveStatusBadge } from "./hr-badges";
-import { EmployeeFormModal } from "./employee-form-modal";
-import { EmployeeImportModal } from "./employee-import-modal";
+} from "./employees/hr-utils";
+import { HrEmployeeStatusBadge, HrLeaveStatusBadge } from "./employees/hr-badges";
+import { EmployeeFormModal } from "./employees/employee-form-modal";
+import { EmployeeImportModal } from "./employees/employee-import-modal";
 import { usePreferences } from "@/components/preferences-provider";
 import { uiMessage } from "@/lib/ui-messages";
-import type { UiMessage } from "@/lib/languages/types";
-import type { Locale } from "@/lib/languages";
+import type { UiMessage } from "@/languages/types";
+import type { Locale } from "@/languages";
 
 type HrTab = "overview" | "employees" | "leaves";
 type HrRequestKind = "leave" | "mission";

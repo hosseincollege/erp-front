@@ -738,3 +738,8 @@ svg {
     transition-duration: 0.01ms !important;
   }
 }
+
+.rahcom-osm-map-dark .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(1.08) contrast(1.08);
+  transition: filter 180ms ease-out;
+}

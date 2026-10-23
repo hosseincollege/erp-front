@@ -23,8 +23,8 @@ import {
   XCircle,
 } from 'lucide-react';
 
-import { ticketApi } from '@/lib/api/tickets/ticket-api';
-import type { Ticket, TicketPriority, TicketStatus } from '@/types/ticket';
+import { ticketApi } from '@/app/(workspace)/support/ticket-api';
+import type { Ticket, TicketPriority, TicketStatus } from '@/app/(workspace)/support/types';
 
 type StatusFilter = TicketStatus | 'ALL';
 type PriorityFilter = TicketPriority | 'ALL';

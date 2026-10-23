@@ -1,4 +1,4 @@
-﻿import { AccountProfilePage } from '@/components/dashboard/account-center';
+import { AccountProfilePage } from '@/app/(workspace)/dashboard/profile/account-center';
 import { redirect } from 'next/navigation';
 
 type ProfilePageProps = { searchParams: Promise<{ tab?: string; person?: string }> };

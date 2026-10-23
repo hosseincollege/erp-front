@@ -12,7 +12,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { DemoJsonToolbar, useDemoDataset } from "@/components/demo-json-toolbar";
+import { DemoJsonToolbar, useDemoDataset } from "@/app/(workspace)/commerce/components/demo-json-toolbar";
 import {
   ShoppingCart,
   Truck,

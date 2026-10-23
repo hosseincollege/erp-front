@@ -20,6 +20,7 @@ export interface AuthUser {
   username?: string;
   firstName?: string;
   lastName?: string;
+  avatarUrl?: string | null;
   phone?: string;
   organizationId?: string | null;
 }
@@ -29,6 +30,7 @@ export interface MyProfile {
   username: string;
   firstName: string;
   lastName: string;
+  avatarUrl?: string | null;
   email: string | null;
   phone: string | null;
   organizationId?: string | null;
@@ -106,6 +108,7 @@ export interface AuthResponseUser {
   username: string;
   firstName: string;
   lastName: string;
+  avatarUrl?: string | null;
   email?: string | null;
   phone?: string | null;
   role?: string;
@@ -153,6 +156,7 @@ function normalizeUser(
     username: responseUser?.username ?? fallback.username,
     firstName,
     lastName,
+    avatarUrl: responseUser?.avatarUrl ?? fallback.avatarUrl ?? null,
     phone: responseUser?.phone ?? fallback.phone,
     organizationId: responseUser?.organizationId ?? fallback.organizationId ?? null,
   };
@@ -247,6 +251,7 @@ export async function updateMyProfile(data: UpdateMyProfile): Promise<MyProfile>
       username: response.user.username,
       firstName: response.user.firstName,
       lastName: response.user.lastName,
+      avatarUrl: response.user.avatarUrl ?? cached.avatarUrl ?? null,
       name: getUserDisplayName(response.user),
       email: response.user.email ?? undefined,
       phone: response.user.phone ?? undefined,

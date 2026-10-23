@@ -1,9 +1,9 @@
 import { apiClient } from '@/lib/api-client';
+import { API_BASE_URL } from '@/lib/api-environment';
 
 const VISITOR_API_URL = (
   process.env.NEXT_PUBLIC_API_URL ||
-  process.env.NEXT_PUBLIC_API_BASE_URL ||
-  'http://localhost:3006'
+  API_BASE_URL
 ).replace(/\/+$/, '');
 
 export type VisitorStats = {

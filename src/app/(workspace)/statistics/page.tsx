@@ -5,7 +5,7 @@ import { AlertTriangle, BarChart3, Boxes, FileText, RefreshCw, Users } from "luc
 import { getLocaleDirection, usePreferences } from "@/components/preferences-provider";
 import { apiClient } from "@/lib/api-client";
 import { uiMessage } from "@/lib/ui-messages";
-import type { UiMessage } from "@/lib/languages/types";
+import type { UiMessage } from "@/languages/types";
 
 type AnalysisOverview = {
   accounting: null | { invoiceCount: number };

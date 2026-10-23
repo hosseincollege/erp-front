@@ -37,7 +37,7 @@ import {
   settingsApi,
   type BranchItem,
   type DepartmentItem,
-} from '@/lib/api/settings/settings-api';
+} from '@/app/(workspace)/settings/settings-api';
 import { getCurrentOrganizationId } from '@/lib/api/shared/auth-api';
 import { DepartmentOverviewPanel } from './department-overview-panel';
 import {

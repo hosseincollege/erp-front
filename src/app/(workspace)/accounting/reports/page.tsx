@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { usePreferences, getLocaleDirection } from '@/components/preferences-provider';
-import { accountingApi } from '@/lib/api/accounting/accounting-api';
+import { accountingApi } from '@/app/(workspace)/accounting/accounting-api';
 import { uiMessage } from '@/lib/ui-messages';
-import type { AccountingTrialBalance } from '@/types/accounting';
+import type { AccountingTrialBalance } from '@/app/(workspace)/accounting/types';
 
 const emptyReport: AccountingTrialBalance = { rows: [], debitTotal: 0, creditTotal: 0 };
 export default function AccountingReportsPage() {

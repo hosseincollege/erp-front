@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { Activity, ArrowLeft, Database, FileCode2, Lock, ShieldCheck, Users } from 'lucide-react';
 import { usePreferences } from '@/components/preferences-provider';
-import { getLocaleDirection } from '@/lib/languages';
+import { getLocaleDirection } from '@/languages';
+import { uiMessage } from '@/lib/ui-messages';
 
 export function SettingsHomeContent() {
   const { locale } = usePreferences();
@@ -60,6 +61,7 @@ export function SettingsHomeContent() {
           </div>
           <div className="flex flex-wrap gap-2">
             <Link href="/settings/general" className="inline-flex items-center justify-between gap-2 rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground transition hover:bg-accent hover:text-primary"><span>{en ? 'General settings' : 'تنظیمات عمومی'}</span><ArrowLeft size={13} /></Link>
+            <Link href="/settings/modules" className="inline-flex items-center justify-between gap-2 rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground transition hover:bg-accent hover:text-primary"><span>{uiMessage(locale, 'settingsDisplayManagement')}</span><ArrowLeft size={13} /></Link>
             <Link href="/settings/roles" className="inline-flex items-center justify-between gap-2 rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground transition hover:bg-accent hover:text-primary"><span className="flex items-center gap-1.5"><Users size={14} />{en ? 'Users and permissions' : 'کاربران و دسترسی‌ها'}</span><ArrowLeft size={13} /></Link>
           </div>
         </div>

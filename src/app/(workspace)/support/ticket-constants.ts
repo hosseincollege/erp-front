@@ -5,7 +5,7 @@ import type {
   TicketStatus,
   TicketType,
   TicketVisibility,
-} from '@/types/ticket';
+} from '@/app/(workspace)/support/types';
 
 // پیکربندی بصری وضعیت‌های تیکت
 export const statusConfig: Record<

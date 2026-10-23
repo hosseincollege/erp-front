@@ -3,8 +3,8 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { usePreferences, getLocaleDirection } from '@/components/preferences-provider';
 import { uiMessage } from '@/lib/ui-messages';
-import { accountingApi } from '@/lib/api/accounting/accounting-api';
-import type { AccountingAccess } from '@/types/accounting';
+import { accountingApi } from '@/app/(workspace)/accounting/accounting-api';
+import type { AccountingAccess } from '@/app/(workspace)/accounting/types';
 import { AccountingAccessProvider } from './accounting-access-context';
 
 export default function AccountingLayout({ children }: { children: ReactNode }) {

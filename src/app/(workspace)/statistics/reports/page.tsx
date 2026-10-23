@@ -4,7 +4,7 @@ import Link from "next/link";
 import { BarChart3, Boxes, FileText, Users } from "lucide-react";
 import { getLocaleDirection, usePreferences } from "@/components/preferences-provider";
 import { uiMessage } from "@/lib/ui-messages";
-import type { UiMessage } from "@/lib/languages/types";
+import type { UiMessage } from "@/languages/types";
 
 const categories: Array<{ href: string; title: UiMessage; icon: typeof BarChart3 }> = [
   { href: "/statistics/reports/financial", title: "sidebarFinancialReports", icon: FileText },

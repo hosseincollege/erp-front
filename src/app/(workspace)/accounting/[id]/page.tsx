@@ -48,7 +48,7 @@ import {
 import {
   accountingApi,
   ApiClientError,
-} from "@/lib/api/accounting/accounting-api";
+} from "@/app/(workspace)/accounting/accounting-api";
 
 import type {
   AccountingDetail,
@@ -56,7 +56,7 @@ import type {
   AccountingPayment,
   AccountingPriority,
   PaymentMethod,
-} from "@/types/accounting";
+} from "@/app/(workspace)/accounting/types";
 import { getLocaleDirection, usePreferences } from "@/components/preferences-provider";
 import { useAccountingAccess } from "../accounting-access-context";
 

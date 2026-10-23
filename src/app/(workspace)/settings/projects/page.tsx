@@ -8,8 +8,8 @@ import { ApiError } from '@/lib/api-client';
 import { uiMessage } from '@/lib/ui-messages';
 import { projectsApi, type ProjectDraft, type ProjectImportRecord, type ProjectItem, type ProjectStatus } from '@/lib/api/shared/projects-api';
 import { parseProjectsImportData, PROJECTS_IMPORT_SAMPLE, projectsToExportData } from './projects-json';
-import type { UiMessage } from '@/lib/languages/types';
-import { SettingsOrganizationTabs } from '@/components/settings/settings-organization-tabs';
+import type { UiMessage } from '@/languages/types';
+import { SettingsOrganizationTabs } from '@/app/(workspace)/settings/components/settings-organization-tabs';
 
 const EMPTY_FORM: ProjectDraft = { code: '', name: '', description: '', status: 'ACTIVE' };
 

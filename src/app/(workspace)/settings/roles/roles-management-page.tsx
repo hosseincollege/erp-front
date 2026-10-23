@@ -22,13 +22,13 @@ import {
   getRoles,
   saveRoles,
   type RoleItem,
-} from "@/lib/api/settings/settings-api";
+} from "@/app/(workspace)/settings/settings-api";
 import {
   usePreferences,
   getLocaleDirection,
 } from "@/components/preferences-provider";
 import { uiMessage } from "@/lib/ui-messages";
-import type { UiMessage } from "@/lib/languages/types";
+import type { UiMessage } from "@/languages/types";
 import {
   parseRolesImportData,
   rolesImportDataToItems,

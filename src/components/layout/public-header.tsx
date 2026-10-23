@@ -20,8 +20,9 @@ import {
 } from 'lucide-react';
 import { useTheme } from '@/components/theme-provider';
 import { getLocaleDirection, usePreferences } from '@/components/preferences-provider';
+import { API_BASE_URL } from '@/lib/api-environment';
 import { uiMessage } from '@/lib/ui-messages';
-import type { UiMessage } from '@/lib/languages/types';
+import type { UiMessage } from '@/languages/types';
 
 type SetupStatusResponse = {
   hasUsers: boolean;
@@ -33,7 +34,7 @@ function getBackendBaseUrl(): string {
     process.env.NEXT_PUBLIC_API_URL ||
     process.env.NEXT_PUBLIC_API_BASE_URL ||
     process.env.NEXT_PUBLIC_BACKEND_BASE_URL ||
-    'http://localhost:3006';
+    API_BASE_URL;
   return url.replace(/\/+$/, '');
 }
 

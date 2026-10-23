@@ -21,7 +21,7 @@ import { getLocaleDirection, usePreferences } from '@/components/preferences-pro
 import { uiMessage } from '@/lib/ui-messages';
 
 import { getCurrentOrganizationId } from '@/lib/api/shared/auth-api';
-import { settingsApi, type UserItem } from '@/lib/api/settings/settings-api';
+import { settingsApi, type UserItem } from '@/app/(workspace)/settings/settings-api';
 
 import { UserFormModal, type UserFormData } from './user-form-modal';
 import { parseUsersToItems, usersImportSample } from './users-json';

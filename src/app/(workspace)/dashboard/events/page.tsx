@@ -2,7 +2,7 @@
 
 import { getLocaleDirection, usePreferences } from '@/components/preferences-provider';
 import { uiMessage } from '@/lib/ui-messages';
-import { NotificationsCenter } from '@/components/dashboard/notifications-center';
+import { NotificationsCenter } from '@/app/(workspace)/dashboard/events/notifications-center';
 
 export default function NotificationsPage() {
   const { locale } = usePreferences();

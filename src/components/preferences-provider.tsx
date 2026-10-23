@@ -11,7 +11,7 @@ import {
   type CSSProperties,
   type ReactNode,
 } from 'react';
-import { getLocaleDirection, supportedLocales, type Locale } from '@/lib/languages';
+import { getLocaleDirection, supportedLocales, type Locale } from '@/languages';
 import { getCurrentOrganizationId } from '@/lib/api/shared/auth-api';
 import {
   preferencesApi,
@@ -25,8 +25,8 @@ export {
   getLocaleDirection,
   localeOptions,
   supportedLocales,
-} from '@/lib/languages';
-export type { Locale } from '@/lib/languages';
+} from '@/languages';
+export type { Locale } from '@/languages';
 
 export type ContrastLevel = 'soft' | 'balanced' | 'strong';
 export type ContrastPreferences = { light: ContrastLevel; dark: ContrastLevel };
@@ -36,6 +36,8 @@ export type WorkspaceMode = 'form' | 'command' | 'ai';
 
 type PreferencesContextValue = {
   locale: Locale;
+  savedLocale: Locale;
+  previewLocale: (locale: Locale | null) => void;
   workspaceMode: WorkspaceMode;
   saveWorkspaceMode: (mode: WorkspaceMode) => Promise<void>;
   contrastPreferences: ContrastPreferences;
@@ -199,7 +201,7 @@ function applyOrganizationDisplay(appearance: OrganizationAppearance) {
 
 export function PreferencesProvider({ children }: { children: ReactNode }) {
   const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>('form');
-  const locale = useSyncExternalStore<Locale>(
+  const savedLocale = useSyncExternalStore<Locale>(
     subscribePreferences,
     () => {
       const saved = window.localStorage.getItem(LOCALE_KEY);
@@ -207,6 +209,8 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     },
     (): Locale => 'fa',
   );
+  const [localePreview, setLocalePreview] = useState<Locale | null>(null);
+  const locale = localePreview ?? savedLocale;
   const contrastSnapshot = useSyncExternalStore(
     subscribePreferences,
     readContrastSnapshot,
@@ -282,6 +286,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
       window.localStorage.removeItem(BRIGHTNESS_KEY);
       window.localStorage.removeItem(LEGACY_BRIGHTNESS_KEY);
       setAppearancePreview(null);
+      setLocalePreview(null);
       window.dispatchEvent(new Event('erp-preferences-changed'));
     };
     const handleAuthStorageChange = (event: StorageEvent) => {
@@ -310,6 +315,10 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
 
   const previewOrganizationAppearance = useCallback((appearance: SaveOrganizationAppearance | null) => {
     setAppearancePreview(appearance);
+  }, []);
+
+  const previewLocale = useCallback((nextLocale: Locale | null) => {
+    setLocalePreview(nextLocale);
   }, []);
 
   const savePreferences = useCallback(async (preferences: SaveUserPreferences) => {
@@ -349,6 +358,8 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
   const value = useMemo(
     () => ({
       locale,
+      savedLocale,
+      previewLocale,
       workspaceMode,
       saveWorkspaceMode,
       contrastPreferences,
@@ -368,6 +379,8 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     }),
     [
       locale,
+      savedLocale,
+      previewLocale,
       workspaceMode,
       saveWorkspaceMode,
       contrastPreferences,
