@@ -53,6 +53,7 @@ const appearanceBootstrap = `(() => {
 })();`;
 
 export const metadata: Metadata = {
+  icons: { icon: '/favicon.ico' },
   title: {
     default: "ERP Pro",
     template: "%s | ERP Pro",
