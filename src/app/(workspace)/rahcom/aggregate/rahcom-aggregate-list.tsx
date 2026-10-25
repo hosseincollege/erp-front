@@ -102,7 +102,14 @@ export function RahcomAggregateList() {
       }
     }
     const systemIncidentCodes = [...systemByCode.entries()].filter(([, system]) => Boolean(system.incidentType || system.incidentDetails)).map(([code]) => code);
-    const codes = new Set([...solarByCode.keys(), ...trafficFailureCodes, ...(showTrafficIncidents ? trafficIncidentCodes : []), ...(showSystemIncidents ? systemIncidentCodes : [])].filter((code) => systemByCode.has(code) || trafficRowsByCode.has(code)));
+    const codes = new Set([...solarByCode.keys(), ...trafficFailureCodes, ...trafficIncidentCodes, ...systemIncidentCodes].filter((code) => {
+      if (!systemByCode.has(code) && !trafficRowsByCode.has(code)) return false;
+      // A disabled incident filter removes its affected system row as well as its column,
+      // even when that same row also appears in the solar or traffic status lists.
+      if (!showTrafficIncidents && trafficIncidentCodes.has(code)) return false;
+      if (!showSystemIncidents && systemIncidentCodes.includes(code)) return false;
+      return true;
+    }));
     return [...codes].map((code) => {
       const system = systemByCode.get(code);
       const trafficRow = trafficRowsByCode.get(code);
