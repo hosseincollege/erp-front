@@ -65,3 +65,9 @@ Whenever assigned a task:
 - ERP must not expose or include the Rahcom module. Remove ERP Rahcom navigation and routes when carrying out the product split; preserve unrelated shell behavior.
 - Keep this frontend environment, API configuration, deployment settings, and integrations specific to ERP.
 - The user will move project folders. Do not move or rename directories.
+
+## Shared Rahyar and ERP administration UI
+
+- For shared administration experiences, especially Settings, module display management, TopHeader, and shell controls, inspect both Rahyar and ERP when changing either one and implement the compatible improvement in both products.
+- Adapt each implementation to that product's modules, permissions, translations, and architecture. Do not blindly copy product-specific pages or code.
+- Keep business features, APIs, data, identity, integrations, environments, and deployments product-specific. This shared-UI rule is an explicit exception to the default product separation above.
