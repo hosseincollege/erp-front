@@ -33,9 +33,11 @@ import {
 import { ticketApi } from '@/app/(workspace)/support/ticket-api';
 import { usePreferences } from '@/components/preferences-provider';
 import { uiMessage } from '@/lib/ui-messages';
+import { TicketWorkflow, ticketStatusKeys } from '../ticket-workflow';
+import type { TicketStatus } from '../types';
+import type { Locale } from '@/languages';
 
 type TicketPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
-type TicketStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED';
 type TicketSource =
   | 'PHONE'
   | 'EMAIL'
@@ -60,6 +62,8 @@ type CreatorSummary = {
 };
 
 type TicketDetailsRecord = {
+  canEdit: boolean;
+  resolution?: string | null;
   id: string;
   ticketNumber?: string | null;
   title: string;
@@ -106,15 +110,8 @@ function formatShortDate(value?: string | null) {
   }
 }
 
-function getStatusLabel(status: TicketStatus) {
-  const labels: Record<TicketStatus, string> = {
-    OPEN: 'باز',
-    IN_PROGRESS: 'در حال پیگیری',
-    RESOLVED: 'حل‌شده',
-    CLOSED: 'بسته‌شده',
-  };
-
-  return labels[status];
+function getStatusLabel(status: TicketStatus, locale: Locale) {
+  return uiMessage(locale, ticketStatusKeys[status]);
 }
 
 function getPriorityLabel(priority: TicketPriority) {
@@ -148,6 +145,8 @@ function getStatusClassName(status: TicketStatus) {
     IN_PROGRESS: 'border-[var(--warning)]/20 bg-[var(--warning-soft)] text-[var(--warning)]',
     RESOLVED: 'border-[var(--success)]/20 bg-[var(--success-soft)] text-[var(--success)]',
     CLOSED: 'border-[var(--border)] bg-[var(--surface-muted)] text-[var(--muted)]',
+    WAITING_FOR_CUSTOMER: 'border-[var(--warning)]/20 bg-[var(--warning-soft)] text-[var(--warning)]',
+    CANCELLED: 'border-[var(--border)] bg-[var(--surface-muted)] text-[var(--muted)]',
   };
 
   return classes[status];
@@ -167,12 +166,14 @@ function getPriorityClassName(priority: TicketPriority) {
 function getStatusIcon(status: TicketStatus) {
   switch (status) {
     case 'OPEN':
+    case 'WAITING_FOR_CUSTOMER':
       return <Clock3 className="h-4 w-4" />;
     case 'IN_PROGRESS':
       return <RefreshCcw className="h-4 w-4" />;
     case 'RESOLVED':
       return <CheckCircle2 className="h-4 w-4" />;
     case 'CLOSED':
+    case 'CANCELLED':
       return <XCircle className="h-4 w-4" />;
   }
 }
@@ -220,6 +221,8 @@ export default function TicketDetailsPage() {
         
         // تبدیل صریح Response بک‌اندازه به شکل مورد نیاز این صفحه
         const record: TicketDetailsRecord = {
+          canEdit: result.canEdit === true,
+          resolution: result.resolution,
           id: result.id,
           title: result.subject,
           ticketNumber:
@@ -227,7 +230,7 @@ export default function TicketDetailsPage() {
               ? String(result.ticketNumber)
               : null,
           description: result.description,
-          status: (result.status as unknown) as TicketStatus,
+          status: result.status,
           priority: result.priority,
           source: null,
           customerName: null,
@@ -236,8 +239,8 @@ export default function TicketDetailsPage() {
           creator: result.creatorId
             ? {
                 id: result.creatorId,
-                name: `کاربر ${result.creatorId.slice(0, 6)}`,
-                fullName: `کاربر ${result.creatorId.slice(0, 6)}`,
+                name: result.creator?.username || result.creatorId,
+                fullName: [result.creator?.firstName, result.creator?.lastName].filter(Boolean).join(' '),
               }
             : null,
           creatorId: result.creatorId,
@@ -284,6 +287,7 @@ export default function TicketDetailsPage() {
       setCopied(false);
     }
   }
+
 
   if (isLoading) {
     return <TicketDetailsLoading />;
@@ -413,7 +417,7 @@ export default function TicketDetailsPage() {
                   `}
                 >
                   {getStatusIcon(ticket.status)}
-                  {getStatusLabel(ticket.status)}
+                  {getStatusLabel(ticket.status, locale)}
                 </span>
 
                 <span
@@ -469,6 +473,7 @@ export default function TicketDetailsPage() {
             )}
           </button>
 
+
           <button
             type="button"
             onClick={() => void loadTicket(true)}
@@ -517,7 +522,7 @@ export default function TicketDetailsPage() {
             <div className="grid gap-4 sm:grid-cols-3">
               <InfoCard
                 title="وضعیت فعلی"
-                value={getStatusLabel(ticket.status)}
+                value={getStatusLabel(ticket.status, locale)}
                 icon={getStatusIcon(ticket.status)}
                 className={getStatusClassName(ticket.status)}
               />
@@ -574,6 +579,7 @@ export default function TicketDetailsPage() {
         </section>
 
         <aside className="space-y-6">
+          <TicketWorkflow id={ticket.id} status={ticket.status} resolution={ticket.resolution} canEdit={ticket.canEdit} onSaved={() => loadTicket(true)} />
           <Panel
             icon={<UserRound className="h-5 w-5" />}
             title="اطلاعات مشتری"
@@ -632,35 +638,6 @@ export default function TicketDetailsPage() {
             </div>
           </Panel>
 
-          <section
-            className="
-              rounded-2xl border border-[var(--primary)]/15
-              bg-gradient-to-br from-[var(--primary-soft)] to-[var(--surface-muted)]
-              p-5
-            "
-          >
-            <div className="flex items-start gap-3">
-              <div
-                className="
-                  rounded-xl bg-[var(--primary-soft)] p-2
-                  text-[var(--primary)]
-                "
-              >
-                <Clock3 className="h-5 w-5" />
-              </div>
-
-              <div>
-                <h2 className="font-semibold text-[var(--foreground)]">
-                  چرخه رسیدگی
-                </h2>
-
-                <p className="mt-2 text-sm leading-7 text-[var(--muted)]">
-                  در گام بعدی، امکان تغییر وضعیت، ارجاع تیکت و ثبت پیام‌های
-                  پیگیری به این بخش افزوده می‌شود.
-                </p>
-              </div>
-            </div>
-          </section>
         </aside>
       </div>
     </div>

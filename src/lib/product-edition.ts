@@ -1,2 +1,2 @@
-/** ERP keeps all first-party modules visible. Rahyar overrides this file. */
+/** ERP is a standalone product; its module availability is configured within ERP. */
 export const isReducedEdition = false;

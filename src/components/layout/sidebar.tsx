@@ -17,7 +17,7 @@ import { projectsApi, type SupportProjectItem } from '@/lib/api/shared/projects-
 import { notificationsApi } from '@/lib/api/shared/notifications-api';
 import { settingsApi, type OrganizationAccess } from '@/app/(workspace)/settings/settings-api';
 import { isReducedEdition } from '@/lib/product-edition';
-import { OPTIONAL_MODULE_IDS, readShellVisibility } from '@/lib/module-visibility';
+import { NAVIGATION_MODULE_IDS, OPTIONAL_MODULE_IDS, readShellVisibility } from '@/lib/module-visibility';
 
 import {
   BarChart3,
@@ -359,13 +359,13 @@ export function Sidebar({
   };
 
   const localizedNavigation = navigation
-    // Rahyar keeps the full ERP code, but its five premium modules are off by
-    // default. Keep every other shared module available in the reduced edition.
+    // ERP navigation and module availability are managed within this product.
+    .filter((item) => NAVIGATION_MODULE_IDS.includes(item.id as (typeof NAVIGATION_MODULE_IDS)[number]))
     .filter((item) => moduleVisibility.navigationModules?.[item.id as keyof NonNullable<typeof moduleVisibility.navigationModules>] !== false)
     .filter((item) => !OPTIONAL_MODULE_IDS.includes(item.id as (typeof OPTIONAL_MODULE_IDS)[number]) || moduleVisibility[item.id as (typeof OPTIONAL_MODULE_IDS)[number]])
-    .filter((item) => item.id !== 'rahcom' || Boolean(organizationAccess?.canViewRahcom))
     .filter((item) => item.id !== 'accounting' || Boolean(organizationAccess?.canViewAccounting))
     .filter((item) => item.id !== 'human-resources' || Boolean(organizationAccess?.canViewHumanResources))
+    .filter((item) => item.id !== 'commerce' || Boolean(organizationAccess?.canViewCommerce))
     .map((item) => ({
     ...item,
     title: message(item.titleKey),

@@ -9,7 +9,7 @@ import { isReducedEdition } from '@/lib/product-edition';
 import { HEADER_CONTROL_IDS, NAVIGATION_MODULE_IDS, OPTIONAL_MODULE_IDS, readShellVisibility, saveModuleVisibility, type HeaderControlId, type NavigationModuleId, type OptionalModuleId, type ModuleVisibility } from '@/lib/module-visibility';
 import type { UiMessage } from '@/languages/types';
 
-const moduleTitles: Record<NavigationModuleId, Parameters<typeof uiMessage>[1]> = {
+const moduleTitles: Record<string, Parameters<typeof uiMessage>[1]> = {
   dashboard: 'sidebarDashboard',
   rahcom: 'sidebarRahkam',
   accounting: 'sidebarAccounting',

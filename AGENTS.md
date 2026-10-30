@@ -57,3 +57,11 @@ Whenever assigned a task:
 - [ ] **Accounting & Invoices** (Invoicing, Payments, Line Items)
 - [ ] **Human Resources (HR)** (Employees, Leave Requests)
 - [ ] **Ticketing System** (Support, Status Tracker)
+
+
+## Product scope
+
+- This repository is the ERP frontend only. Work on ERP here without automatically copying changes to Rahyar.
+- ERP must not expose or include the Rahcom module. Remove ERP Rahcom navigation and routes when carrying out the product split; preserve unrelated shell behavior.
+- Keep this frontend environment, API configuration, deployment settings, and integrations specific to ERP.
+- The user will move project folders. Do not move or rename directories.

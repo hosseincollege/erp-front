@@ -74,6 +74,9 @@ export type Ticket = {
   updatedAt: string;
   // اضافه شده برای جلوگیری از خطای Type Mismatch هنگام دریافت لیست تیکت‌ها
   creator?: {
+    id?: string;
+    firstName?: string | null;
+    lastName?: string | null;
     username: string;
   } | null;
 };
@@ -89,5 +92,7 @@ export type TicketMessage = {
 };
 
 export type TicketDetails = Ticket & {
+  canEdit?: boolean;
+  resolution?: string | null;
   messages?: TicketMessage[];
 };

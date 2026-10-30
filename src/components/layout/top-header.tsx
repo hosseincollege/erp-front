@@ -108,7 +108,7 @@ export function TopHeader({
 
   useEffect(() => {
     const query = headerSearchQuery.trim();
-    if (!query) {
+    if (!isReducedEdition || !query) {
       setHeaderSearchResults([]);
       setHeaderSearchLoading(false);
       setHeaderSearchError(false);
@@ -233,7 +233,7 @@ export function TopHeader({
     else router.push('/rahcom/map');
   };
 
-  const renderHeaderSystemSuggestions = (mobile = false) => headerSearchOpen && headerSearchQuery.trim() ? (
+  const renderHeaderSystemSuggestions = (mobile = false) => isReducedEdition && headerSearchOpen && headerSearchQuery.trim() ? (
     <div role="listbox" aria-label={message('headerSearch')} aria-live="polite" dir={direction} style={{ backgroundColor: 'var(--gray-header, var(--surface))' }} className={`${mobile ? 'relative mt-2 w-full' : 'absolute end-0 top-full mt-2 w-80 max-w-[calc(100vw-1.5rem)]'} z-[120] overflow-hidden rounded-xl border border-[var(--border)] text-[var(--foreground)] shadow-2xl`}>
       {headerSearchLoading ? <div className="flex items-center gap-2 px-3 py-3 text-sm text-muted-foreground"><span className="size-4 animate-spin rounded-full border-2 border-primary border-t-transparent" aria-hidden="true" />{message('headerSearch')}</div> : null}
       {headerSearchError ? <p role="alert" className="px-3 py-3 text-sm text-muted-foreground">{message('rahcomSystemsLoadError')}</p> : null}
@@ -475,9 +475,9 @@ export function TopHeader({
         <div ref={mobileToolsRef} className="pointer-events-auto absolute inset-y-0 left-3 z-20 lg:hidden">
           <button type="button" onClick={() => { setMobileToolsOpen((open) => !open); setMobileTool(null); }} aria-label={message('missionShortcutTitle')} title={message('missionShortcutTitle')} aria-expanded={mobileToolsOpen} className="absolute top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl border border-[var(--border)] text-[var(--foreground)] max-sm:h-8 max-sm:w-8"><MoreHorizontal size={19}/></button>
           {mobileToolsOpen && <div dir={direction} style={{ backgroundColor: 'var(--gray-header, var(--surface))' }} className="fixed inset-x-3 top-[4.5rem] z-[100] max-h-[calc(100dvh-5.5rem)] overflow-y-auto rounded-2xl border border-[var(--border)] p-3 shadow-2xl sm:inset-x-5">
-            {mobileTool === null ? <div className="grid gap-2">{([['search','headerSearch'],['accountSwitcher','settingsHeaderAccountSwitcher'],['province','settingsHeaderProvinceSelector'],['profile','viewProfile'],['mission','missionShortcutTitle']] as const).map(([id,label]) => <button key={id} type="button" onClick={() => setMobileTool(id)} className="min-h-12 rounded-xl border border-[var(--border)] px-4 text-start text-sm font-medium text-[var(--foreground)] hover:bg-[var(--primary-soft)]">{message(label)}</button>)}</div> : <div>
+            {mobileTool === null ? <div className="grid gap-2">{([['search','headerSearch'],['accountSwitcher','settingsHeaderAccountSwitcher'],['province','settingsHeaderProvinceSelector'],['profile','viewProfile'],['mission','missionShortcutTitle']] as const).filter(([id]) => id !== 'province' || isReducedEdition).map(([id,label]) => <button key={id} type="button" onClick={() => setMobileTool(id)} className="min-h-12 rounded-xl border border-[var(--border)] px-4 text-start text-sm font-medium text-[var(--foreground)] hover:bg-[var(--primary-soft)]">{message(label)}</button>)}</div> : <div>
               <button type="button" onClick={() => setMobileTool(null)} aria-label={message('closeSidebar')} className="mb-3 inline-flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm font-semibold text-[var(--primary)] hover:bg-[var(--primary-soft)]"><ChevronLeft size={18}/>{direction === 'rtl' ? '→' : '←'}</button>
-              {mobileTool === 'search' && <div className="relative"><form onSubmit={(event) => { submitHeaderSearch(event); setMobileToolsOpen(false); setMobileTool(null); }} role="search" className="flex gap-2"><input autoFocus type="search" value={headerSearchQuery} onChange={(event) => setHeaderSearchQuery(event.target.value)} aria-label={message('headerSearch')} placeholder={message('headerSearch')} className="h-12 min-w-0 flex-1 rounded-xl border border-[var(--border)] bg-background px-3 text-sm text-foreground"/><button type="submit" aria-label={message('headerSearch')} className="rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground"><Search size={17}/></button></form>{renderHeaderSystemSuggestions(true)}</div>}
+              {mobileTool === 'search' && <div className="relative"><form onSubmit={(event) => { submitHeaderSearch(event); setMobileToolsOpen(false); setMobileTool(null); }} role="search" className="flex gap-2"><div className="relative min-w-0 flex-1"><input autoFocus type="text" value={headerSearchQuery} onChange={(event) => setHeaderSearchQuery(event.target.value)} aria-label={message('headerSearch')} placeholder={message('headerSearch')} className="h-12 w-full rounded-xl border border-[var(--border)] bg-background px-3 pe-10 text-sm text-foreground"/>{headerSearchQuery && <button type="button" onClick={() => setHeaderSearchQuery('')} aria-label={message('searchClear')} title={message('searchClear')} className="absolute end-2 top-1/2 -translate-y-1/2 rounded-md p-2 text-muted-foreground hover:bg-muted hover:text-foreground"><X size={16}/></button>}</div><button type="submit" aria-label={message('headerSearch')} className="rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground"><Search size={17}/></button></form>{renderHeaderSystemSuggestions(true)}</div>}
               {mobileTool === 'accountSwitcher' && shellVisibility.headerControls?.accountSwitcher !== false && <HeaderAccountSwitcher userId={user?.id} embedded/>}
               {mobileTool === 'province' && shellVisibility.headerControls?.provinceSelector !== false && <div className="p-1"><HeaderProvinceSelector userId={user?.id} embedded/></div>}
               {mobileTool === 'profile' && <div className="flex items-center justify-between gap-3 p-2"><span className="min-w-0 truncate text-sm font-semibold">{[user?.firstName,user?.lastName].filter(Boolean).join(' ') || user?.name || message('admin')}</span><button type="button" onClick={() => { setMobileToolsOpen(false); setMobileTool(null); void handleSignOut(); }} className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-lg px-3 text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400"><LogOut size={16}/>{message('sidebarSignOut')}</button></div>}
@@ -538,7 +538,7 @@ export function TopHeader({
           </div>
           </button>
           {isAccountMenuOpen && (
-            <div role="menu" style={{ backgroundColor: 'var(--gray-header, var(--surface))' }} className="pointer-events-auto absolute end-0 top-full z-[60] mt-2 min-w-48 rounded-xl border border-[var(--border)] p-1.5 shadow-lg">
+            <div role="menu" style={{ backgroundColor: 'var(--gray-header, var(--surface))' }} className="pointer-events-auto absolute end-0 top-full z-[60] mt-2 w-[min(11rem,calc(100vw-1rem))] rounded-xl border border-[var(--border)] p-1.5 shadow-lg sm:w-44">
               <div className="md:hidden">
                 {shellVisibility.headerControls?.accountSwitcher !== false && <HeaderAccountSwitcher userId={user?.id} embedded />}
                 {shellVisibility.headerControls?.provinceSelector !== false && <div className="px-2 py-1"><HeaderProvinceSelector userId={user?.id} embedded /></div>}
@@ -548,7 +548,7 @@ export function TopHeader({
                 type="button"
                 role="menuitem"
                 onClick={handleSignOut}
-                className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-start text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30 md:min-h-8 md:gap-1.5 md:px-2 md:text-xs"
+                className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg px-2 text-center text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30 md:min-h-8 md:gap-1.5 md:px-2 md:text-xs"
               >
                 <LogOut size={16} />
                 {message('sidebarSignOut')}
@@ -619,7 +619,7 @@ export function TopHeader({
           <button type="button" onClick={() => setIsMissionMenuOpen((open) => !open)} title={message('missionShortcutTitle')} aria-label={message('missionShortcutTitle')} aria-haspopup="menu" aria-expanded={isMissionMenuOpen} className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border)] text-[var(--foreground)] transition-colors hover:bg-[var(--primary-soft)] hover:text-[var(--primary)]">
             {activeMissionMode === 'form' ? <FilePlus2 size={17}/> : activeMissionMode === 'command' ? <SquareTerminal size={17}/> : <Bot size={17}/>}
           </button>
-          {isMissionMenuOpen && <div role="menu" dir={direction} style={{ backgroundColor: 'var(--gray-header, var(--surface))' }} className={`absolute ${direction === 'rtl' ? 'end-0' : 'start-0'} top-full z-[70] mt-2 w-max min-w-40 max-w-[calc(100vw-1rem)] rounded-xl border border-[var(--border)] p-1 shadow-xl`}>
+          {isMissionMenuOpen && <div role="menu" dir={direction} style={{ backgroundColor: 'var(--gray-header, var(--surface))' }} className={`absolute ${direction === 'rtl' ? 'end-0' : 'start-0'} top-full z-[70] mt-2 w-max min-w-32 max-w-[calc(100vw-1rem)] rounded-xl border border-[var(--border)] p-1 shadow-xl`}>
             {([
               ['form', FilePlus2, 'missionModeForm'],
               ['command', SquareTerminal, 'missionModeCommand'],
@@ -628,7 +628,8 @@ export function TopHeader({
           </div>}
         </div>}
         <form ref={headerSearchRef} onSubmit={submitHeaderSearch} role="search" className="pointer-events-auto relative flex min-w-0">
-          <input type="search" value={headerSearchQuery} onChange={(event) => setHeaderSearchQuery(event.target.value)} aria-label={message('headerSearch')} placeholder={message('headerSearch')} style={{ backgroundColor: 'var(--gray-header, var(--surface))' }} className="h-9 w-36 rounded-xl border border-[var(--border)] px-3 text-sm text-[var(--foreground)] outline-none placeholder:text-muted-foreground focus:border-[var(--primary)] xl:w-44 2xl:w-52" />
+          <input type="text" value={headerSearchQuery} onChange={(event) => setHeaderSearchQuery(event.target.value)} aria-label={message('headerSearch')} placeholder={message('headerSearch')} style={{ backgroundColor: 'var(--gray-header, var(--surface))' }} className="h-9 w-36 rounded-xl border border-[var(--border)] px-3 pe-9 text-sm text-[var(--foreground)] outline-none placeholder:text-muted-foreground focus:border-[var(--primary)] xl:w-44 2xl:w-52" />
+          {headerSearchQuery && <button type="button" onClick={() => setHeaderSearchQuery('')} aria-label={message('searchClear')} title={message('searchClear')} className="absolute end-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"><X size={15}/></button>}
           {renderHeaderSystemSuggestions()}
         </form>
       </div>

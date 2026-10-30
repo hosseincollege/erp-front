@@ -96,6 +96,8 @@ const PERMISSION_OPTIONS: { key: string; label: UiMessage }[] = [
   { key: "hr.payroll.write", label: "permissionManage" },
   { key: "inventory.read", label: "permissionView" },
   { key: "inventory.write", label: "permissionManage" },
+  { key: "crm.read", label: "permissionView" },
+  { key: "crm.write", label: "permissionManage" },
   { key: "reports.sales.read", label: "permissionView" },
   { key: "announcements.write", label: "permissionManage" },
 ];
@@ -137,6 +139,10 @@ const PERMISSION_GROUPS: { label: UiMessage; permissionKeys: string[] }[] = [
   {
     label: "permissionGroupInventory",
     permissionKeys: ["inventory.read", "inventory.write"],
+  },
+  {
+    label: "permissionGroupCrm",
+    permissionKeys: ["crm.read", "crm.write"],
   },
   {
     label: "permissionGroupSalesReports",

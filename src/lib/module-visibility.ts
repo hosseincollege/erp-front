@@ -1,10 +1,13 @@
 import { getCurrentUser } from '@/lib/api/shared/auth-api';
 import { getCurrentOrganizationId } from '@/lib/api/shared/auth-api';
+import { isReducedEdition } from '@/lib/product-edition';
 import { settingsApi } from '@/app/(workspace)/settings/settings-api';
 
 export const MODULE_VISIBILITY_KEY = 'erp-module-visibility-v2';
-export const HEADER_CONTROL_IDS = ['missionTools', 'accountSwitcher', 'provinceSelector'] as const;
-export type HeaderControlId = (typeof HEADER_CONTROL_IDS)[number];
+export type HeaderControlId = 'missionTools' | 'accountSwitcher' | 'provinceSelector';
+export const HEADER_CONTROL_IDS: readonly HeaderControlId[] = isReducedEdition
+  ? ['missionTools', 'accountSwitcher', 'provinceSelector']
+  : ['missionTools', 'accountSwitcher'];
 export const OPTIONAL_MODULE_IDS = [
   'accounting',
   'commerce',
@@ -15,11 +18,10 @@ export const OPTIONAL_MODULE_IDS = [
 
 let visibilityWriteQueue: Promise<void> = Promise.resolve();
 
-export const NAVIGATION_MODULE_IDS = [
-  'dashboard', 'rahcom', 'accounting', 'commerce', 'human-resources',
-  'support', 'statistics', 'settings', 'development',
-] as const;
-export type NavigationModuleId = (typeof NAVIGATION_MODULE_IDS)[number];
+export type NavigationModuleId = 'dashboard' | 'accounting' | 'commerce' | 'human-resources' | 'support' | 'statistics' | 'settings' | 'development';
+export const NAVIGATION_MODULE_IDS: readonly NavigationModuleId[] = [
+  'dashboard', 'accounting', 'commerce', 'human-resources', 'support', 'statistics', 'settings', 'development',
+];
 
 export type OptionalModuleId = (typeof OPTIONAL_MODULE_IDS)[number];
 
@@ -63,6 +65,7 @@ export function readShellVisibility(isReducedEdition: boolean): ModuleVisibility
     const headerControls = {
       ...defaults,
       ...saved.headerControls,
+      provinceSelector: isReducedEdition && saved.headerControls?.provinceSelector !== false,
       missionTools: typeof legacyMissionTools?.missionTools === 'boolean'
         ? legacyMissionTools.missionTools
         : legacyMissionTools?.missionForm !== false || legacyMissionTools?.missionCommand !== false || legacyMissionTools?.missionAI !== false,

@@ -4,6 +4,8 @@
  */
 
 import { apiClient, ApiClientError } from '@/lib/api-client';
+import type { Locale } from '@/languages';
+import { uiMessage } from '@/lib/ui-messages';
 import type {
   CreateTicketPayload,
   Ticket,
@@ -24,6 +26,20 @@ export type TicketListQuery = {
   status?: TicketStatus | 'ALL';
   priority?: TicketPriority | 'ALL';
 };
+
+export type UpdateTicketPayload = Partial<{
+  subject: string;
+  description: string;
+  type: import('@/app/(workspace)/support/types').TicketType;
+  status: TicketStatus;
+  priority: TicketPriority;
+  visibility: import('@/app/(workspace)/support/types').TicketVisibility;
+  category: string;
+  assigneeId: string | null;
+  projectId: string;
+  dueAt: string | null;
+  resolution: string;
+}>;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -165,8 +181,34 @@ export async function createTicket(
   }
 }
 
+export async function updateTicket(id: string, payload: UpdateTicketPayload, locale: Locale = 'fa'): Promise<Ticket> {
+  if (!id.trim()) throw new Error(uiMessage(locale, 'ticketSaveFailed'));
+  try {
+    const response = await apiClient.patch<unknown>(`/tickets/${encodeURIComponent(id)}`, payload);
+    return unwrapApiData<Ticket>(response);
+  } catch (error) {
+    normalizeError(error, uiMessage(locale, 'ticketSaveFailed'));
+  }
+}
+
+export async function resolveTicket(
+  id: string,
+  payload: { resolution: string; billableHours?: number },
+  locale: Locale = 'fa',
+): Promise<Ticket> {
+  if (!id.trim() || !payload.resolution.trim()) throw new Error(uiMessage(locale, 'ticketSaveFailed'));
+  try {
+    const response = await apiClient.post<unknown>(`/tickets/${encodeURIComponent(id)}/resolve`, payload);
+    return unwrapApiData<Ticket>(response);
+  } catch (error) {
+    normalizeError(error, uiMessage(locale, 'ticketSaveFailed'));
+  }
+}
+
 export const ticketApi = {
   getTickets,
   getTicketById,
   createTicket,
+  updateTicket,
+  resolveTicket,
 } as const;

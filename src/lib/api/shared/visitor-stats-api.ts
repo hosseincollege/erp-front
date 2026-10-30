@@ -18,6 +18,7 @@ export type VisitorStats = {
 let fallbackVisitorId: string | null = null;
 const VISITOR_ID_KEY = 'erp-visitor-id';
 const SESSION_ID_KEY = 'erp-visitor-session-id';
+const UUID_V4_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const disabledStats = { enabled: false, daily: 0, weekly: 0, monthly: 0, yearly: 0, online: 0, today: 0, week: 0, month: 0, year: 0 };
 
 function isLocalRuntime() {
@@ -41,7 +42,7 @@ export function getVisitorId() {
   if (fallbackVisitorId) return fallbackVisitorId;
   try {
     const saved = window.localStorage.getItem(VISITOR_ID_KEY);
-    if (saved && /^[0-9a-f-]{36}$/i.test(saved)) {
+    if (saved && UUID_V4_PATTERN.test(saved)) {
       fallbackVisitorId = saved;
       return saved;
     }
@@ -58,7 +59,7 @@ export function getVisitorSessionId() {
   if (typeof window === 'undefined') return null;
   try {
     const saved = window.sessionStorage.getItem(SESSION_ID_KEY);
-    if (saved && /^[0-9a-f-]{36}$/i.test(saved)) return saved;
+    if (saved && UUID_V4_PATTERN.test(saved)) return saved;
     const created = createVisitorId();
     window.sessionStorage.setItem(SESSION_ID_KEY, created);
     return created;
